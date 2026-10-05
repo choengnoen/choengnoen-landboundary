@@ -1289,7 +1289,6 @@ tr.route-editable:hover td{background:var(--amber-glow)}
   <div class="view" id="view-routes">
     <div class="card">
       <div class="assets-toolbar" style="justify-content:flex-end">
-        <button class="btn btn-outline btn-sm" id="btnAddRoute" type="button">+ เพิ่มสายทาง</button>
         <div class="assets-updated-badge" id="routesUpdatedHint"></div>
       </div>
       <div class="table-wrap">
@@ -1807,24 +1806,6 @@ function onMasterChange(docId){
   } else if (docId === 'rightofway' || docId === 'surface') {
     try { updateKmHint(); } catch(e){}
   }
-}
-function masterUrl(tab){
-  if (!window.CNMaster) return '#';
-  return (CNMaster.EDIT_URL || '') + (tab ? '#' + tab : '');
-}
-function showMasterEditInfo(what, tab){
-  const root = document.getElementById('modalRoot');
-  root.innerHTML = `
-    <div class="modal-backdrop"><div class="modal">
-      <div class="modal-head"><h3>แก้ไข${escapeHtml(what)}</h3><button class="modal-close" id="masterInfoClose" type="button">×</button></div>
-      <p>แก้ได้ที่ฐานข้อมูลกลาง ทุกระบบเห็นข้อมูลใหม่ทันที</p>
-      <div class="actions">
-        <button class="btn btn-outline" id="masterInfoCancel" type="button">ปิด</button>
-        <a class="btn btn-primary" style="text-decoration:none" href="${masterUrl(tab)}" target="_blank" rel="noopener">เปิดฐานข้อมูลกลาง ↗</a>
-      </div>
-    </div></div>`;
-  document.getElementById('masterInfoClose').onclick = () => { root.innerHTML = ''; };
-  document.getElementById('masterInfoCancel').onclick = () => { root.innerHTML = ''; };
 }
 
  
@@ -2936,10 +2917,6 @@ async function startApp(){
   try { await refreshTeamConfig(); } catch (e) { console.error('refresh team failed', e); }
   try {
     await Promise.all([loadRoutesData(), loadRecords()]);
-    // ฐานข้อมูลใหม่ยังไม่มีสายทาง: เจ้าของระบบ/ผู้ดูแลระบบเข้าครั้งแรก เติมรายชื่อสายทางตั้งต้นให้อัตโนมัติ
-    if (!masterRoutesOn && !FBL.docs('routes').length && isPrivileged()) {
-      try { await FBL.seedRoutes(ROUTES); } catch (e) { console.error('seed routes failed', e); }
-    }
     populateHighwaySelect();
     populateYearFilter();
     updateWhoDisplay();
@@ -3920,7 +3897,7 @@ function renderRoutesTable(){
   const rowHtml = (r, i) => {
     const off = !isRouteActive(r);
     return `
-    <tr data-idx="${i}" class="${off ? 'route-transferred' : ''}${owner ? ' route-editable' : ''}"${owner ? ' title="ดับเบิลคลิกเพื่อแก้ไข"' : ''}>
+    <tr data-idx="${i}" class="${off ? 'route-transferred' : ''}">
       <td class="mono" style="text-align:center">${escapeHtml(r.highway)}${off ? '<span class="route-badge">โอนแล้ว</span>' : ''}</td>
       <td class="mono" style="text-align:center">${escapeHtml(r.controlNo || '-')}</td>
       <td style="text-align:center">${escapeHtml(r.section || '-')}${off ? `<div class="route-note">${escapeHtml(routeTransferNote(r))}</div>` : ''}</td>
@@ -3955,20 +3932,6 @@ function renderRoutesTable(){
   }
   tbody.innerHTML = html;
 
-  if (owner) {
-    tbody.querySelectorAll('tr[data-idx]').forEach(tr => {
-      tr.addEventListener('dblclick', () => {
-        if (masterRoutesOn) { showMasterEditInfo('ข้อมูลสายทาง', 'routes'); return; }
-        const idx = Number(tr.dataset.idx);
-        openRouteEditModal(rows[idx]);
-      });
-    });
-  }
-  const addBtn = document.getElementById('btnAddRoute');
-  if (addBtn) {
-    addBtn.style.display = owner && !masterRoutesOn ? '' : 'none'; // ใช้ฐานกลางอยู่ → เพิ่มสายทางที่ฐานกลาง
-    addBtn.onclick = () => openRouteEditModal(null);
-  }
   updateRoutesUpdatedHint();
 }
 // แยกช่วง กม. หลายช่วงที่คั่นด้วยจุลภาค เช่น "0+000 - 1+308, 2+346 - 3+292" กลับเป็น [[0,1308],[2346,3292]]
@@ -3986,7 +3949,7 @@ function parseKmRangesText(text){
 }
 // โมดัลเพิ่ม/แก้ไขสายทาง 1 สาย — ส่ง route เป็น null เพื่อเปิดในโหมด "เพิ่มสายทางใหม่", ส่ง object เพื่อแก้ไขของเดิม (เฉพาะเจ้าของระบบ)
 // preset = { status: 'transferred' } ใช้ตอนกดมาจากหน้าลบสายทางที่มีเคสอยู่ เพื่อเลือก "โอนแล้ว" ไว้ให้
-function openRouteEditModal(route, preset){
+function openRouteEditModal(route, preset){ return; // ปิดการใช้งาน: สายทางเป็นข้อมูลกลาง ดูได้อย่างเดียว
   const root = document.getElementById('modalRoot');
   const isNew = !route;
   const r = route || { highway:'', controlNo:'', section:'', kmRanges:[], distanceActual:null, distance2Lane:null, asphalt:null, concrete:null, workQty:null, status:'active' };
@@ -4148,8 +4111,7 @@ function updateRoutesUpdatedHint(){
   if (!el) return;
   if (masterRoutesOn) {
     const upd = normalizeDateStr(CNMaster.updatedAt('routes'));
-    el.innerHTML = 'จากฐานข้อมูลกลาง' + (upd ? ' · อัปเดต ' + escapeHtml(formatThaiDate(upd)) : '') +
-      (isPrivileged() ? ` · <a href="${masterUrl('routes')}" target="_blank" rel="noopener">แก้ไขที่ฐานข้อมูลกลาง ↗</a>` : '');
+    el.innerHTML = 'ข้อมูลจากฐานข้อมูลกลาง' + (upd ? ' · อัปเดต ' + escapeHtml(formatThaiDate(upd)) : '');
     return;
   }
   const dates = ROUTES.map(r => r.updatedAt).filter(Boolean).sort();
