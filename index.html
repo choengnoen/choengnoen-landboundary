@@ -2084,7 +2084,7 @@ async function bootstrapOwner(name, password){
 async function addTeamMember(name, password, isAdmin){
   name = (name || '').trim();
   if (!name || !password) { showToast('กรอกชื่อและรหัสผ่านให้ครบ'); return false; }
-  if (password.length < 6) { showToast('รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร'); return false; }
+  if (password.length < 8) { showToast('รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร'); return false; }
   if (findMember(name)) { showToast('มีชื่อนี้เป็นเจ้าหน้าที่อยู่แล้ว'); return false; }
   try {
     await FBL.addMember(name, password, isAdmin);
@@ -2145,7 +2145,7 @@ function confirmRemoveTeamMember(name){
 // ตั้งรหัสผ่านใหม่ให้สมาชิกทีม (ทำเบื้องหลังโดยสร้างบัญชีล็อกอินใหม่ให้คนนั้น — ดูคำอธิบายใน firebase-layer.js)
 async function resetMemberPassword(name, newPassword){
   if (!findMember(name) || !newPassword) return;
-  if (newPassword.length < 6) { showToast('รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร'); return; }
+  if (newPassword.length < 8) { showToast('รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร'); return; }
   try {
     await FBL.resetMemberPassword(name, newPassword);
     await refreshTeamConfig();
@@ -2154,6 +2154,37 @@ async function resetMemberPassword(name, newPassword){
   } catch (e) {
     showToast('ตั้งรหัสผ่านไม่สำเร็จ: ' + e.message);
   }
+}
+/* ----- สมุดชื่อล็อกอิน (แผน 6) — เจ้าของระบบกดย้ายครั้งเดียว -----
+   หน้าล็อกอินเปิดดูได้โดยไม่ต้องล็อกอิน จึงอ่านได้เฉพาะ "ชื่อ → อีเมลสังเคราะห์" จากสมุดชื่อ (login_directory)
+   หลังย้าย ตารางรายชื่อทีม (มีสถานะเจ้าของ/ผู้ดูแล) จะอ่านได้เฉพาะสมาชิกที่ล็อกอินแล้ว — ระหว่างย้ายไม่มีใครล็อกอินไม่ได้ */
+async function renderDirNotice(){
+  const box = document.getElementById('dirNotice');
+  if (!box || !isOwner() || !window.FBL || !FBL.loginDirStatus) return;
+  let st;
+  try { st = await FBL.loginDirStatus(); } catch (e) { box.innerHTML = ''; return; }
+  if (!document.getElementById('dirNotice')) return;
+  const bad = st.missing.length + st.extra.length;
+  if (st.ready && !bad) {
+    box.innerHTML = '<p class="hint" style="margin-top:14px">🔒 สมุดชื่อล็อกอิน: ย้ายแล้ว — คนที่ยังไม่ล็อกอินมองไม่เห็นว่าใครเป็นเจ้าของ/ผู้ดูแลระบบ</p>';
+    return;
+  }
+  const why = !st.ready
+    ? 'ยังไม่ได้ย้ายรายชื่อไปสมุดชื่อล็อกอิน — ตอนนี้คนนอกที่เปิดหน้านี้ยังเห็นว่าใครเป็นเจ้าของ/ผู้ดูแลระบบ กดปุ่มด้านล่างครั้งเดียวเพื่อย้าย (ไม่กระทบการล็อกอินของใคร)'
+    : 'สมุดชื่อล็อกอินไม่ตรงกับรายชื่อทีม ' + bad + ' ชื่อ (' + st.missing.concat(st.extra).join(', ') + ') — กดซิงก์เพื่อให้ตรงกัน';
+  box.innerHTML = '<div style="margin-top:14px;padding:12px;border:1px solid #f59e0b;background:#fff8e1;border-radius:10px"><p class="hint" style="margin:0 0 8px;color:#7a4b00">⚠ ' + why + '</p>' +
+    '<button class="btn btn-primary btn-sm" id="btnMigrateDir">' + (st.ready ? 'ซิงก์สมุดชื่อล็อกอิน' : 'ย้ายรายชื่อไปสมุดชื่อล็อกอิน') + '</button></div>';
+  document.getElementById('btnMigrateDir').onclick = async () => {
+    const btn = document.getElementById('btnMigrateDir');
+    btn.disabled = true; btn.textContent = 'กำลังดำเนินการ...';
+    try {
+      const r = await FBL.migrateLoginDirectory();
+      showToast('ย้ายสมุดชื่อล็อกอินเรียบร้อย (' + r.total + ' ชื่อ)');
+    } catch (e) {
+      showToast('ย้ายไม่สำเร็จ: ' + e.message);
+    }
+    renderDirNotice();
+  };
 }
 /* ----- สถานะออนไลน์ของเจ้าหน้าที่ (เจ้าของระบบเห็นคนเดียว) -----
    ทุกเครื่องส่งสัญญาณ "ยังอยู่" ทุก 2 นาที (FBL.startPresence) — เจ้าของระบบอ่านเอกสาร presence แล้วแสดงจุดเขียว/เทา
@@ -2262,9 +2293,11 @@ function renderTeamPanelInner(){
     <div style="margin:10px 0 6px">${memberRows || '<span class="hint">ยังไม่มีเจ้าหน้าที่</span>'}</div>
     ${isOwner() ? `
       <button class="btn btn-outline btn-sm" id="btnAddMember" style="margin-top:14px">+ เพิ่มเจ้าหน้าที่</button>
+      <div id="dirNotice"></div>
     ` : `<p class="hint">ติดต่อเจ้าของระบบเพื่อขอเพิ่มชื่อหรือรีเซ็ตรหัสผ่าน</p>`}
   `;
   if (isOwner()) {
+    renderDirNotice();
     document.getElementById('btnAddMember').onclick = () => {
       const root = document.getElementById('modalRoot');
       root.innerHTML = `
@@ -2778,7 +2811,7 @@ function renderAuthGate(errorMsg){
         <h3 class="auth-h3">ตั้งค่าเจ้าของระบบครั้งแรก</h3>
         <p class="hint" style="margin-bottom:14px">ยังไม่มีเจ้าหน้าที่ในระบบ — คนแรกที่ตั้งค่าจะเป็น "เจ้าของระบบ" และเพิ่มเจ้าหน้าที่คนอื่นได้ภายหลัง</p>
         <div class="field" style="margin-bottom:12px"><label>ชื่อ-นามสกุลของคุณ</label><input type="text" id="gateOwnerName" autocomplete="off"></div>
-        <div class="field" style="margin-bottom:12px"><label>ตั้งรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)</label>${pwField('gateOwnerPass')}</div>
+        <div class="field" style="margin-bottom:12px"><label>ตั้งรหัสผ่าน (อย่างน้อย 8 ตัวอักษร)</label>${pwField('gateOwnerPass')}</div>
         <div class="field" style="margin-bottom:14px"><label>ยืนยันรหัสผ่าน</label>${pwField('gateOwnerPass2')}</div>
         ${errHtml}
         <button class="btn btn-primary auth-btn" id="gateClaim">ตั้งค่าและเข้าสู่ระบบ</button>
@@ -2788,7 +2821,7 @@ function renderAuthGate(errorMsg){
       const p1 = document.getElementById('gateOwnerPass').value;
       const p2 = document.getElementById('gateOwnerPass2').value;
       if (!n || !p1) return showGateError('กรอกชื่อและรหัสผ่านให้ครบ');
-      if (p1.length < 6) return showGateError('รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร');
+      if (p1.length < 8) return showGateError('รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร');
       if (p1 !== p2) return showGateError('รหัสผ่านสองช่องไม่ตรงกัน');
       const btn = document.getElementById('gateClaim');
       btn.disabled = true; btn.textContent = 'กำลังตั้งค่า...';
@@ -2899,6 +2932,8 @@ async function startApp(){
   guardSearchAutofill();
   const overlay = document.getElementById('pageLoadingOverlay');
   if (overlay) overlay.classList.remove('hide');
+  // ก่อนล็อกอินหน้าเว็บอ่านได้แค่สมุดชื่อ (ไม่มีสถานะเจ้าของ/ผู้ดูแล) — ล็อกอินแล้วโหลดรายชื่อทีมเต็มอีกครั้ง
+  try { await refreshTeamConfig(); } catch (e) { console.error('refresh team failed', e); }
   try {
     await Promise.all([loadRoutesData(), loadRecords()]);
     // ฐานข้อมูลใหม่ยังไม่มีสายทาง: เจ้าของระบบ/ผู้ดูแลระบบเข้าครั้งแรก เติมรายชื่อสายทางตั้งต้นให้อัตโนมัติ
