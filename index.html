@@ -1107,6 +1107,18 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <input type="text" id="f_rowDistance" inputmode="decimal" placeholder="เช่น 30">
         </div>
       </div>
+      <div class="grid grid-4" style="margin-top:12px">
+        <div class="field">
+          <label>วันนัดชี้แนวเขต (ที่สำนักงานที่ดินนัด)</label>
+          <input type="date" id="f_appointDate">
+          <span class="hint km-hint">ระบบแจ้งเตือน LINE ล่วงหน้า 1 วันทำการ</span>
+        </div>
+        <div class="field" style="grid-column: span 2">
+          <label>พิกัดแปลงที่ดิน (ละติจูด, ลองจิจูด)</label>
+          <input type="text" id="f_coords" placeholder="เช่น 12.7071, 101.1474">
+          <span class="hint km-hint" id="coordsHint">ตรวจจากเว็บกรมที่ดินแล้วนำพิกัดมาวาง</span>
+        </div>
+      </div>
     </div>
 
     <div class="card" id="fsec3">
@@ -1736,6 +1748,29 @@ function updateHighwayHint(){
   if (!hw || isRouteActive(route)) { hint.textContent = ''; hint.classList.remove('warn'); return; }
   hint.textContent = 'สายทางถูกโอนย้ายแล้ว';
   hint.classList.add('warn');
+}
+// พิกัดแปลงที่ดิน "ละติจูด, ลองจิจูด" (เช่น 12.7071, 101.1474) — ต้องอยู่ในประเทศไทย (แผน 17)
+function parseCoords(text){
+  const m = String(text || '').trim().match(/^(-?\d{1,2}(?:\.\d+)?)\s*[,\s]\s*(-?\d{2,3}(?:\.\d+)?)$/);
+  if (!m) return null;
+  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+  if (!(lat >= 5 && lat <= 21 && lng >= 97 && lng <= 106)) return null;
+  return { lat: lat, lng: lng };
+}
+function coordsMapUrl(c){ return 'https://maps.google.com/?q=' + c.lat + ',' + c.lng; }
+function coordsHtml(text){
+  const raw = String(text || '').trim();
+  if (!raw) return '-';
+  const c = parseCoords(raw);
+  return escapeHtml(raw) + (c ? ' · <a href="' + coordsMapUrl(c) + '" target="_blank" rel="noopener">เปิดแผนที่ ↗</a>' : '');
+}
+function updateCoordsHint(){
+  const el = document.getElementById('coordsHint');
+  if (!el) return;
+  const raw = document.getElementById('f_coords').value.trim();
+  if (!raw) { el.textContent = 'ตรวจจากเว็บกรมที่ดินแล้วนำพิกัดมาวาง'; return; }
+  const c = parseCoords(raw);
+  el.innerHTML = c ? '✓ พิกัดถูกต้อง · <a href="' + coordsMapUrl(c) + '" target="_blank" rel="noopener">ดูแผนที่ ↗</a>' : '⚠ รูปแบบไม่ถูกต้อง — ใส่ ละติจูด, ลองจิจูด เช่น 12.7071, 101.1474';
 }
 function updateKmHint(){
   const hw = document.getElementById('f_highway').value;
@@ -2634,7 +2669,7 @@ function updateCancelUi(){
 // ช่องข้อความทั่วไปของฟอร์ม (id = 'f_' + ชื่อฟิลด์)
 const TEXT_FIELDS = ['receivedFrom', 'incomingNo', 'purpose', 'purposeNote', 'side', 'location', 'deedNo', 'landNo', 'surveyPage',
   'tambon', 'amphoe', 'province', 'areaRai', 'areaNgan', 'areaWa', 'rowDistance', 'ownerName', 'ownerPhone', 'ownerAddress',
-  'proxyName', 'proxyPhone', 'proxyRelation', 'pointedBy', 'pointedWith', 'certNo', 'sentTo', 'archiveLocation', 'note', 'cancelReason'];
+  'proxyName', 'proxyPhone', 'proxyRelation', 'pointedBy', 'pointedWith', 'certNo', 'sentTo', 'archiveLocation', 'note', 'cancelReason', 'appointDate', 'coords'];
 const DEFAULT_PROVINCE = 'ระยอง';
 
 function clearForm(){
@@ -2660,6 +2695,7 @@ function clearForm(){
   updateDocUi();
   updateCancelUi();
   updateKmHint();
+  updateCoordsHint();
   updateHighwayHint();
 }
 
@@ -2689,6 +2725,7 @@ function loadRecordIntoForm(rec){
   updateDocUi();
   updateCancelUi();
   updateKmHint();
+  updateCoordsHint();
   updateHighwayHint();
   document.querySelector('.tab-btn[data-view="form"]').click();
   window.scrollTo({top:0, behavior:'smooth'});
@@ -2709,6 +2746,10 @@ async function saveForm(){
   const snap = formSnapshot();
   const early = STEPS.slice(1).find(s => snap[s.field] && snap[s.field] < dateReceived);
   if (early) { showToast('วันที่ขั้น "' + early.label + '" อยู่ก่อนวันที่รับเรื่อง — ตรวจสอบอีกครั้ง'); return; }
+  const apptRaw = document.getElementById('f_appointDate').value;
+  if (apptRaw && apptRaw < dateReceived) { showToast('วันนัดชี้แนวอยู่ก่อนวันที่รับเรื่อง — ตรวจสอบอีกครั้ง'); return; }
+  const coordsRaw = document.getElementById('f_coords').value.trim();
+  if (coordsRaw && !parseCoords(coordsRaw)) { showToast('พิกัดแปลงที่ดินไม่ถูกรูปแบบ — ใส่ ละติจูด, ลองจิจูด เช่น 12.7071, 101.1474'); return; }
   if (!recorderName) { openRecorderModal(); return; }
 
   const now = new Date().toISOString();
@@ -3141,6 +3182,8 @@ function openCaseDetailModal(id){
                   <dt>เนื้อที่</dt><dd>${escapeHtml(areaText(rec)) || '-'}</dd>
                   <dt>บริเวณ</dt><dd>${escapeHtml(rec.location) || '-'}</dd>
                   <dt>ระยะเขตทาง</dt><dd>${rec.rowDistance ? escapeHtml(rec.rowDistance) + ' ม. จากศูนย์กลาง' : '-'}</dd>
+                  <dt>วันนัดชี้แนว</dt><dd>${rec.appointDate ? escapeHtml(formatThaiDate(rec.appointDate)) : '-'}</dd>
+                  <dt>พิกัดแปลง</dt><dd>${coordsHtml(rec.coords)}</dd>
                 </dl></div>
               <div class="cd-card"><div class="cd-sec">เจ้าของที่ดิน${rec.hasProxy === 'มี' ? ' / ผู้รับมอบอำนาจ' : ''}</div>
                 <dl class="cd-dl">
@@ -4247,6 +4290,7 @@ async function init(){
   populateStepFilter();
   initCustomSelects();
   document.getElementById('f_dateReceived').addEventListener('change', () => { syncFiscalYearFromDate(); updateStepUi(); });
+  document.getElementById('f_coords').addEventListener('input', updateCoordsHint);
   initTabs();
   initPasswordToggles();
   document.addEventListener('click', (e) => {
