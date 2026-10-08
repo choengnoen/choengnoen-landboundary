@@ -929,6 +929,12 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .pipe-row:hover{background:var(--paper)}
 .pipe-row .rank{background:var(--amber-glow);color:var(--amber-deep)}
 .pipe-row .mini-track i{background:linear-gradient(90deg,#f6a35c,#e0620f)}
+/* ปุ่มหลักสีส้ม: เส้นใต้แท็บที่เลือก + ปุ่ม "ทุกปีงบประมาณ" ในแท็บภาพรวม ใช้สไตล์เดียวกับ .btn-primary */
+.tab-btn{border-bottom-width:3px}
+.tab-btn.active{border-bottom-color:transparent;background:linear-gradient(135deg,var(--amber-500),var(--amber)) bottom/100% 3px no-repeat border-box}
+#dashYearFilter button,.year-dropdown-btn{font-family:'Kanit',sans-serif;font-weight:600;font-size:14px;border-radius:10px;padding:9px 17px}
+#dashYearFilter button.active,.year-dropdown-btn.active{background:linear-gradient(135deg,var(--amber-500),var(--amber));color:#fff;border-color:transparent;box-shadow:0 4px 12px -2px rgba(224,98,15,.4)}
+#dashYearFilter button.active:hover,.year-dropdown-btn.active:hover{filter:brightness(1.06);color:#fff}
 </style>
 <script>function themeColor(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}</script></head>
 <body>
