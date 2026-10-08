@@ -689,6 +689,8 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .follow-foot{margin-top:10px;font-size:13px;color:var(--ink-soft);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .follow-foot a{color:var(--amber);font-weight:600;cursor:pointer}
 #dashSecondRow.single{grid-template-columns:1fr}
+/* กราฟ Chart.js ตั้งความกว้างเป็นพิกเซลตามกล่อง: ต้องให้การ์ดหดได้ มิฉะนั้นสลับ ปีเดียว → ทุกปีงบ แล้วคอลัมน์ซ้ายค้างกว้างดันกราฟขวาหลุดจอ */
+#dashFirstRow>.card,#dashSecondRow>.card{min-width:0}
 /* ===== ฟอร์มบันทึก: สารบัญด้านซ้าย + แถบบันทึกลอยด้านล่าง ===== */
 .form-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
 .form-main{min-width:0}
