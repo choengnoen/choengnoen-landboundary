@@ -19,17 +19,17 @@
 
 :root{
   --ink:#182430;
-  --ink-2:#06182e;
-  --sh:6,24,46;--tint:#eef4fb;--hd-lbl:#a9c3e0;--hd-dt:#cfdff0;--hd-loc:#e0ebf7;
+  --ink-2:#0a3a6b;
+  --sh:10,58,107;--tint:#eaf3fc;--hd-lbl:#cfe2f5;--hd-dt:#e3eefa;--hd-loc:#eef5fc;--hd-sub:#bcd3ee;--hd-tab:#a9c4e4;
   --ink-soft:#4d5a66;
   --ink-mute:#8792a0;
   --paper:#f4f7fa;
   --paper-2:#e9eef3;
   --card:#FFFFFF;
   --line:#dbe2ea;
-  --navy-900:#0b2f5a;
-  --navy-800:#124580;
-  --navy-700:#1d5fa8;
+  --navy-900:#0d4f8b;
+  --navy-800:#1668b3;
+  --navy-700:#2a82d0;
   --amber:#e0620f;
   --amber-500:#f07a1f;
   --amber-deep:#8a6a12;
@@ -75,21 +75,21 @@ h1,h2,h3,.display{font-family:'Kanit',sans-serif;font-weight:700}
 /* ตรากรม: ล็อคตำแหน่ง ห่างขอบบนหัวเว็บ 23px (20px + 3px) เท่ากับระบบควบคุมงานโครงการ */
 .brand-block{display:flex;align-items:flex-start;align-self:flex-start;gap:14px}
 .dept-logo{width:50px;height:50px;flex:none;margin-top:3px}
-.route-header .sub{font-size:13px;color:#9DA0A8;margin:0 0 14px}
-.route-header .who{font-size:12px;color:#787B84}
+.route-header .sub{font-size:13px;color:var(--hd-sub);margin:0 0 14px}
+.route-header .who{font-size:12px;color:var(--hd-sub)}
 
 .tabs{
   display:flex;gap:0;max-width:1180px;margin:14px auto 0;overflow-x:auto;
-  border-top:1px solid rgba(255,255,255,.08);
+  border-top:1px solid rgba(255,255,255,.12);
 }
 .tab-btn{
   font-family:'Kanit',sans-serif;font-weight:600;font-size:12.5px;
-  background:transparent;border:none;color:#84878F;
+  background:transparent;border:none;color:var(--hd-tab);
   padding:9px 13px;cursor:pointer;white-space:nowrap;
   border-bottom:2px solid transparent;letter-spacing:.01em;
   transition:color .15s;
 }
-.tab-btn:hover{color:#DEDFE2}
+.tab-btn:hover{color:#fff}
 .tab-btn.active{color:#fff;border-bottom-color:#c9a227}
 
 .view{display:none;padding-top:22px}
@@ -929,28 +929,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .pipe-row:hover{background:var(--paper)}
 .pipe-row .rank{background:var(--amber-glow);color:var(--amber-deep)}
 .pipe-row .mini-track i{background:linear-gradient(90deg,#f6a35c,#e0620f)}
-/* ===== โทนสีฟ้า 5 แบบ (เลือกได้จากปุ่มวงกลมมุมซ้ายล่าง) ===== */
-html[data-theme="sky"]{--ink-2:#072a45;--navy-900:#0a4a7a;--navy-800:#0f6aa8;--navy-700:#1a86c8;--sh:7,42,69;--tint:#ebf5fc;--hd-lbl:#a6d0ee;--hd-dt:#cde6f7;--hd-loc:#e0f0fb}
-html[data-theme="ocean"]{--ink-2:#062b36;--navy-900:#0a4a5e;--navy-800:#0e6a85;--navy-700:#1788a8;--sh:6,43,54;--tint:#ebf6f9;--hd-lbl:#a3d3de;--hd-dt:#cce8ef;--hd-loc:#dff2f6}
-html[data-theme="royal"]{--ink-2:#0a1740;--navy-900:#14296b;--navy-800:#1e3f9a;--navy-700:#2e5bc4;--sh:10,23,64;--tint:#eef2fc;--hd-lbl:#b0c0ee;--hd-dt:#d2dcf6;--hd-loc:#e3e9f9}
-html[data-theme="steel"]{--ink-2:#0e1f2e;--navy-900:#213f58;--navy-800:#315a7d;--navy-700:#43779f;--sh:14,31,46;--tint:#eff3f7;--hd-lbl:#b3c7d9;--hd-dt:#d3dfea;--hd-loc:#e3ebf2}
-.theme-pick{position:fixed;left:14px;bottom:14px;z-index:10001;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:999px;padding:7px 12px;box-shadow:var(--shadow-lg);font-size:12px;color:var(--ink-soft)}
-.theme-pick button{width:24px;height:24px;border-radius:50%;border:2px solid #fff;cursor:pointer;padding:0;box-shadow:0 0 0 1px var(--line);transition:transform .12s}
-.theme-pick button:hover{transform:scale(1.15)}
-.theme-pick button.on{box-shadow:0 0 0 2px var(--amber)}
-@media print{.theme-pick{display:none}}</style>
-<script>
-/* โทนสีฟ้า: จำค่าที่เลือกไว้ในเบราว์เซอร์ */
-var THEMES=[['navy','ฟ้าน้ำเงินเข้ม','#124580'],['sky','ฟ้าสดใส','#0f6aa8'],['ocean','ฟ้าอมเขียว (ทะเล)','#0e6a85'],['royal','ฟ้าครามเข้ม','#1e3f9a'],['steel','ฟ้าเทา (สุขุม)','#315a7d']];
-function themeColor(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
-function applyTheme(k){if(k==='navy')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',k);
-  var bs=document.querySelectorAll('.theme-pick button');for(var i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].dataset.t===k);
-  try{localStorage.setItem('lb_theme',k)}catch(e){}}
-(function(){var k='navy';try{k=localStorage.getItem('lb_theme')||'navy'}catch(e){} if(k!=='navy')document.documentElement.setAttribute('data-theme',k);
-  document.addEventListener('DOMContentLoaded',function(){var p=document.createElement('div');p.className='theme-pick';p.innerHTML='<span>โทนสี</span>';
-    THEMES.forEach(function(t){var b=document.createElement('button');b.type='button';b.dataset.t=t[0];b.title=t[1];b.style.background='linear-gradient(135deg,'+t[2]+' 50%,#f07a1f 50%)';b.onclick=function(){applyTheme(t[0])};p.appendChild(b)});
-    document.body.appendChild(p);applyTheme(k)});})();
-</script></head>
+</style>
+<script>function themeColor(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}</script></head>
 <body>
 <div class="page-loading-overlay" id="pageLoadingOverlay">
   <div class="page-loading-box">
@@ -969,7 +949,7 @@ function applyTheme(k){if(k==='navy')document.documentElement.removeAttribute('d
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
       <p class="who" id="whoDisplay" style="margin:0">ยังไม่ระบุผู้ใช้งาน</p>
-      <button class="btn btn-ghost btn-sm" style="color:#9DA0A8" id="btnChangeWho">เข้าสู่ระบบ</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--hd-sub)" id="btnChangeWho">เข้าสู่ระบบ</button>
     </div>
   </div>
   <div class="tabs-row">
