@@ -766,8 +766,6 @@ tr.asset-frequent:hover td{background:#efe4c2 !important}
 .hx-btn:hover{background:rgba(255,255,255,.2)}
 @media(max-width:900px){.header-export{position:static;transform:none;justify-content:flex-end;padding:8px 0 2px}}
 .list-count{text-align:right;font-size:12.5px;color:var(--ink-mute);margin:-4px 2px 8px}
-.scope-note{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-mute);margin:0 2px 10px}
-.scope-note[hidden]{display:none}
 /* ตารางรายการ 7 คอลัมน์: ช่องหลักบรรทัดบน + ข้อมูลรองบรรทัดล่างสีเทา */
 #dataTable th,#dataTable td{text-align:left}
 #dataTable td.case-cell b{font-weight:600}
@@ -932,7 +930,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 /* ปุ่มหลักสีส้ม: เส้นใต้แท็บที่เลือก + ปุ่ม "ทุกปีงบประมาณ" ในแท็บภาพรวม ใช้สไตล์เดียวกับ .btn-primary */
 .tab-btn{border-bottom-width:3px}
 .tab-btn.active{border-bottom-color:transparent;background:linear-gradient(135deg,var(--amber-500),var(--amber)) bottom/100% 3px no-repeat border-box}
-#dashYearFilter button,.year-dropdown-btn{font-family:'Kanit',sans-serif;font-weight:600;font-size:14px;border-radius:10px;padding:9px 17px}
+#dashYearFilter button,.year-dropdown-btn{font-family:'Kanit',sans-serif;font-weight:600}
 #dashYearFilter button.active,.year-dropdown-btn.active{background:linear-gradient(135deg,var(--amber-500),var(--amber));color:#fff;border-color:transparent;box-shadow:0 4px 12px -2px rgba(224,98,15,.4)}
 #dashYearFilter button.active:hover,.year-dropdown-btn.active:hover{filter:brightness(1.06);color:#fff}
 </style>
@@ -1248,7 +1246,6 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           </select>
         </div>
       </div>
-      <div class="scope-note" data-scope-note hidden></div>
       <div class="list-count" id="listCount"></div>
       <div class="table-wrap">
         <table class="data" id="dataTable">
@@ -1270,7 +1267,6 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
   <div class="view active" id="view-dash">
     <div class="pill-filter" id="dashYearFilter" style="margin-bottom:16px"></div>
-    <div class="scope-note" data-scope-note hidden></div>
 
     <div class="stat-cards">
       <div class="stat-card"><div class="big mono" id="statTotal">0</div><div class="lbl">เรื่องทั้งหมด</div></div>
@@ -1896,7 +1892,6 @@ function refreshVisibleViews(){
   const scrollY = window.scrollY;
   try {
     populateYearFilter();
-    renderScopeNotes();
     if (v === 'list') renderTable();
     if (v === 'dash') renderDashboard();
     if (v === 'routes') renderRoutesTable();
@@ -1904,60 +1899,23 @@ function refreshVisibleViews(){
   window.scrollTo(window.scrollX, scrollY);
 }
 
-/* ----- โหลดเฉพาะปีงบล่าสุด (ประหยัดโควตาการอ่านของ Firebase เมื่อข้อมูลสะสมหลายปี) -----
-   เปิดระบบ = อ่านเฉพาะปีงบปัจจุบันและปีก่อนหน้า / กด "ดูข้อมูลทุกปีงบประมาณ" = อ่านทั้งหมด (เฉพาะรอบที่เปิดหน้านี้อยู่) */
-const RECENT_YEAR_COUNT = 2;
-let caseScope = 'recent';   // recent | loading | all
-function recentCaseYears(){
-  const fy = thaiFiscalYearNow();
-  return Array.from({ length: RECENT_YEAR_COUNT }, (_, i) => fy - i);
-}
-function renderScopeNotes(){
-  const years = recentCaseYears();
-  document.querySelectorAll('[data-scope-note]').forEach(el => {
-    el.hidden = caseScope === 'all';
-    if (caseScope === 'loading') { el.textContent = 'กำลังโหลดข้อมูลทุกปีงบประมาณ…'; return; }
-    el.innerHTML = `<span>แสดงเฉพาะปีงบ ${years[years.length - 1]}–${years[0]}</span><button type="button" class="btn btn-outline btn-sm">ดูข้อมูลทุกปีงบประมาณ</button>`;
-    el.querySelector('button').onclick = loadAllCaseYears;
-  });
-}
-async function loadAllCaseYears(){
-  if (caseScope !== 'recent') return;
-  caseScope = 'loading'; renderScopeNotes();
-  try {
-    applyCaseDocs(await FBL.rewatch('boundaries', null));
-    caseScope = 'all';
-    refreshVisibleViews();
-  } catch (e) {
-    console.error('load all years failed', e);
-    caseScope = 'recent';
-    showToast('โหลดข้อมูลทุกปีไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต');
-  }
-  renderScopeNotes();
-}
-// บันทึกเรื่องย้อนหลังเกินช่วงที่โหลดไว้ → โหลดทุกปี เพื่อไม่ให้เรื่องหายจากรายการหลังบันทึก
-function ensureCaseYearLoaded(fy){
-  if (caseScope === 'recent' && fy && !recentCaseYears().includes(Number(fy))) loadAllCaseYears();
-}
-
 async function loadRecords(){
   try {
-    const docs = await FBL.watch('boundaries', onRemoteChange, caseScope === 'all' ? null : recentCaseYears());
+    const docs = await FBL.watch('boundaries', onRemoteChange);
     applyCaseDocs(docs);
   } catch (e) {
     console.error('load failed', e);
     showToast('โหลดข้อมูลไม่สำเร็จ ตรวจสอบอินเทอร์เน็ต');
     records = [];
   }
-  renderScopeNotes();
 }
 
 async function apiAddRecord(rec){
-  try { await FBL.saveCase(rec, true); ensureCaseYearLoaded(rec.fiscalYear); return true; }
+  try { await FBL.saveCase(rec, true); return true; }
   catch (e) { console.error('add failed', e); applyCaseDocs(FBL.docs('boundaries')); showToast('บันทึกไม่สำเร็จ: ' + FBL.errorText(e)); return false; }
 }
 async function apiUpdateRecord(rec){
-  try { await FBL.saveCase(rec, false); ensureCaseYearLoaded(rec.fiscalYear); return true; }
+  try { await FBL.saveCase(rec, false); return true; }
   catch (e) { console.error('update failed', e); applyCaseDocs(FBL.docs('boundaries')); showToast('บันทึกไม่สำเร็จ: ' + FBL.errorText(e)); return false; }
 }
 async function apiDeleteRecord(id){
