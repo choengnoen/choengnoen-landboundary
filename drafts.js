@@ -15,6 +15,8 @@
   // วันหยุดนักขัตฤกษ์สำรอง (ใช้เมื่อยังโหลดรายการจริงจาก Apps Script ไม่ได้) — ตั้งค่า window.DRAFT_HOLIDAY_URL ใน index.html เพื่อดึงรายการจริง
   var HOL_FALLBACK = ['2026-10-13', '2026-10-23', '2026-12-05', '2026-12-07', '2026-12-10', '2026-12-31', '2027-01-01'];
   var HOL_KEY = 'cn_draft_holidays_v1';
+  // URL Web app (ลงท้าย /exec) ของ Apps Script "แจ้งเตือน LINE" — ใส่แล้วหน้าเว็บจะดึงรายการวันหยุดตัวเดียวกับที่ LINE ใช้ (ตาราง public_holidays ของระบบบริหารหมวด) ให้วันครบกำหนดตรงกัน · เว้นว่าง = ใช้รายการสำรองข้างบน
+  var HOLIDAY_URL = '';
   var CFG = null, drafts = [], holSet = null, started = false, pendingId = null, pendingExisting = '', editingDraftId = null, showClosed = false;
 
   /* ---------- วันที่ / วันทำการ ---------- */
@@ -28,7 +30,7 @@
     holSet = {}; list.forEach(function (d) { holSet[String(d).slice(0, 10)] = 1; });
   }
   function fetchHolidays() {
-    var url = window.DRAFT_HOLIDAY_URL;
+    var url = window.DRAFT_HOLIDAY_URL || HOLIDAY_URL;
     if (!url || !/^https:\/\/script\.google\.com\/.+\/exec/.test(url)) return;
     fetch(url + (url.indexOf('?') < 0 ? '?' : '&') + 'a=holidays').then(function (r) { return r.json(); }).then(function (j) {
       if (!j || !Array.isArray(j.holidays) || !j.holidays.length) return;
