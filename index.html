@@ -939,6 +939,24 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 #dashYearFilter button,.year-dropdown-btn{font-family:'Kanit',sans-serif;font-weight:600}
 #dashYearFilter button.active,.year-dropdown-btn.active{background:linear-gradient(135deg,var(--amber-500),var(--amber));color:#fff;border-color:transparent;box-shadow:0 4px 12px -2px rgba(224,98,15,.4)}
 #dashYearFilter button.active:hover,.year-dropdown-btn.active:hover{filter:brightness(1.06);color:#fff}
+/* ===== รูปถ่ายประกอบเคส (ไม่เกิน 2 รูป · เก็บใน Google Drive) ===== */
+.ph-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.ph-grid{grid-template-columns:1fr}}
+.ph-slot{border:1px solid var(--line,#dfe2dd);border-radius:12px;padding:10px;background:var(--card,#fff)}
+.ph-title{font-weight:600;font-size:13px;margin-bottom:8px;color:var(--ink-soft,#4d5a66)}
+.ph-empty{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:4/3;border:2px dashed var(--line,#dfe2dd);border-radius:10px;background:var(--paper,#f5f6f4);color:var(--ink-soft,#4d5a66);font:inherit;font-size:14px}
+.ph-add{cursor:pointer}
+.ph-add:hover:not(:disabled){border-color:currentColor;color:var(--ink,#182430)}
+.ph-add:disabled{opacity:.55;cursor:not-allowed}
+.ph-img{width:100%;aspect-ratio:4/3;border-radius:10px;background:var(--paper-2,#eceee9) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--ink-mute,#8792a0);font-size:13px}
+.ph-bar{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+.ph-bar span{margin-right:auto;font-size:12px;color:var(--ink-soft,#4d5a66)}
+.cd-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cd-photo{aspect-ratio:4/3;border-radius:10px;border:1px solid var(--line,#dfe2dd);background:var(--paper-2,#eceee9) center/cover no-repeat;cursor:zoom-in;display:flex;align-items:center;justify-content:center;color:var(--ink-mute,#8792a0);font-size:12px}
+.ph-lightbox{position:fixed;inset:0;z-index:10001;background:rgba(7,27,48,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px}
+.ph-lightbox img{max-width:100%;max-height:calc(100vh - 90px);object-fit:contain;border-radius:8px;cursor:zoom-out}
+.ph-lb-bar{display:flex;gap:10px;align-items:center;color:#fff;font-size:14px}
+.ph-lb-bar .btn-outline{background:#fff;color:#182430;border-color:#fff;text-decoration:none}
 </style>
 <script>function themeColor(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}</script></head>
 <body>
@@ -1201,6 +1219,13 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <input type="text" id="f_cancelReason">
         </div>
       </div>
+    </div>
+
+    <div class="card" id="fsecPhoto">
+      <div class="section-title"><span class="num">6</span> รูปถ่ายประกอบ <span class="sub">ไม่เกิน 2 รูป · ไม่บังคับ</span></div>
+      <div class="ph-grid" id="photoGrid"></div>
+      <input type="file" accept="image/*" id="photoFile" style="display:none">
+      <div class="hint" id="photoHint" style="margin-top:10px"></div>
     </div>
 
     <div class="form-savebar">
@@ -2643,8 +2668,152 @@ const TEXT_FIELDS = ['receivedFrom', 'incomingNo', 'purpose', 'purposeNote', 'si
   'proxyName', 'proxyPhone', 'proxyRelation', 'pointedBy', 'pointedWith', 'certNo', 'sentTo', 'archiveLocation', 'note', 'cancelReason', 'appointDate', 'coords'];
 const DEFAULT_PROVINCE = 'ระยอง';
 
+/* ============ รูปถ่ายประกอบเคส (ไม่เกิน 2 รูป · เก็บใน Google Drive ผ่าน drive-bridge) ============
+   - เลือก/ถ่ายรูป → ย่อในเครื่องทันที (ด้านยาวไม่เกิน 1920 px) → ยังไม่อัปโหลดจนกว่าจะกด "บันทึกข้อมูล"
+   - ในเคสเก็บเฉพาะที่อยู่ไฟล์ rec.photos = [{ path, at, by }] · เอารูปออกจากเคส = ตัดออกจากรายการ (ไฟล์ใน Drive ถูกลบเฉพาะเมื่อผู้ทำเป็นเจ้าของ/ผู้ดูแลระบบ)
+   - ถ้าอัปโหลดรูปไม่สำเร็จ จะไม่บันทึกเคส (ข้อมูลในฟอร์มยังอยู่ กดบันทึกซ้ำได้ รูปที่อัปโหลดไปแล้วไม่อัปโหลดซ้ำ) */
+const PHOTO_SLOT_LABELS = ['ภาพแนวเขต / จุดชี้แนวเขต', 'ภาพหมุด / หลักเขต'];
+let formPhotos = [null, null];   // ช่องละ 1 รูป: null | { saved:{path,at,by}, view, blobUrl? } | { blob, blobUrl, view, name }
+let photoBusy = [false, false];
+let photoPickIdx = -1;
+
+function resetFormPhotos(saved){
+  formPhotos.forEach(s => { if (s && s.blobUrl) { try { URL.revokeObjectURL(s.blobUrl); } catch (e) {} } });
+  formPhotos = [null, null];
+  photoBusy = [false, false];
+  (saved || []).slice(0, 2).forEach((p, i) => { formPhotos[i] = { saved: p, view: '' }; });
+  renderPhotoSlots();
+}
+
+function renderPhotoSlots(){
+  const grid = document.getElementById('photoGrid');
+  if (!grid) return;
+  const on = !!(window.FBL && FBL.photosEnabled);
+  document.getElementById('photoHint').textContent = on
+    ? 'ถ่ายหรือเลือกรูปจากเครื่องได้ ระบบย่อรูปให้อัตโนมัติ (ด้านยาวไม่เกิน 1920 px) แล้วเก็บใน Google Drive ของหมวด · รูปจะถูกอัปโหลดตอนกด "บันทึกข้อมูล"'
+    : 'ยังไม่ได้ตั้งค่าที่เก็บรูป (Google Drive) — ผู้ดูแลระบบดูวิธีตั้งค่าในคู่มือติดตั้ง ส่วนอื่นของระบบใช้งานได้ตามปกติ';
+  grid.innerHTML = [0, 1].map(i => {
+    const s = formPhotos[i];
+    let body;
+    if (photoBusy[i]) {
+      body = '<div class="ph-empty">กำลังย่อรูป…</div>';
+    } else if (s) {
+      const note = s.blob ? ('รูปใหม่ ' + Math.round(s.blob.size / 1024) + ' KB · ยังไม่ได้บันทึก') : (s.blobUrl ? 'อัปโหลดแล้ว' : 'บันทึกแล้ว');
+      body = `<div class="ph-img" data-ph-img="${i}"${s.view ? ` style="background-image:url('${s.view}')"` : ''}>${s.view ? '' : 'กำลังโหลดรูป…'}</div>
+        <div class="ph-bar"><span>${note}</span>
+          <button type="button" class="btn btn-outline btn-sm" data-ph-pick="${i}"${on ? '' : ' disabled'}>เปลี่ยนรูป</button>
+          <button type="button" class="btn btn-outline btn-sm" data-ph-del="${i}">เอาออก</button></div>`;
+    } else {
+      body = `<button type="button" class="ph-empty ph-add" data-ph-pick="${i}"${on ? '' : ' disabled'}>＋ ถ่าย / เลือกรูป</button>`;
+    }
+    return `<div class="ph-slot"><div class="ph-title">${escapeHtml('รูปที่ ' + (i + 1) + ' · ' + PHOTO_SLOT_LABELS[i])}</div>${body}</div>`;
+  }).join('');
+  grid.querySelectorAll('[data-ph-pick]').forEach(b => { b.onclick = () => { photoPickIdx = +b.dataset.phPick; document.getElementById('photoFile').click(); }; });
+  grid.querySelectorAll('[data-ph-del]').forEach(b => { b.onclick = () => {
+    const i = +b.dataset.phDel, s = formPhotos[i];
+    if (s && s.blobUrl) { try { URL.revokeObjectURL(s.blobUrl); } catch (e) {} }
+    formPhotos[i] = null; renderPhotoSlots();
+  }; });
+  // รูปที่บันทึกไว้แล้ว: โหลดมาแสดง
+  formPhotos.forEach((s, i) => {
+    if (!s || !s.saved || s.view || s.loading || !on) return;
+    s.loading = true;
+    FBL.photoUrl(s.saved.path).then(u => {
+      s.loading = false;
+      if (formPhotos[i] !== s) return;
+      const el = grid.querySelector('[data-ph-img="' + i + '"]');
+      if (!el) return;
+      if (u) { s.view = u; el.style.backgroundImage = 'url("' + u + '")'; el.textContent = ''; }
+      else el.textContent = 'โหลดรูปไม่ได้';
+    });
+  });
+}
+
+async function onPhotoFilePicked(ev){
+  const f = ev.target.files && ev.target.files[0];
+  const i = photoPickIdx;
+  ev.target.value = '';
+  if (!f || i < 0) return;
+  photoBusy[i] = true; renderPhotoSlots();
+  try {
+    const blob = await FBL.compressPhoto(f);
+    const old = formPhotos[i];
+    if (old && old.blobUrl) { try { URL.revokeObjectURL(old.blobUrl); } catch (e) {} }
+    const url = URL.createObjectURL(blob);
+    formPhotos[i] = { blob, blobUrl: url, view: url, name: f.name };
+  } catch (e) { showToast(e && e.message ? e.message : 'เลือกรูปไม่สำเร็จ'); }
+  photoBusy[i] = false; renderPhotoSlots();
+}
+(function(){ const f = document.getElementById('photoFile'); if (f) f.addEventListener('change', onPhotoFilePicked); })();
+setTimeout(renderPhotoSlots, 0);
+
+function setSaveButtonText(text){
+  const btn = document.getElementById('btnSave');
+  if (btn && btn.classList.contains('btn-loading')) btn.innerHTML = '<span class="btn-spinner"></span>' + text;
+}
+// อัปโหลดรูปใหม่ในฟอร์ม แล้วคืนรายการรูปทั้งหมดของเคส (โยนข้อผิดพลาดถ้าอัปโหลดไม่สำเร็จ → ไม่บันทึกเคส)
+async function commitFormPhotos(caseId, fiscalYear){
+  const kept = [];
+  const total = formPhotos.filter(s => s && s.blob).length;
+  let n = 0;
+  for (const s of formPhotos) {
+    if (!s) continue;
+    if (!s.saved) {
+      n++;
+      setSaveButtonText('กำลังอัปโหลดรูป ' + n + '/' + total + '…');
+      s.saved = await FBL.uploadPhoto(fiscalYear, caseId, s.blob);
+      s.blob = null;   // อัปโหลดแล้ว — ถ้าบันทึกเคสไม่สำเร็จแล้วกดซ้ำ จะไม่อัปโหลดซ้ำ
+    }
+    kept.push(s.saved);
+  }
+  if (total) setSaveButtonText('กำลังบันทึก...');
+  return kept;
+}
+// หลังบันทึกเคสสำเร็จ: รูปเดิมที่ถูกเอาออก/เปลี่ยน → ลบไฟล์ใน Drive (เฉพาะเจ้าของ/ผู้ดูแลระบบ; คนอื่นไฟล์ยังอยู่ใน Drive แต่ไม่แสดงในเคสแล้ว)
+function finishPhotoCleanup(oldPaths, newPhotos){
+  const keep = new Set((newPhotos || []).map(p => p.path));
+  const gone = (oldPaths || []).filter(p => !keep.has(p));
+  if (gone.length && window.FBL && FBL.deletePhotoFiles) FBL.deletePhotoFiles(gone);
+}
+
+// การ์ด "รูปถ่าย" ในหน้าต่างรายละเอียดเคส
+function casePhotosCardHtml(rec){
+  const ph = FBL.photosOf(rec);
+  if (!ph.length && !FBL.photosEnabled) return '';
+  const body = ph.length
+    ? `<div class="cd-photos">${ph.map((p, i) => `<div class="cd-photo" data-cdph="${i}" title="กดเพื่อดูรูปขยาย"><span>กำลังโหลดรูป…</span></div>`).join('')}</div>`
+    : '<p class="hint" style="text-align:center;padding:8px 0">ยังไม่มีรูปถ่าย</p>';
+  return `<div class="cd-card"><div class="cd-sec">รูปถ่าย <span class="cd-count">${ph.length} รูป</span></div>${body}</div>`;
+}
+function hydrateCasePhotos(rec){
+  FBL.photosOf(rec).forEach((p, i) => {
+    const el = document.querySelector('[data-cdph="' + i + '"]');
+    if (!el) return;
+    FBL.photoUrl(p.path).then(u => {
+      if (!document.body.contains(el)) return;
+      if (!u) { el.innerHTML = '<span>โหลดรูปไม่ได้</span>'; return; }
+      el.innerHTML = ''; el.style.backgroundImage = 'url("' + u + '")';
+      el.onclick = () => openPhotoLightbox(u, 'รูปที่ ' + (i + 1) + ' ' + (PHOTO_SLOT_LABELS[i] || ''));
+    });
+  });
+}
+function openPhotoLightbox(url, title){
+  const old = document.getElementById('photoLightbox');
+  if (old) old.remove();
+  const d = document.createElement('div');
+  d.id = 'photoLightbox'; d.className = 'ph-lightbox';
+  d.innerHTML = `<div class="ph-lb-bar"><span>${escapeHtml(title)}</span><a href="${url}" download="${escapeHtml(title)}.jpg" class="btn btn-outline btn-sm">ดาวน์โหลด</a><button type="button" class="btn btn-primary btn-sm" id="phLbClose">ปิด</button></div><img src="${url}" alt="">`;
+  const onKey = ev => { if (ev.key === 'Escape') close(); };
+  const close = () => { d.remove(); document.removeEventListener('keydown', onKey); };
+  d.addEventListener('click', ev => { if (ev.target === d || ev.target.tagName === 'IMG') close(); });
+  d.querySelector('#phLbClose').onclick = close;
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(d);
+}
+
 function clearForm(){
   editingId = null;
+  resetFormPhotos([]);
   document.getElementById('editingHint').textContent = '';
   document.getElementById('editModeBanner').style.display = 'none';
   document.querySelector('.tab-btn[data-view="form"]').textContent = '＋ บันทึกเรื่องใหม่';
@@ -2672,6 +2841,7 @@ function clearForm(){
 
 function loadRecordIntoForm(rec){
   editingId = rec.id;
+  resetFormPhotos(FBL.photosOf(rec));
   const seqMap = computeSeqMap();
   const caseNo = caseNoOf(rec, seqMap);
   document.getElementById('editingHint').textContent = 'กำลังแก้ไขเรื่อง: ' + caseNo;
@@ -2746,6 +2916,10 @@ async function saveForm(){
   if (!rec.cancelled) rec.cancelReason = '';
 
   setSaveButtonLoading(true);
+  const prevRecForPhotos = editingId ? records.find(r => r.id === editingId) : null;
+  const prevPhotoPaths = FBL.photosOf(prevRecForPhotos).map(p => p.path);
+  try { rec.photos = await commitFormPhotos(rec.id, rec.fiscalYear); }
+  catch (e) { setSaveButtonLoading(false); showToast('อัปโหลดรูปไม่สำเร็จ: ' + (e && e.message ? e.message : e) + ' — ยังไม่ได้บันทึกเคส กดบันทึกอีกครั้งได้'); return; }
   let saved;
   if (editingId) {
     const idx = records.findIndex(r => r.id === editingId);
@@ -2758,6 +2932,7 @@ async function saveForm(){
   setSaveButtonLoading(false);
   // บันทึกไม่สำเร็จ (เช่น สัญญาณหลุด/ไม่มีสิทธิ์): คงข้อมูลในฟอร์มไว้ให้กดบันทึกซ้ำได้ ไม่แสดง "บันทึกสำเร็จ" หลอก
   if (!saved) { renderTable(); return; }
+  finishPhotoCleanup(prevPhotoPaths, rec.photos);
   showSaveSuccessModal(!!editingId, rec);
   clearForm();
   populateYearFilter();
@@ -3179,6 +3354,7 @@ function openCaseDetailModal(id){
                 </dl></div>
             </div>
             <div>
+              ${casePhotosCardHtml(rec)}
               <div class="cd-card"><div class="cd-sec">ขั้นตอนการดำเนินงาน <span class="cd-count">${Math.max(0, cur + 1)} / ${STEPS.length} ขั้น</span></div>
                 ${timelineHtml}</div>
               <div class="cd-card"><div class="cd-sec">เอกสารหลักฐานที่ต้องจัดส่ง <span class="cd-count">ครบ ${dp.have} / ${dp.need}</span></div>
@@ -3194,6 +3370,7 @@ function openCaseDetailModal(id){
       </div>
     </div>`;
 
+  hydrateCasePhotos(rec);
   document.getElementById('caseDetailCloseX').onclick = () => { root.innerHTML = ''; };
   document.getElementById('caseDetailClose').onclick = () => { root.innerHTML = ''; };
   document.getElementById('caseDetailEdit').onclick = () => { root.innerHTML = ''; loadRecordIntoForm(rec); };

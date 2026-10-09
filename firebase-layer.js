@@ -41,6 +41,10 @@
   // ระบบล็อกอินด้วยชื่อ-นามสกุล แต่ Firebase Auth ต้องการอีเมล จึงสร้างอีเมลสังเคราะห์ให้แต่ละคน
   // (โดเมน .invalid เป็นโดเมนที่ไม่มีอยู่จริงตามมาตรฐาน — ไม่มีการส่งอีเมลใดๆ ออกไปทั้งสิ้น)
   const EMAIL_DOMAIN = 'landboundary.invalid';
+  // ▼▼▼ วาง URL ของ drive-bridge (Apps Script → Deploy → Web app ลงท้ายด้วย /exec) ▼▼▼
+  //     เว้นว่าง = ยังไม่เปิดใช้การแนบรูปถ่าย (ส่วนอื่นของระบบทำงานตามปกติ)
+  const DRIVE_BRIDGE_URL = 'https://script.google.com/macros/s/AKfycbyt0LmzcKG1AIxUrQsfxgsTIg1rQzT5dXiDKm8BYBZNzuTzsnoIzdrkJVW6h6aH-uKT/exec';
+  // ▲▲▲ ------------------------------------------------------------------------------------ ▲▲▲
   const CASES = 'boundaries';
 
   firebase.initializeApp(firebaseConfig);
@@ -492,6 +496,13 @@
     } catch (e) { throw new Error(thErr(e)); }
   };
 
+  /* ---------- รายการร่าง (drafts) — ตาราง "รายการร่าง" ในหน้าบันทึกรายการใหม่ ---------- */
+  FBL.saveDraft = async function (d) {
+    if (!d || !d.id) throw new Error('ไม่มีรหัสร่าง');
+    const ref = db.collection('drafts').doc(String(d.id));
+    await ref.set(clean(Object.assign({}, d, { updatedAt: nowIso(), updatedBy: FBL.user ? FBL.user.name : '' })), { merge: true });
+  };
+
   /* ---------- อ่านข้อมูลแบบ realtime ---------- */
   const subs = {};
   // คืน Promise ที่ resolve เมื่อได้ข้อมูลชุดแรก; การเปลี่ยนแปลงถัดไปเรียก onChange(collection, docs)
@@ -521,11 +532,13 @@
     s.first = new Promise(function (resolve) {
       s.unsub = q.onSnapshot(function (snap) {
         s.docs = snap.docs.map(function (d) { return Object.assign({}, d.data(), { __id: d.id }); });
+        if (FBL.watchFailed) delete FBL.watchFailed[col];
         if (!s.firstDone) { s.firstDone = true; resolve(s.docs); }
         else if (s.onChange) { try { s.onChange(col, s.docs); } catch (e) { console.error(e); } }
       }, function (err) {
         console.error('watch ' + col + ' failed', err);
-        if (FBL.onError && col !== 'presence') FBL.onError(thErr(err));   // presence: ยังไม่ได้ประกาศ Rules ก็ไม่ต้องเตือน
+        if (col === 'drafts') { FBL.watchFailed = FBL.watchFailed || {}; FBL.watchFailed.drafts = thErr(err); }
+        else if (FBL.onError && col !== 'presence') FBL.onError(thErr(err));   // presence: ยังไม่ได้ประกาศ Rules ก็ไม่ต้องเตือน
         if (!s.firstDone) { s.firstDone = true; resolve([]); }
       });
     });
@@ -590,6 +603,149 @@
     batch.delete(ref);
     batch.set(logRef(), logEntry('permanentDelete', CASES, id, before));
     await batch.commit();
+    FBL.deletePhotoFiles(photoPathsOf(before));   // ลบรูปของเคสนี้ใน Drive ด้วย (ไม่รอผล · ลบไม่สำเร็จก็ไม่กระทบการลบเคส)
+  };
+  /* ---------- รูปถ่ายประกอบเคส (Google Drive ผ่านตัวกลาง drive-bridge.gs) ----------
+     - ในเคสเก็บเฉพาะที่อยู่ไฟล์: rec.photos = [{ path, at, by }] (ไม่เกิน 2 รูป) — ตัวรูปอยู่ใน Google Drive ไม่กินพื้นที่ Firestore
+     - ย่อรูปในเบราว์เซอร์ก่อนส่ง: ด้านยาวไม่เกิน 1920 px, JPEG คุณภาพ 80% (ประมาณ 0.5–0.7 MB ต่อรูป)
+     - ตัวกลางตรวจว่าผู้ขอล็อกอินอยู่และมีชื่อในทีมของระบบนี้ก่อนทุกครั้ง · ไฟล์ไม่แชร์สาธารณะ
+     - ลบไฟล์ใน Drive ได้เฉพาะเจ้าของระบบ/ผู้ดูแลระบบ (ย้ายเข้าถังขยะของ Drive กู้คืนได้ 30 วัน)
+     - ยังไม่ได้ตั้ง DRIVE_BRIDGE_URL = หน้าเว็บแจ้งว่ายังไม่ได้ตั้งค่าที่เก็บรูป ส่วนอื่นของระบบทำงานเหมือนเดิม */
+  const PHOTO_OK = /^https:\/\/script\.google\.com\/.+\/exec$/.test(DRIVE_BRIDGE_URL);
+  const PHOTO_MAX = 2, PHOTO_SIDE = 1920, PHOTO_QUALITY = 0.8, PHOTO_CACHE = 'landboundary-photos-v1';
+  FBL.photosEnabled = PHOTO_OK;
+  FBL.photoMax = PHOTO_MAX;
+
+  // รายการรูปที่ใช้ได้ของเคส (ตัดรายการที่ข้อมูลไม่ครบ / เกิน 2 รูป)
+  FBL.photosOf = function (rec) {
+    const a = rec && Array.isArray(rec.photos) ? rec.photos : [];
+    return a.filter(function (p) { return p && typeof p.path === 'string' && p.path; }).slice(0, PHOTO_MAX);
+  };
+  function photoPathsOf(doc) { return FBL.photosOf(doc).map(function (p) { return p.path; }); }
+  function photoSeg(s) { return String(s === undefined || s === null || s === '' ? '-' : s).replace(/[^0-9A-Za-z฀-๿._-]+/g, '_'); }
+
+  async function photoBridge(body) {
+    if (!auth.currentUser) throw new Error('ยังไม่ได้ล็อกอิน');
+    body.idToken = await auth.currentUser.getIdToken();
+    let r, j;
+    // text/plain = ไม่ต้องมีคำขอ preflight (Apps Script ไม่รองรับ OPTIONS)
+    try { r = await fetch(DRIVE_BRIDGE_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) }); }
+    catch (e) { throw new Error('เชื่อมต่อ Google Drive ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'); }
+    try { j = await r.json(); } catch (e) { throw new Error('ตัวกลาง Google Drive ตอบกลับผิดรูปแบบ (ตรวจสอบการ Deploy ของ drive-bridge ว่าเลือก Who has access = Anyone)'); }
+    if (!j.ok) throw new Error(j.error || 'Google Drive ทำรายการไม่สำเร็จ');
+    return j;
+  }
+  function phToB64(u8) {
+    let s = '';
+    for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+    return btoa(s);
+  }
+  function phFromB64(s) {
+    const bin = atob(s), u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return u8;
+  }
+
+  // อ่านรูปจาก Drive: คำขอที่เกิดพร้อมกันรวมเป็นคำขอเดียว (ครั้งละไม่เกิน 4 รูป)
+  let phQueue = [], phTimer = null;
+  function phDriveGet(path) {
+    return new Promise(function (resolve, reject) {
+      phQueue.push({ path: path, resolve: resolve, reject: reject });
+      if (!phTimer) phTimer = setTimeout(phFlush, 40);
+    });
+  }
+  function phFlush() {
+    phTimer = null;
+    const all = phQueue.splice(0, phQueue.length);
+    for (let i = 0; i < all.length; i += 4) {
+      const part = all.slice(i, i + 4);
+      photoBridge({ action: 'get', paths: part.map(function (x) { return x.path; }) }).then(function (j) {
+        const by = {};
+        (j.files || []).forEach(function (f) { by[f.path] = f; });
+        part.forEach(function (x) {
+          const f = by[x.path];
+          x.resolve(f && !f.missing ? new Blob([phFromB64(f.data)], { type: f.type || 'image/jpeg' }) : null);
+        });
+      }, function (e) { part.forEach(function (x) { x.reject(e); }); });
+    }
+  }
+
+  // สำเนาในเครื่อง (Cache Storage): รูปไม่เปลี่ยนหลังอัปโหลด จึงไม่ต้องโหลดซ้ำ · ล้างทิ้งเมื่อออกจากระบบ · ใช้ไม่ได้ก็ข้าม
+  function phLocalKey(path) { return new URL('__photos__/' + encodeURIComponent(path), location.href).href; }
+  async function phLocalGet(path) {
+    try { const r = await (await caches.open(PHOTO_CACHE)).match(phLocalKey(path)); return r ? await r.blob() : null; } catch (e) { return null; }
+  }
+  async function phLocalPut(path, blob) {
+    try { await (await caches.open(PHOTO_CACHE)).put(phLocalKey(path), new Response(blob, { headers: { 'Content-Type': blob.type || 'image/jpeg' } })); } catch (e) { /* ข้าม */ }
+  }
+  async function phLocalDel(path) { try { await (await caches.open(PHOTO_CACHE)).delete(phLocalKey(path)); } catch (e) { /* ข้าม */ } }
+  const phUrlCache = {}, phPending = {};
+  function phClearLocal() {
+    Object.keys(phUrlCache).forEach(function (k) { try { URL.revokeObjectURL(phUrlCache[k]); } catch (e) { /* ข้าม */ } delete phUrlCache[k]; });
+    try { if (window.caches) caches.delete(PHOTO_CACHE); } catch (e) { /* ข้าม */ }
+  }
+  auth.onAuthStateChanged(function (u) { if (!u) phClearLocal(); });
+
+  // ย่อรูปในเบราว์เซอร์ → Blob JPEG
+  FBL.compressPhoto = function (file) {
+    return new Promise(function (resolve, reject) {
+      if (!file || (!/^image\//.test(file.type || '') && !/\.(jpe?g|png|webp|gif|bmp|heic|heif)$/i.test(file.name || ''))) { reject(new Error('ไฟล์ที่เลือกไม่ใช่รูปภาพ')); return; }
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        try {
+          const s = Math.min(1, PHOTO_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+          const w = Math.max(1, Math.round(img.naturalWidth * s)), h = Math.max(1, Math.round(img.naturalHeight * s));
+          const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+          const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h);
+          cx.imageSmoothingQuality = 'high'; cx.drawImage(img, 0, 0, w, h);
+          cv.toBlob(function (b) { URL.revokeObjectURL(url); if (b) resolve(b); else reject(new Error('ย่อรูปไม่สำเร็จ')); }, 'image/jpeg', PHOTO_QUALITY);
+        } catch (e) { URL.revokeObjectURL(url); reject(new Error('ย่อรูปไม่สำเร็จ')); }
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('เปิดรูปนี้ไม่ได้ — ใช้ไฟล์รูป JPG หรือ PNG')); };
+      img.src = url;
+    });
+  };
+
+  // อัปโหลดรูปที่ย่อแล้ว → คืน { path, at, by } สำหรับเก็บในเคส · ชื่อไฟล์ไม่ซ้ำทุกครั้ง (ไม่เขียนทับรูปเดิม)
+  FBL.uploadPhoto = async function (folderKey, caseId, blob) {
+    if (!PHOTO_OK) throw new Error('ยังไม่ได้ตั้งค่าที่เก็บรูป (DRIVE_BRIDGE_URL)');
+    const path = 'photos/' + photoSeg(folderKey) + '/' + photoSeg(caseId) + '/' + Date.now().toString(36) + '-' + randomId(6) + '.jpg';
+    const u8 = new Uint8Array(await blob.arrayBuffer());
+    const j = await photoBridge({ action: 'put', path: path, type: 'image/jpeg', data: phToB64(u8) });
+    if (j.size !== u8.length) throw new Error('อัปโหลดรูปไม่ครบ กรุณาลองใหม่');
+    await phLocalPut(path, blob);
+    return { path: path, at: nowIso(), by: FBL.user ? FBL.user.name : '' };
+  };
+
+  // คืน blob: URL สำหรับแสดงรูป (ว่าง = โหลดไม่ได้)
+  FBL.photoUrl = function (path) {
+    if (!path || !PHOTO_OK) return Promise.resolve('');
+    if (phUrlCache[path]) return Promise.resolve(phUrlCache[path]);
+    if (phPending[path]) return phPending[path];
+    phPending[path] = (async function () {
+      try {
+        let blob = await phLocalGet(path);
+        if (!blob) { blob = await phDriveGet(path); if (blob) phLocalPut(path, blob); }
+        if (!blob) return '';
+        phUrlCache[path] = URL.createObjectURL(blob);
+        return phUrlCache[path];
+      } catch (e) { console.warn('photoUrl', path, e && e.message); return ''; }
+      finally { delete phPending[path]; }
+    })();
+    return phPending[path];
+  };
+
+  // ลบไฟล์รูปใน Drive (เจ้าของระบบ/ผู้ดูแลระบบเท่านั้น — คนอื่นเรียกแล้วข้ามไปเงียบๆ) ไม่ทำให้การบันทึกล้มเหลวถ้าลบไม่สำเร็จ
+  FBL.deletePhotoFiles = async function (paths) {
+    if (!PHOTO_OK || !FBL.user || !(FBL.user.isOwner || FBL.user.isAdmin)) return;
+    for (let i = 0; i < (paths || []).length; i++) {
+      const p = paths[i];
+      try {
+        await photoBridge({ action: 'del', path: p });
+        await phLocalDel(p);
+        if (phUrlCache[p]) { URL.revokeObjectURL(phUrlCache[p]); delete phUrlCache[p]; }
+      } catch (e) { console.warn('deletePhotoFiles', p, e && e.message); }
+    }
   };
 
   /* ---------- สายทาง ---------- */
