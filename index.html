@@ -14,6 +14,7 @@
 <!-- ฐานข้อมูลกลาง (สายทาง / บัญชีเขตทาง) จาก CN-Hub — ถ้าโหลดไม่ได้ ระบบใช้สายทางเดิมในโปรเจกต์นี้แทน -->
 <script src="https://choengnoen.github.io/choengnoen-Hub/master-client.js"></script>
 <script src="firebase-layer.js"></script>
+<script src="drafts.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@600;700&family=Sarabun:wght@400;500;600;700&display=swap');
 
@@ -957,6 +958,42 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .ph-lightbox img{max-width:100%;max-height:calc(100vh - 90px);object-fit:contain;border-radius:8px;cursor:zoom-out}
 .ph-lb-bar{display:flex;gap:10px;align-items:center;color:#fff;font-size:14px}
 .ph-lb-bar .btn-outline{background:#fff;color:#182430;border-color:#fff;text-decoration:none}
+/* ===== ปุ่มไอคอน "คัดลอกเป็นรูป" + ปุ่ม × ในหัวหน้าต่างรายละเอียดเคส (วงกลมเทาอ่อน ไอคอนเส้นเรียบ) ===== */
+.cd-hd-actions{display:flex;align-items:center;gap:8px;flex:none}
+.cd-copy,.case-modal .cd-hd .modal-close{width:40px;height:40px;border:0;border-radius:50%;padding:0;display:inline-grid;place-items:center;background:#eef0f6;color:#2b3445;cursor:pointer;transition:background .15s,color .15s,transform .1s}
+.cd-copy:hover,.case-modal .cd-hd .modal-close:hover{background:#fff;color:#2b3445}
+.cd-copy:active,.case-modal .cd-hd .modal-close:active{transform:scale(.94)}
+.case-modal .cd-hd .modal-close{font-size:22px;line-height:1}
+.cd-copy svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.cd-copy:disabled{cursor:wait}
+.cd-copy.ok,.cd-copy.ok:hover{background:#d7f0e1;color:#1c8a53}
+.cd-copy-spin{width:18px;height:18px;border-radius:50%;border:2px solid rgba(43,52,69,.25);border-top-color:#2b3445;animation:cdCopySpin .8s linear infinite}
+@keyframes cdCopySpin{to{transform:rotate(360deg)}}
+/* ===== ชุดสไตล์ของรูปที่ใช้วางใน LINE (แนวนอน กว้าง 1100 px) ===== */
+.cd-snap-stage{position:fixed;left:-12000px;top:0;z-index:-1;width:auto}
+.cd-snap-stage .snap{display:block;width:1100px;max-width:none;max-height:none;overflow:visible;animation:none;box-shadow:none;border-radius:0;padding:0}
+.cd-snap-stage .snap .modal-body{overflow:visible;max-height:none;margin:0;padding:12px 14px}
+.snap .cd-hd{padding:14px 20px 12px}
+.snap .cd-hd h3{font-size:26px}
+.snap .snap-grid{display:grid;gap:10px}
+.snap .snap-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.snap .cd-tiles{grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:0}
+.snap .cd-tile{padding:6px 10px}
+.snap .cd-card{padding:9px 12px;margin-bottom:0}
+.snap .cd-sec{font-size:14px;margin-bottom:6px}
+.snap .cd-dl.wide{display:grid;grid-template-columns:62px 1fr 62px 1fr;gap:3px 8px;font-size:13px}
+.snap .cd-dl.wide dd.full{grid-column:2 / -1}
+.snap .cd-divider{margin:8px 0}
+.snap .cd-photos{gap:8px}
+.snap .cd-photo{aspect-ratio:4/3}
+.snap .snap-items2{display:grid;grid-template-columns:1fr 1fr;column-gap:20px}
+.snap .cd-item{padding:4px 0}
+.snap .cd-item b{font-size:13px}
+.snap .cd-q{font-size:11.5px}
+.snap .cd-receipt{padding:8px 13px;margin-top:8px}
+.snap .cd-ln{font-size:13px;padding:1px 0}
+.snap .cd-grand{font-size:21px}
+.snap-stamp{padding:8px 16px 10px;background:#fff;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-mute);text-align:center}
 </style>
 <script>function themeColor(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}</script></head>
 <body>
@@ -999,6 +1036,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 <div class="shell">
 
   <div class="view" id="view-form">
+   <div id="draftPanel" style="margin-bottom:14px"></div>
    <div class="form-layout">
     <div class="form-main">
     <div class="edit-mode-banner" id="editModeBanner">
@@ -1926,6 +1964,7 @@ function refreshVisibleViews(){
     if (v === 'list') renderTable();
     if (v === 'dash') renderDashboard();
     if (v === 'routes') renderRoutesTable();
+    if (v === 'form' && window.DRAFTS) DRAFTS.render();
   } catch (e) { console.error('refresh failed', e); }
   window.scrollTo(window.scrollX, scrollY);
 }
@@ -2446,6 +2485,7 @@ function initTabs(){
       if (btn.dataset.view === 'dash') renderDashboard();
       if (btn.dataset.view === 'settings') renderTeamPanel();
       if (btn.dataset.view === 'routes') renderRoutesTable();
+      if (btn.dataset.view === 'form' && window.DRAFTS) DRAFTS.render();
       recordViewInHistory(btn.dataset.view);
     });
   });
@@ -2813,6 +2853,7 @@ function openPhotoLightbox(url, title){
 
 function clearForm(){
   editingId = null;
+  if (window.DRAFTS) DRAFTS.clearPending();
   resetFormPhotos([]);
   document.getElementById('editingHint').textContent = '';
   document.getElementById('editModeBanner').style.display = 'none';
@@ -2841,6 +2882,7 @@ function clearForm(){
 
 function loadRecordIntoForm(rec){
   editingId = rec.id;
+  if (window.DRAFTS) DRAFTS.clearPending();
   resetFormPhotos(FBL.photosOf(rec));
   const seqMap = computeSeqMap();
   const caseNo = caseNoOf(rec, seqMap);
@@ -2933,6 +2975,7 @@ async function saveForm(){
   // บันทึกไม่สำเร็จ (เช่น สัญญาณหลุด/ไม่มีสิทธิ์): คงข้อมูลในฟอร์มไว้ให้กดบันทึกซ้ำได้ ไม่แสดง "บันทึกสำเร็จ" หลอก
   if (!saved) { renderTable(); return; }
   finishPhotoCleanup(prevPhotoPaths, rec.photos);
+  if (window.DRAFTS) await DRAFTS.afterCaseSaved(rec, !editingId);   // ผูกกับรายการร่าง / สร้างร่างอัตโนมัติ (ต้องเรียกก่อน clearForm)
   showSaveSuccessModal(!!editingId, rec);
   clearForm();
   populateYearFilter();
@@ -3094,6 +3137,50 @@ async function startAuth(){
   FBL.onAuth(handleAuthResult);
 }
 
+/* ============ ตาราง "รายการร่าง" (drafts.js) — ติดตามเรื่องที่ชี้แนวเขตแล้วจนส่งเอกสารถึงแขวง ============ */
+function initDrafts(){
+  if (!window.DRAFTS) return;
+  DRAFTS.init({
+    sys: 'boundary', startLabel: 'วันชี้แนวเขต', caseCol: 'boundaries',
+    startOf: c => c.pointedDate, sentOf: c => c.sentDate, doneOf: c => !!normalizeDateStr(c.archivedDate) || c.cancelled === true,
+    highways: () => ROUTES.filter(isRouteActive).map(r => ({ value: r.highway, label: r.highway + (r.section ? ' (' + r.section + ')' : '') })),
+    parseKm: parseKm,
+    openNew: prefillFormFromDraft,
+    openCase: id => { const rec = records.find(r => r.id === id); if (rec) loadRecordIntoForm(rec); else showToast('ไม่พบเรื่องนี้ (อาจถูกลบ)'); }
+  });
+  DRAFTS.start();
+  DRAFTS.render();
+}
+// กดปุ่ม "บันทึกเคส" ที่ร่าง: ถ้ามีเรื่องเดิม (ทล. เดียวกัน กม. ใกล้กัน ยังไม่มีวันชี้แนว) ให้เติมวันชี้แนวลงเรื่องเดิม ไม่ซ้ำ · ไม่มีก็เปิดฟอร์มเรื่องใหม่
+function prefillFormFromDraft(p){
+  const cand = records
+    .filter(r => !r.cancelled && !r.pointedDate && String(r.highway) === String(p.highway) && r.km != null && Math.abs(Number(r.km) - Number(p.km)) <= 500)
+    .sort((a, b) => Math.abs(a.km - p.km) - Math.abs(b.km - p.km));
+  if (cand.length) {
+    const r = cand[0];
+    const who = [r.ownerName, 'ทล.' + r.highway + ' กม.' + formatKm(r.km)].filter(Boolean).join(' · ');
+    if (window.confirm('พบเรื่องเดิมที่ยังไม่มีวันชี้แนวเขต:\n' + who + '\n\nกด "ตกลง" = เปิดเรื่องเดิมแล้วเติมวันชี้แนวให้\nกด "ยกเลิก" = เปิดฟอร์มเรื่องใหม่')) {
+      loadRecordIntoForm(r);
+      document.getElementById('f_step_pointedDate').value = p.startDate || '';
+      updateStepUi();
+      showToast('เติมวันชี้แนวเขตลงเรื่องเดิมแล้ว ตรวจและกดบันทึก');
+      return { existingId: r.id };
+    }
+  }
+  clearForm();
+  document.getElementById('f_step_pointedDate').value = p.startDate || '';
+  ensureHighwayOption(p.highway);
+  document.getElementById('f_highway').value = p.highway || '';
+  document.getElementById('f_section').value = highwaySection(p.highway);
+  document.getElementById('f_km').value = formatKm(p.km);
+  updateKmHint();
+  updateHighwayHint();
+  updateStepUi();
+  const sec = document.getElementById('fsec1');
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showToast('ดึงข้อมูลจากรายการร่างแล้ว กรอกวันที่รับเรื่อง/เจ้าของที่ดินต่อและกดบันทึก');
+}
+
 async function startApp(){
   if (appStarted) return;
   appStarted = true;
@@ -3107,6 +3194,7 @@ async function startApp(){
     populateHighwaySelect();
     populateYearFilter();
     updateWhoDisplay();
+    initDrafts();
   } catch (e) {
     console.error('startApp failed', e);
     showToast('โหลดข้อมูลไม่สำเร็จ ลองรีเฟรชหน้านี้');
@@ -3258,6 +3346,153 @@ async function openTrashModal(){
 }
 
 /* ============ หน้าต่างรายละเอียดเรื่อง ============ */
+/* ============ คัดลอกหน้าต่างรายละเอียดเป็น "รูปเดียว" เพื่อวางใน LINE ============
+   - สร้างรูปจากสำเนาของหน้าต่างรายละเอียด จัดเป็นแนวนอนกว้าง 1100 px ความละเอียด 2 เท่า:
+       แถวบน = กล่องเตือน/สถานะ · ซ้าย = รูปถ่าย (ถ้ามี) + การ์ดข้อมูล · ขวา = การ์ดที่เหลือ (รายการทรัพย์สินแบ่ง 2 คอลัมน์)
+   - แสดงทุกการ์ดครบ ไม่มีแถบเลื่อน · ตัด "เบอร์โทร" ออกเสมอ
+   - ไม่ติดปุ่ม ลบ / ปิด / แก้ไข / ปุ่มอื่นในส่วนท้าย / × / ปุ่มคัดลอกเอง · ท้ายรูปมีบรรทัดที่มาและเวลาที่คัดลอก
+   - คัดลอกลงคลิปบอร์ดโดยตรง (วางใน LINE ด้วย Ctrl+V) ถ้าเบราว์เซอร์ไม่อนุญาตจะบันทึกเป็นไฟล์ .png ให้แทน
+   - ใช้ไลบรารี html2canvas (โหลดตอนกดปุ่มครั้งแรกเท่านั้น) */
+const HTML2CANVAS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+const SNAP_SYSTEM_NAME = 'ระบบงานระวังชี้แนวเขตที่ดิน';
+function loadScriptOnce(src){
+  return new Promise((resolve, reject) => {
+    if (window.html2canvas) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('โหลดตัวสร้างรูปไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'));
+    document.head.appendChild(s);
+  });
+}
+// รอให้รูปถ่ายในการ์ด "รูปถ่าย" (ถ้ามี) โหลดเสร็จก่อนสร้างรูป (สูงสุด 8 วินาที)
+async function waitCasePhotosReady(){
+  for (let i = 0; i < 40; i++) {
+    const loading = [...document.querySelectorAll('#modalRoot .cd-photo')].some(e => !e.style.backgroundImage && /กำลังโหลด/.test(e.textContent));
+    if (!loading) return;
+    await new Promise(r => setTimeout(r, 200));
+  }
+}
+// ตัดเบอร์โทรออกจากสำเนา: แถว "โทร"/"เบอร์โทร" และข้อความ ☎ เบอร์ ต่อท้ายชื่อ
+function snapStripPhones(root){
+  root.querySelectorAll('.cd-dl').forEach(dl => {
+    [...dl.querySelectorAll('dt')].forEach(dt => {
+      if (/^(เบอร์)?โทร(ศัพท์)?$/.test(dt.textContent.trim())) { const dd = dt.nextElementSibling; dt.remove(); if (dd && dd.tagName === 'DD') dd.remove(); }
+    });
+  });
+  root.querySelectorAll('dd').forEach(dd => {
+    if (/☎/.test(dd.textContent)) dd.innerHTML = dd.innerHTML.replace(/\s*·?\s*☎[^<]*/g, '');
+  });
+}
+// จัด "หัวข้อ–ค่า" เป็นคู่ 2 ชุดต่อบรรทัด · ค่ายาว (เกิน 24 ตัวอักษร) ไปอยู่ท้ายการ์ดแบบเต็มบรรทัด
+function snapPairify(dls){
+  const pairs = [];
+  dls.forEach(dl => { const ch = [...dl.children]; for (let i = 0; i + 1 < ch.length; i += 2) pairs.push([ch[i], ch[i + 1]]); });
+  const short = pairs.filter(p => p[1].textContent.trim().length <= 24);
+  const long = pairs.filter(p => p[1].textContent.trim().length > 24);
+  const wide = document.createElement('dl');
+  wide.className = 'cd-dl wide';
+  short.forEach(p => wide.append(p[0], p[1]));
+  if (short.length % 2) wide.append(document.createElement('dt'), document.createElement('dd'));
+  long.forEach(p => { p[0].style.gridColumn = '1'; p[1].classList.add('full'); wide.append(p[0], p[1]); });
+  return wide;
+}
+async function buildCaseImage(){
+  const src = document.querySelector('#modalRoot .modal.case-modal');
+  if (!src) throw new Error('ไม่พบหน้าต่างรายละเอียด');
+  await loadScriptOnce(HTML2CANVAS_URL);
+  await waitCasePhotosReady();
+  const clone = src.cloneNode(true);
+  clone.querySelectorAll('.cd-foot,.cd-hd-actions,.modal-close').forEach(e => e.remove());
+  snapStripPhones(clone);
+  const mk = (cls, kids) => { const d = document.createElement('div'); if (cls) d.className = cls; (kids || []).forEach(k => k && d.appendChild(k)); return d; };
+  const hd = clone.querySelector('.cd-hd');
+  const bodyEl = clone.querySelector('.modal-body');
+  const cols = bodyEl.querySelector('.cd-cols');
+  const colEls = cols ? [...cols.children] : [];
+  const top = [...bodyEl.children].filter(e => e !== cols);   // กล่องเตือน/สถานะ/ช่องสรุป คงลำดับเดิม
+  const leftCards = colEls[0] ? [...colEls[0].children] : [];
+  const rightCards = colEls[1] ? [...colEls[1].children] : [];
+  const isPhoto = c => { const s = c.querySelector && c.querySelector('.cd-sec'); return !!(s && /รูปถ่าย/.test(s.textContent)); };
+  const photoCard = [...leftCards, ...rightCards].find(isPhoto) || null;
+  const L = leftCards.filter(c => c !== photoCard), R = rightCards.filter(c => c !== photoCard);
+  // ย่อการ์ดข้อมูล: หัวข้อ–ค่า 2 ชุดต่อบรรทัด · รายการทรัพย์สินแบ่ง 2 คอลัมน์
+  [...L, ...R].forEach(card => {
+    card.querySelectorAll('.cd-dl').forEach(dl => dl.replaceWith(snapPairify([dl])));
+    const items = [...card.querySelectorAll(':scope > .cd-item')];
+    if (items.length > 1) {
+      const receipt = card.querySelector(':scope > .cd-receipt');
+      const half = Math.ceil(items.length / 2);
+      const list = mk('snap-items2', [mk('', items.slice(0, half)), mk('', items.slice(half))]);
+      if (receipt) card.insertBefore(list, receipt); else card.appendChild(list);
+    }
+  });
+  const grid = mk('snap-grid', [mk('snap-col', [photoCard, ...L]), mk('snap-col', R)]);
+  grid.style.gridTemplateColumns = '1fr 1.25fr';
+
+  const shell = document.createElement('div');
+  shell.className = 'modal case-modal snap';
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+  body.appendChild(mk('snap-col', [...top, grid]));
+  const stamp = document.createElement('div');
+  stamp.className = 'snap-stamp';
+  stamp.textContent = SNAP_SYSTEM_NAME + ' · หมวดทางหลวงเชิงเนิน แขวงทางหลวงระยอง · คัดลอกเมื่อ ' + new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) + ' น.';
+  shell.append(hd, body, stamp);
+
+  const stage = document.createElement('div');
+  stage.className = 'cd-snap-stage';
+  stage.appendChild(shell);
+  document.body.appendChild(stage);
+  try {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const canvas = await window.html2canvas(shell, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, windowWidth: 1100 });
+    return await new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('สร้างรูปไม่สำเร็จ')), 'image/png'));
+  } finally { stage.remove(); }
+}
+
+const SNAP_ICON = {
+  copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
+  check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  spin: '<span class="cd-copy-spin"></span>'
+};
+const SNAP_FILE_PREFIX = 'ชี้แนวเขต';
+async function copyCaseDetailAsImage(rec, btn){
+  btn.disabled = true;
+  btn.innerHTML = SNAP_ICON.spin;
+  btn.title = 'กำลังสร้างรูป…';
+  try {
+    const blobPromise = buildCaseImage();
+    let copied = false;
+    // ส่ง Promise เข้าคลิปบอร์ดทันที (ต้องทำในจังหวะที่ผู้ใช้กดปุ่ม) — ไม่รองรับ/ไม่อนุญาต → บันทึกเป็นไฟล์แทน
+    if (navigator.clipboard && window.ClipboardItem) {
+      try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]); copied = true; } catch (e) { copied = false; }
+    }
+    const blob = await blobPromise;
+    btn.classList.add('ok');
+    btn.innerHTML = SNAP_ICON.check;
+    if (copied) {
+      btn.title = 'คัดลอกแล้ว';
+      showToast('คัดลอกรูปแล้ว — เปิด LINE แล้วกด Ctrl+V เพื่อวาง (มือถือ: กดค้างที่ช่องพิมพ์ → วาง)');
+    } else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = SNAP_FILE_PREFIX + '-' + String(rec.fiscalYear || '') + '-' + String(rec.id || '').slice(-6) + '.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      btn.title = 'บันทึกไฟล์แล้ว';
+      showToast('เบราว์เซอร์นี้คัดลอกรูปอัตโนมัติไม่ได้ จึงบันทึกเป็นไฟล์รูปให้แทน — ส่งไฟล์เข้า LINE ได้เลย');
+    }
+  } catch (e) {
+    console.error('copy image failed', e);
+    btn.innerHTML = SNAP_ICON.copy;
+    btn.title = 'คัดลอกเป็นรูป';
+    showToast('สร้างรูปไม่สำเร็จ: ' + (e && e.message ? e.message : e));
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.classList.remove('ok'); btn.innerHTML = SNAP_ICON.copy; btn.title = 'คัดลอกเป็นรูป'; }, 2500);
+  }
+}
+
 function openCaseDetailModal(id){
   const rec = records.find(r => r.id === id);
   if (!rec) return;
@@ -3312,7 +3547,7 @@ function openCaseDetailModal(id){
             <h3>${escapeHtml(caseNo)} <span class="cd-dt">· รับเรื่อง ${escapeHtml(formatThaiDate(rec.dateReceived))}</span></h3>
             <div class="cd-loc">📍 ทล.${escapeHtml(rec.highway)} ตอน ${escapeHtml(rec.section)} · กม.${escapeHtml(formatKm(rec.km))}${rec.side ? ' · ' + escapeHtml(rec.side) : ''}</div>
           </div>
-          <button class="modal-close" id="caseDetailCloseX" type="button">×</button>
+          <div class="cd-hd-actions"><button class="cd-copy" id="caseDetailCopy" type="button" title="คัดลอกเป็นรูป" aria-label="คัดลอกเป็นรูป"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><button class="modal-close" id="caseDetailCloseX" type="button">×</button></div>
         </div>
         <div class="modal-body">
           ${tilesHtml}
@@ -3371,6 +3606,7 @@ function openCaseDetailModal(id){
     </div>`;
 
   hydrateCasePhotos(rec);
+  document.getElementById('caseDetailCopy').onclick = (e) => copyCaseDetailAsImage(rec, e.currentTarget);
   document.getElementById('caseDetailCloseX').onclick = () => { root.innerHTML = ''; };
   document.getElementById('caseDetailClose').onclick = () => { root.innerHTML = ''; };
   document.getElementById('caseDetailEdit').onclick = () => { root.innerHTML = ''; loadRecordIntoForm(rec); };
