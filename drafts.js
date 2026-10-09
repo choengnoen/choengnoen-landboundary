@@ -47,10 +47,12 @@
   // จำนวนวันทำการจาก "วันนี้" ถึง "วันครบกำหนด" (บวก = เหลือ, 0 = วันนี้, ลบ = เลยกำหนด)
   function workLeft(todayStr, dueStr) {
     if (dueStr === todayStr) return 0;
-    var a = parse(todayStr), b = parse(dueStr), c = 0, step = a < b ? 1 : -1;
-    var d = new Date(a.getTime());
-    while (ymd(d) !== ymd(b)) { d.setDate(d.getDate() + step); if (isWork(d)) c += step; if (Math.abs(c) > 400) break; }
-    return c;
+    var a = parse(todayStr), b = parse(dueStr), c = 0;
+    // เหลือ = จำนวนวันทำการหลังวันนี้ถึงวันครบกำหนด (รวมวันครบกำหนด) · เลย = จำนวนวันทำการหลังวันครบกำหนดถึงวันนี้ (รวมวันนี้)
+    var from = a < b ? a : b, to = a < b ? ymd(b) : ymd(a);
+    var d = new Date(from.getTime());
+    while (ymd(d) !== to) { d.setDate(d.getDate() + 1); if (isWork(d)) c++; if (c > 400) break; }
+    return a < b ? c : -c;
   }
 
   /* ---------- ข้อมูล ---------- */
@@ -75,7 +77,7 @@
     var done = c ? !!CFG.doneOf(c) : false;
     var due = addWork(start, LIMIT_DAYS);
     var left = workLeft(t, due);
-    return { state: sent ? 'sent' : (done ? 'done' : 'open'), start: start, due: due, left: left, c: c, sent: sent };
+    return { state: sent ? 'sent' : (done ? 'done' : 'open'), start: start, due: due, left: left, c: c, sent: sent, over: due < t };
   }
 
   /* ---------- หน้าตา ---------- */
@@ -109,6 +111,7 @@
     if (v.state === 'sent') return '<span class="dr-chip g">ส่งแขวงแล้ว ' + esc(tdate(v.sent)) + '</span>';
     if (v.state === 'done') return '<span class="dr-chip n">เรื่องจบแล้ว</span>';
     if (v.left < 0) return '<span class="dr-chip r">เลยกำหนด ' + (-v.left) + ' วันทำการ</span>';
+    if (v.left === 0 && v.over) return '<span class="dr-chip r">เลยกำหนดแล้ว</span>';   // ครบกำหนดก่อนวันนี้ แต่วันนี้ไม่ใช่วันทำการ (เสาร์-อาทิตย์/วันหยุด)
     if (v.left === 0) return '<span class="dr-chip r">ครบกำหนดวันนี้</span>';
     if (v.left <= WARN_LEFT) return '<span class="dr-chip y">เหลือ ' + v.left + ' วันทำการ</span>';
     return '<span class="dr-chip g">เหลือ ' + v.left + ' วันทำการ</span>';
