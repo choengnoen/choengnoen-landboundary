@@ -950,7 +950,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 #dashYearFilter button.active:hover,.year-dropdown-btn.active:hover{filter:brightness(1.06);color:#fff}
 /* ===== แท็บ "เอกสาร": ผังกระบวนงาน + เอกสารที่ต้องใช้ ===== */
 /* ผังวงเวียน (rb-*): ถนนเทา รถเหลือง สีประจำระบบใช้ที่ไอคอน — ตัวแปร --c1/--c2 ตั้งจาก theme ใน renderFlowRoundabout */
-.rb-wrap{max-width:680px;margin:0 auto}
+.rb-wrap{width:100%}
 .rb-head{display:flex;align-items:center;gap:10px;padding:0 2px 10px;border-bottom:1px solid var(--line,#dfe2dd);flex-wrap:wrap}
 .rb-hic{display:inline-flex;color:var(--c1)}
 .rb-t{font-size:15px;font-weight:600;color:var(--ink,#182430)}
@@ -959,7 +959,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .rb-lg .c{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--c1);vertical-align:-1px;margin-right:5px}
 .rb-lg .d{display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--c2);box-shadow:0 0 0 1.5px #fff,0 0 0 2.5px var(--c2);transform:rotate(45deg);vertical-align:0;margin:0 7px 0 3px}
 .rb-lg .w{display:inline-block;width:16px;border-top:2px dashed #f07a1f;vertical-align:3px;margin-right:5px}
-.rb-box{position:relative;overflow:hidden;height:570px}
+.rb-box{position:relative;overflow:hidden;height:570px;max-width:680px;margin:0 auto}
 .rb-cv{position:absolute;left:0;top:0;width:680px;height:570px;transform-origin:top left}
 .rb-bg{position:absolute;left:0;top:0;pointer-events:none;z-index:1}
 .rb-stw{position:absolute;width:48px;height:48px;display:flex;align-items:center;justify-content:center;z-index:3}
@@ -3834,7 +3834,7 @@ const GUIDE_DATA = {
     { who: 'ธุรการหมวดการทาง', shape: 'box', text: 'ออกเลข ทำสำเนา ลงสมุดส่ง' },
     { who: 'ธุรการหมวดการทาง', shape: 'oval', text: 'เก็บสำเนา' }
   ],
-  docTitle: 'เอกสารที่ต้องใช้',
+  docTitle: 'เอกสารประกอบงาน',
   sections: [{
     title: '2. งานการระวังชี้แนวเขตที่ดิน', tag: 'งานสถิติหมวดการทาง',
     steps: [
@@ -3909,7 +3909,7 @@ function renderFlowRoundabout(host, opt){
   });
   const hasLoop = st.some(s => s.loop);
   host.innerHTML = `<div class="rb-wrap" style="--c1:${th[0]};--c2:${th[1]}">
-    <div class="rb-head"><span class="rb-hic">${rbSvg(th[2], 20)}</span><span class="rb-t">${esc(opt.title)}</span><span class="rb-p">ผังกระบวนงานสถิติหมวดการทาง</span>
+    <div class="rb-head"><span class="rb-hic">${rbSvg(th[2], 20)}</span><span class="rb-t">${esc(opt.title)}</span>
       <span class="rb-lg"><span><span class="c"></span>ธุรการ</span><span><span class="d"></span>หัวหน้า</span>${hasLoop ? '<span><span class="w"></span>วนแก้ไข</span>' : ''}</span></div>
     <div class="rb-box"><div class="rb-cv">${svg}${h}</div></div></div>`;
   /* ย่อผังให้พอดีหน้าจอแคบ (ผังออกแบบไว้กว้าง 680px) */
@@ -3926,7 +3926,7 @@ function renderGuide(){
   const G = GUIDE_DATA, esc = escapeHtml;
   const secHtml = G.sections.map(t => `
     <div class="cd-card" style="margin-bottom:10px">
-      <div class="cd-sec" style="flex-wrap:wrap"><span>${esc(t.title)}</span>${t.tag ? `<span class="gd-tag">${esc(t.tag)}</span>` : ''}</div>
+      <div class="cd-sec" style="flex-wrap:wrap"><span>${esc(t.title)}</span></div>
       <div class="gd-h" style="margin-top:0">รายละเอียดการปฏิบัติงาน</div>
       <ol class="gd-ol">${t.steps.map(s => `<li>${esc(s.text)}${s.subs ? `<ul>${s.subs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ol>
       ${t.forms && t.forms.length ? `<div class="gd-h">แบบฟอร์ม/เอกสารที่เกี่ยวข้อง</div><ul class="gd-ul">${t.forms.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
