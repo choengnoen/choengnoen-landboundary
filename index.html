@@ -1440,7 +1440,16 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <div class="stat-card ins clickable" id="cardWaitPoint" title="รับเรื่องแล้ว แต่ยังไม่ได้ออกไปชี้แนวเขต"><div class="big mono" id="statWaitPoint">0</div><div class="lbl">รอชี้แนวเขต (เรื่อง)</div></div>
     </div>
 
-    <div class="grid grid-2" id="dashFirstRow">
+    <div class="card" id="weekCard">
+      <div class="section-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span>ปฏิทินสัปดาห์นี้</span>
+        <span class="wk-nav"><button type="button" id="wkPrev">‹ ก่อนหน้า</button><span id="wkRange"></span><button type="button" id="wkNext">ถัดไป ›</button></span>
+      </div>
+      <div class="wk-grid" id="wkGrid"></div>
+      <div class="wk-foot" id="wkFoot"></div>
+    </div>
+
+    <div class="grid grid-2" id="dashFirstRow" style="margin-top:14px">
       <div class="card">
         <div class="section-title">ชี้แนวเขตแยกตามสายทาง</div>
         <div style="position:relative;height:280px" id="barChartHighwayWrap"><canvas id="barChartHighway"></canvas></div>
@@ -1451,16 +1460,6 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <div style="position:relative;height:260px" id="trendChartWrap"><canvas id="trendChart"></canvas></div>
         <p class="hint" id="trendChartEmpty" style="display:none">ไม่มีข้อมูล</p>
       </div>
-    </div>
-
-    <div class="card" id="weekCard" style="margin-top:14px">
-      <div class="section-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span>ปฏิทินสัปดาห์นี้</span>
-        <span class="wk-nav"><button type="button" id="wkPrev">‹ ก่อนหน้า</button><span id="wkRange"></span><button type="button" id="wkNext">ถัดไป ›</button></span>
-      </div>
-      <div class="wk-info" id="wkInfo"></div>
-      <div class="wk-grid" id="wkGrid"></div>
-      <div class="wk-foot" id="wkFoot"></div>
     </div>
   </div>
 
@@ -3850,13 +3849,6 @@ function renderWeekCalendar(){
   document.getElementById('wkNext').onclick = () => { weekOffset++; renderWeekCalendar(); };
 
   const open = records.filter(isOpenCase);
-  const overdue = open.filter(r => deadlineInfo(r).key === 'overdue').length;
-  const docsMissing = open.filter(r => { const p = docProgress(r); return p.have < p.need; }).length;
-  const info = document.getElementById('wkInfo');
-  info.innerHTML = `<span class="wk-chip ${overdue ? 'bad clickable' : ''}" id="wkOverdue"><b>${overdue}</b> เกินกำหนดส่งสะสม${overdue ? ' · กดดูรายการ' : ''}</span>`
-    + `<span class="wk-chip"><b>${docsMissing}</b> เอกสารยังไม่ครบ</span>`;
-  const ob = document.getElementById('wkOverdue');
-  if (overdue && ob) ob.onclick = () => goToFilteredList('ทั้งหมด', { deadline: 'overdue' });
 
   const seqMap = computeSeqMap();
   const items = {};   // 'YYYY-MM-DD' -> [{cls, label, r}]
