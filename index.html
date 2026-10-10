@@ -951,14 +951,14 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 /* ===== แท็บ "เอกสาร": ผังกระบวนงาน + เอกสารที่ต้องใช้ ===== */
 /* ผังวงเวียน (rb-*): ถนนเทา รถเหลือง สีประจำระบบใช้ที่ไอคอน — ตัวแปร --c1/--c2 ตั้งจาก theme ใน renderFlowRoundabout */
 .rb-wrap{max-width:680px;margin:0 auto}
-.rb-sign{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:11px 14px;border-radius:12px;background:#3F3E3A}
-.rb-hi{width:40px;height:40px;border-radius:10px;background:var(--c1);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
-.rb-h1{font-size:12px;color:#B4B2A9}
-.rb-h2{font-size:15px;font-weight:600;line-height:1.35;color:#fff}
-.rb-lg{display:flex;gap:16px;font-size:12.5px;color:var(--ink-mute,#8792a0);margin:0 0 6px;flex-wrap:wrap;align-items:center}
-.rb-lg .c{display:inline-block;width:14px;height:14px;border-radius:50%;background:var(--c1);vertical-align:-3px;margin-right:5px}
-.rb-lg .d{display:inline-block;width:11px;height:11px;border-radius:3px;background:var(--c2);border:1.5px solid #fff;box-shadow:0 0 0 1.5px var(--c2);transform:rotate(45deg);vertical-align:-1px;margin:0 7px 0 3px}
-.rb-lg .w{display:inline-block;width:18px;border-top:2.5px dashed #f07a1f;vertical-align:3px;margin-right:5px}
+.rb-head{display:flex;align-items:center;gap:10px;padding:0 2px 10px;border-bottom:1px solid var(--line,#dfe2dd);flex-wrap:wrap}
+.rb-hic{display:inline-flex;color:var(--c1)}
+.rb-t{font-size:15px;font-weight:600;color:var(--ink,#182430)}
+.rb-p{font-size:12.5px;color:var(--ink-mute,#8792a0)}
+.rb-lg{margin-left:auto;display:flex;gap:14px;font-size:12.5px;color:var(--ink-mute,#8792a0);flex-wrap:wrap;align-items:center}
+.rb-lg .c{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--c1);vertical-align:-1px;margin-right:5px}
+.rb-lg .d{display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--c2);box-shadow:0 0 0 1.5px #fff,0 0 0 2.5px var(--c2);transform:rotate(45deg);vertical-align:0;margin:0 7px 0 3px}
+.rb-lg .w{display:inline-block;width:16px;border-top:2px dashed #f07a1f;vertical-align:3px;margin-right:5px}
 .rb-box{position:relative;overflow:hidden;height:570px}
 .rb-cv{position:absolute;left:0;top:0;width:680px;height:570px;transform-origin:top left}
 .rb-bg{position:absolute;left:0;top:0;pointer-events:none;z-index:1}
@@ -3909,8 +3909,8 @@ function renderFlowRoundabout(host, opt){
   });
   const hasLoop = st.some(s => s.loop);
   host.innerHTML = `<div class="rb-wrap" style="--c1:${th[0]};--c2:${th[1]}">
-    <div class="rb-sign"><div class="rb-hi">${rbSvg(th[2], 22)}</div><div><div class="rb-h1">ผังกระบวนงานสถิติหมวดการทาง</div><div class="rb-h2">${esc(opt.title)}</div></div></div>
-    <div class="rb-lg"><span><span class="c"></span>ธุรการหมวดการทาง</span><span><span class="d"></span>หัวหน้าหมวดการทาง</span>${hasLoop ? '<span><span class="w"></span>วนกลับไปแก้ไข</span>' : ''}</div>
+    <div class="rb-head"><span class="rb-hic">${rbSvg(th[2], 20)}</span><span class="rb-t">${esc(opt.title)}</span><span class="rb-p">ผังกระบวนงานสถิติหมวดการทาง</span>
+      <span class="rb-lg"><span><span class="c"></span>ธุรการ</span><span><span class="d"></span>หัวหน้า</span>${hasLoop ? '<span><span class="w"></span>วนแก้ไข</span>' : ''}</span></div>
     <div class="rb-box"><div class="rb-cv">${svg}${h}</div></div></div>`;
   /* ย่อผังให้พอดีหน้าจอแคบ (ผังออกแบบไว้กว้าง 680px) */
   const box = host.querySelector('.rb-box'), cv = box.firstElementChild;
