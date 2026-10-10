@@ -1396,18 +1396,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           </select>
         </div>
         <div class="field">
-          <label style="text-align:center">ขั้นตอนที่รอ</label>
-          <select id="filterStep"><option value="">ทั้งหมด</option></select>
-        </div>
-        <div class="field">
-          <label style="text-align:center">กำหนดส่ง</label>
-          <select id="filterDeadline">
-            <option value="">ทั้งหมด</option>
-            <option value="overdue">เกินกำหนด (ยังไม่ส่ง)</option>
-            <option value="near">ใกล้ครบกำหนด</option>
-            <option value="late">ส่งแล้วแต่เกินกำหนด</option>
-            <option value="ontime">ส่งทันกำหนด</option>
-          </select>
+          <button type="button" class="btn btn-outline btn-sm" id="btnClearFilters" title="ล้างตัวกรองทั้งหมด">ล้างตัวกรอง</button>
         </div>
       </div>
       <div class="list-count" id="listCount"></div>
@@ -3322,21 +3311,39 @@ function statusPillOf(r){
   const st = caseStatus(r);
   return `<span class="status-pill ${st.cls}">${escapeHtml(st.text)}</span>`;
 }
-function populateStepFilter(){
-  const sel = document.getElementById('filterStep');
-  sel.innerHTML = '<option value="">ทั้งหมด</option>' + STEPS.slice(1).map((s, i) => `<option value="${i + 1}">${escapeHtml(s.wait)}</option>`).join('');
+// ตัวกรอง "สถานะ": ใส่จำนวนเรื่องต่อท้ายแต่ละตัวเลือก (นับจากทุกเรื่อง)
+function populateStatusFilter(){
+  const sel = document.getElementById('filterStatus');
+  const n = { '': records.length, open: 0, done: 0, cancelled: 0 };
+  records.forEach(r => { if (r.cancelled) n.cancelled++; else if (r.archivedDate) n.done++; else n.open++; });
+  const base = { '': 'ทั้งหมด', open: 'กำลังดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' };
+  [...sel.options].forEach(o => { if (o.value in base) { const t = base[o.value] + (o.value ? ' (' + n[o.value] + ')' : ''); if (o.textContent !== t) o.textContent = t; } });
+}
+// เรียงตามความเร่งด่วน: เรื่องที่ยังดำเนินการอยู่ก่อน (เกินกำหนดนานสุด → ใกล้ครบ → ยังไม่ถึงกำหนด → ยังไม่ชี้แนว) ตามด้วยเรื่องเสร็จสิ้น/ยกเลิก
+function listSortKey(r){
+  if (!isOpenCase(r)) return { g: 4, due: '' };
+  const d = deadlineInfo(r);
+  return { g: urgencyOf(r), due: d.due || '' };
 }
 function renderTable(){
   populateYearFilter();
+  populateStatusFilter();
   const seqMap = computeSeqMap();
   const fState = listFilterState();
   let rows = records.filter(r => recordMatchesList(r, fState, seqMap));
-  rows.sort((a,b) => (b.dateReceived||'').localeCompare(a.dateReceived||'') || (seqMap[b.id]||0) - (seqMap[a.id]||0));
+  const sk = new Map(rows.map(r => [r.id, listSortKey(r)]));
+  rows.sort((a,b) => {
+    const ka = sk.get(a.id), kb = sk.get(b.id);
+    if (ka.g !== kb.g) return ka.g - kb.g;
+    if (ka.g <= 2 && ka.due !== kb.due) return ka.due.localeCompare(kb.due);
+    return (b.dateReceived||'').localeCompare(a.dateReceived||'') || (seqMap[b.id]||0) - (seqMap[a.id]||0);
+  });
 
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
   document.getElementById('emptyState').style.display = rows.length ? 'none' : 'block';
-  document.getElementById('listCount').textContent = rows.length === records.length ? ('ทั้งหมด ' + records.length + ' เรื่อง') : ('แสดง ' + rows.length + ' จาก ' + records.length + ' เรื่อง');
+  const cardNote = fState.waitPoint ? ' · เฉพาะที่รอชี้แนวเขต' : fState.waitReport ? ' · เฉพาะที่รอส่งรายงาน' : '';
+  document.getElementById('listCount').textContent = (rows.length === records.length ? ('ทั้งหมด ' + records.length + ' เรื่อง') : ('แสดง ' + rows.length + ' จาก ' + records.length + ' เรื่อง')) + cardNote;
 
   rows.forEach(r => {
     const tr = document.createElement('tr');
@@ -4038,9 +4045,7 @@ function goToFilteredList(fiscalYear, opt){
   document.querySelector('.tab-btn[data-view="list"]').click();
   document.getElementById('filterYear').value = (fiscalYear === 'ทั้งหมด') ? '' : String(fiscalYear);
   document.getElementById('filterHighway').value = '';
-  document.getElementById('filterStatus').value = opt.status || (opt.step || opt.deadline || opt.waitPoint || opt.waitReport ? 'open' : '');
-  document.getElementById('filterStep').value = opt.step || '';
-  document.getElementById('filterDeadline').value = opt.deadline || '';
+  document.getElementById('filterStatus').value = opt.status || (opt.waitPoint || opt.waitReport ? 'open' : '');
   listWaitPointOnly = !!opt.waitPoint;
   listWaitReportOnly = !!opt.waitReport;
   renderTable();
@@ -4228,8 +4233,6 @@ function listFilterState(){
     year: document.getElementById('filterYear').value,
     hw: document.getElementById('filterHighway').value,
     status: document.getElementById('filterStatus').value,
-    step: document.getElementById('filterStep').value,
-    deadline: document.getElementById('filterDeadline').value,
     waitPoint: listWaitPointOnly,
     waitReport: listWaitReportOnly
   };
@@ -4240,8 +4243,6 @@ function recordMatchesList(r, f, seqMap){
   if (f.status === 'open' && !isOpenCase(r)) return false;
   if (f.status === 'done' && !isDone(r)) return false;
   if (f.status === 'cancelled' && !r.cancelled) return false;
-  if (f.step && (!isOpenCase(r) || currentStepIndex(r) + 1 !== Number(f.step))) return false;
-  if (f.deadline && deadlineInfo(r).key !== f.deadline) return false;
   if (f.waitPoint && (!isOpenCase(r) || r.pointedDate)) return false;
   if (f.waitReport && (!isOpenCase(r) || !r.pointedDate || r.sentDate)) return false;
   if (f.q) {
@@ -4253,21 +4254,18 @@ function recordMatchesList(r, f, seqMap){
 }
 function hasListFilters(){
   const f = listFilterState();
-  return !!(f.q || f.year || f.hw || f.status || f.step || f.deadline || f.waitPoint || f.waitReport);
+  return !!(f.q || f.year || f.hw || f.status || f.waitPoint || f.waitReport);
 }
 function getListRecords(scope){
   if (scope === 'all') return records.slice();
   const f = listFilterState(), seqMap = computeSeqMap();
   return records.filter(r => recordMatchesList(r, f, seqMap));
 }
-const DEADLINE_FILTER_TEXT = { overdue: 'เกินกำหนด (ยังไม่ส่ง)', near: 'ใกล้ครบกำหนด', late: 'ส่งแล้วแต่เกินกำหนด', ontime: 'ส่งทันกำหนด' };
 function describeListFilters(){
   const f = listFilterState(), out = [];
   if (f.year) out.push('ปีงบประมาณ ' + f.year);
   if (f.hw) out.push('ทล.' + f.hw);
   if (f.status) out.push(({ open: 'กำลังดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' })[f.status]);
-  if (f.step) out.push('ขั้นตอน: ' + STEPS[Number(f.step)].wait);
-  if (f.deadline) out.push('กำหนดส่ง: ' + DEADLINE_FILTER_TEXT[f.deadline]);
   if (f.waitPoint) out.push('รอชี้แนวเขต');
   if (f.waitReport) out.push('รอส่งรายงาน');
   if (f.q) out.push('คำค้น "' + document.getElementById('searchBox').value.trim() + '"');
@@ -4969,7 +4967,6 @@ async function init(){
   initModalScroll();
   buildStepRows();
   buildDocList();
-  populateStepFilter();
   initCustomSelects();
   document.getElementById('f_dateReceived').addEventListener('change', () => { syncFiscalYearFromDate(); updateStepUi(); });
   document.getElementById('f_coords').addEventListener('input', updateCoordsHint);
@@ -5005,8 +5002,15 @@ async function init(){
     renderTable();
     document.getElementById('searchBox').focus();
   });
-  ['filterYear', 'filterHighway', 'filterStatus', 'filterStep', 'filterDeadline'].forEach(id =>
+  ['filterYear', 'filterHighway', 'filterStatus'].forEach(id =>
     document.getElementById(id).addEventListener('change', () => { listWaitPointOnly = false; listWaitReportOnly = false; renderTable(); }));
+  document.getElementById('btnClearFilters').addEventListener('click', () => {
+    ['filterYear', 'filterHighway', 'filterStatus'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('searchBox').value = '';
+    document.getElementById('searchWrap').classList.remove('has-text');
+    listWaitPointOnly = false; listWaitReportOnly = false;
+    renderTable();
+  });
   document.getElementById('btnExportXlsx').addEventListener('click', (e) => { e.stopPropagation(); openExportMenu('xlsx'); });
   document.getElementById('btnExportPdf').addEventListener('click', (e) => { e.stopPropagation(); openExportMenu('pdf'); });
   document.getElementById('exportMenu').addEventListener('click', (e) => {
