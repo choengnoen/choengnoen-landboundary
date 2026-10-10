@@ -1408,10 +1408,10 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
     <div class="stat-cards">
       <div class="stat-card"><div class="big mono" id="statTotal">0</div><div class="lbl">ชี้แนวเขตทั้งหมด (เรื่อง)</div></div>
-      <div class="stat-card amber clickable" id="cardOpen"><div class="big mono" id="statOpen">0</div><div class="lbl">ระหว่างดำเนินการ</div></div>
-      <div class="stat-card green clickable" id="cardDone"><div class="big mono" id="statDone">0</div><div class="lbl">เสร็จสิ้น</div></div>
-      <div class="stat-card rust clickable" id="cardOverdue" title="ชี้แนวเขตแล้ว แต่ยังไม่ส่งรายงานภายใน 5 วันทำการ"><div class="big mono" id="statOverdue">0</div><div class="lbl">เกินกำหนดส่ง 5 วันทำการ</div></div>
-      <div class="stat-card ins clickable" id="cardWaitPoint" title="รับเรื่องแล้ว แต่ยังไม่ได้ออกไปชี้แนวเขต"><div class="big mono" id="statWaitPoint">0</div><div class="lbl">รอชี้แนวเขต</div></div>
+      <div class="stat-card amber clickable" id="cardOpen"><div class="big mono" id="statOpen">0</div><div class="lbl">รอส่งรายงาน (เรื่อง)</div></div>
+      <div class="stat-card green clickable" id="cardDone"><div class="big mono" id="statDone">0</div><div class="lbl">เสร็จสิ้น (เรื่อง)</div></div>
+      <div class="stat-card rust clickable" id="cardOverdue" title="เรื่องที่ยังไม่เสร็จสิ้น"><div class="big mono" id="statOverdue">0</div><div class="lbl">ไม่เสร็จสิ้น (เรื่อง)</div></div>
+      <div class="stat-card ins clickable" id="cardWaitPoint" title="รับเรื่องแล้ว แต่ยังไม่ได้ออกไปชี้แนวเขต"><div class="big mono" id="statWaitPoint">0</div><div class="lbl">รอชี้แนวเขต (เรื่อง)</div></div>
     </div>
 
     <div class="grid grid-2" id="dashFirstRow">
@@ -3728,13 +3728,13 @@ function renderDashboard(){
   const active = rows.filter(r => !r.cancelled);
   const open = active.filter(isOpenCase);
   document.getElementById('statTotal').textContent = active.length;
-  document.getElementById('statOpen').textContent = open.length;
+  document.getElementById('statOpen').textContent = open.filter(r => r.pointedDate && !r.sentDate).length;
   document.getElementById('statDone').textContent = active.filter(isDone).length;
-  document.getElementById('statOverdue').textContent = open.filter(r => deadlineInfo(r).key === 'overdue').length;
+  document.getElementById('statOverdue').textContent = open.length;
   document.getElementById('statWaitPoint').textContent = open.filter(r => !r.pointedDate).length;
-  document.getElementById('cardOpen').onclick = () => goToFilteredList(dashYear, { status: 'open' });
+  document.getElementById('cardOpen').onclick = () => goToFilteredList(dashYear, { waitReport: true });
   document.getElementById('cardDone').onclick = () => goToFilteredList(dashYear, { status: 'done' });
-  document.getElementById('cardOverdue').onclick = () => goToFilteredList(dashYear, { deadline: 'overdue' });
+  document.getElementById('cardOverdue').onclick = () => goToFilteredList(dashYear, { status: 'open' });
   document.getElementById('cardWaitPoint').onclick = () => goToFilteredList(dashYear, { waitPoint: true });
 
   const byHw = {};
@@ -3958,12 +3958,14 @@ function goToFilteredList(fiscalYear, opt){
   document.querySelector('.tab-btn[data-view="list"]').click();
   document.getElementById('filterYear').value = (fiscalYear === 'ทั้งหมด') ? '' : String(fiscalYear);
   document.getElementById('filterHighway').value = '';
-  document.getElementById('filterStatus').value = opt.status || (opt.step || opt.deadline || opt.waitPoint ? 'open' : '');
+  document.getElementById('filterStatus').value = opt.status || (opt.step || opt.deadline || opt.waitPoint || opt.waitReport ? 'open' : '');
   document.getElementById('filterStep').value = opt.step || '';
   document.getElementById('filterDeadline').value = opt.deadline || '';
   listWaitPointOnly = !!opt.waitPoint;
+  listWaitReportOnly = !!opt.waitReport;
   renderTable();
 }
+let listWaitReportOnly = false;   // ตัวกรองชั่วคราวจากการ์ด "รอส่งรายงาน" (ชี้แนวเขตแล้ว แต่ยังไม่ออกเลข/ส่ง)
 let listWaitPointOnly = false;   // ตัวกรองชั่วคราวจากการ์ด "รอชี้แนวเขต" (ล้างเมื่อเปลี่ยนตัวกรองอื่น)
 /* ===== ช่องเลือก (select) แบบเดียวกันทั้งระบบ =====
    แทนรายการเลือกของเบราว์เซอร์ด้วยรายการพื้นขาวขอบบาง แถวที่ชี้เป็นสีส้มอ่อน เหมือนช่องค้นหาทรัพย์สิน/บริษัทประกัน
@@ -4148,7 +4150,8 @@ function listFilterState(){
     status: document.getElementById('filterStatus').value,
     step: document.getElementById('filterStep').value,
     deadline: document.getElementById('filterDeadline').value,
-    waitPoint: listWaitPointOnly
+    waitPoint: listWaitPointOnly,
+    waitReport: listWaitReportOnly
   };
 }
 function recordMatchesList(r, f, seqMap){
@@ -4160,6 +4163,7 @@ function recordMatchesList(r, f, seqMap){
   if (f.step && (!isOpenCase(r) || currentStepIndex(r) + 1 !== Number(f.step))) return false;
   if (f.deadline && deadlineInfo(r).key !== f.deadline) return false;
   if (f.waitPoint && (!isOpenCase(r) || r.pointedDate)) return false;
+  if (f.waitReport && (!isOpenCase(r) || !r.pointedDate || r.sentDate)) return false;
   if (f.q) {
     const hay = [caseNoOf(r, seqMap), r.ownerName, r.proxyName, r.deedNo, r.landNo, r.tambon, r.amphoe, r.section, r.location,
       r.incomingNo, r.outgoingNo, r.certNo, r.note, formatKm(r.km), formatThaiDate(r.dateReceived), r.dateReceived].join(' ').toLowerCase();
@@ -4169,7 +4173,7 @@ function recordMatchesList(r, f, seqMap){
 }
 function hasListFilters(){
   const f = listFilterState();
-  return !!(f.q || f.year || f.hw || f.status || f.step || f.deadline || f.waitPoint);
+  return !!(f.q || f.year || f.hw || f.status || f.step || f.deadline || f.waitPoint || f.waitReport);
 }
 function getListRecords(scope){
   if (scope === 'all') return records.slice();
@@ -4185,6 +4189,7 @@ function describeListFilters(){
   if (f.step) out.push('ขั้นตอน: ' + STEPS[Number(f.step)].wait);
   if (f.deadline) out.push('กำหนดส่ง: ' + DEADLINE_FILTER_TEXT[f.deadline]);
   if (f.waitPoint) out.push('รอชี้แนวเขต');
+  if (f.waitReport) out.push('รอส่งรายงาน');
   if (f.q) out.push('คำค้น "' + document.getElementById('searchBox').value.trim() + '"');
   return out;
 }
@@ -4921,7 +4926,7 @@ async function init(){
     document.getElementById('searchBox').focus();
   });
   ['filterYear', 'filterHighway', 'filterStatus', 'filterStep', 'filterDeadline'].forEach(id =>
-    document.getElementById(id).addEventListener('change', () => { listWaitPointOnly = false; renderTable(); }));
+    document.getElementById(id).addEventListener('change', () => { listWaitPointOnly = false; listWaitReportOnly = false; renderTable(); }));
   document.getElementById('btnExportXlsx').addEventListener('click', (e) => { e.stopPropagation(); openExportMenu('xlsx'); });
   document.getElementById('btnExportPdf').addEventListener('click', (e) => { e.stopPropagation(); openExportMenu('pdf'); });
   document.getElementById('exportMenu').addEventListener('click', (e) => {
