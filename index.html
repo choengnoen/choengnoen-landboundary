@@ -678,6 +678,31 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .rank.top{background:var(--rust-bg);color:var(--rust)}
 .link-btn{color:var(--amber);font-weight:600;cursor:pointer;font-size:13px}
 .follow-head-sub{font-family:'Sarabun',sans-serif;font-weight:400;font-size:12.5px;color:var(--ink-mute)}
+/* ปฏิทินสัปดาห์นี้ (หน้าภาพรวม) */
+.wk-nav{display:inline-flex;align-items:center;gap:8px;font-family:'Sarabun',sans-serif;font-weight:400;font-size:13px;color:var(--ink-mute)}
+.wk-nav button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:2px 12px;font:inherit;color:var(--ink-soft);cursor:pointer}
+.wk-nav button:hover{background:var(--paper)}
+.wk-info{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.wk-chip{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:5px 11px;font-size:13px;background:var(--paper);color:var(--ink-soft)}
+.wk-chip b{font-family:'Kanit',sans-serif;font-weight:600;font-size:15px}
+.wk-chip.bad{background:#fcebeb;color:#a32d2d}.wk-chip.clickable{cursor:pointer}
+.wk-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.wk-day{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:#fafaf8;min-height:128px}
+.wk-day.today{border:1.5px solid var(--amber-500);background:#fff8f1}
+.wk-dh{display:flex;align-items:baseline;gap:6px;margin-bottom:7px;font-size:12.5px;color:var(--ink-mute)}
+.wk-dh b{font-family:'Kanit',sans-serif;font-weight:600;font-size:20px;line-height:1;color:var(--navy-900)}
+.wk-day.today .wk-dh b{color:var(--amber)}
+.wk-tag{margin-left:auto;background:var(--amber-500);color:#fff;border-radius:999px;padding:0 7px;font-size:11px}
+.wk-it{border-left:3px solid;border-radius:6px;padding:4px 7px;margin-bottom:5px;font-size:12.5px;line-height:1.3;cursor:pointer}
+.wk-it small{display:block;font-size:11.5px;opacity:.85}
+.wk-it.ap{background:#e6f1fb;border-color:#185fa5;color:#0c447c}
+.wk-it.rp{background:#faeeda;border-color:#ba7517;color:#633806}
+.wk-it.ov{background:#fcebeb;border-color:#a32d2d;color:#791f1f}
+.wk-empty{color:#a8afb8;font-size:12.5px;text-align:center;margin-top:30px}
+.wk-more{font-size:12px;color:var(--ink-mute);padding-left:4px}
+.wk-foot{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--ink-mute)}
+.wk-foot i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+@media(max-width:760px){.wk-grid{grid-template-columns:1fr}.wk-day{min-height:0}.wk-empty{margin-top:4px;text-align:left}}
 .follow-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:8px}
 .follow-row:last-of-type{border-bottom:0}
 .follow-row:hover{background:var(--paper)}
@@ -1428,15 +1453,14 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       </div>
     </div>
 
-    <div class="grid grid-2" id="dashSecondRow" style="margin-top:14px">
-      <div class="card" id="followCard">
-        <div class="section-title" style="justify-content:space-between"><span>เรื่องที่ต้องติดตาม</span><span class="follow-head-sub" id="followSub"></span></div>
-        <div id="followList"></div>
+    <div class="card" id="weekCard" style="margin-top:14px">
+      <div class="section-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span>ปฏิทินสัปดาห์นี้</span>
+        <span class="wk-nav"><button type="button" id="wkPrev">‹ ก่อนหน้า</button><span id="wkRange"></span><button type="button" id="wkNext">ถัดไป ›</button></span>
       </div>
-      <div class="card" id="apptCard">
-        <div class="section-title" style="justify-content:space-between"><span>นัดหมายชี้แนวเขต</span><span class="follow-head-sub" id="apptSub"></span></div>
-        <div id="apptList"></div>
-      </div>
+      <div class="wk-info" id="wkInfo"></div>
+      <div class="wk-grid" id="wkGrid"></div>
+      <div class="wk-foot" id="wkFoot"></div>
     </div>
   </div>
 
@@ -3758,8 +3782,7 @@ function renderDashboard(){
     trendCard.style.display = 'none';
     firstRow.style.gridTemplateColumns = '1fr';
   }
-  try { renderFollowUp(); } catch (e) { console.error('follow-up render failed', e); }
-  try { renderAppointments(); } catch (e) { console.error('appointments render failed', e); }
+  try { renderWeekCalendar(); } catch (e) { console.error('week calendar render failed', e); }
 }
 
 // กล่อง "เรื่องที่ต้องติดตาม": เรื่องที่ยังไม่เสร็จ เรียงตามความเร่งด่วน (เกินกำหนด → ใกล้ครบ → ที่เหลือตามวันที่รับเรื่องเก่าสุด)
@@ -3805,6 +3828,63 @@ function renderFollowUp(){
   el.querySelectorAll('.follow-row').forEach(row => { row.onclick = () => openCaseDetailModal(row.dataset.id); });
   const more = document.getElementById('followMoreLink');
   if (more) more.onclick = () => goToFilteredList(dashYear, { status: 'open' });
+}
+/* กล่อง "ปฏิทินสัปดาห์นี้" (แทน "เรื่องที่ต้องติดตาม" + "นัดหมายชี้แนวเขต")
+   จันทร์–ศุกร์: นัดชี้แนวเขต (ฟ้า) · ครบกำหนดส่งรายงาน 5 วันทำการ (เหลือง) · เลยกำหนด (แดง)
+   ไม่ขึ้นกับตัวกรองปีงบ เพราะเป็นงานที่ต้องทำตอนนี้ — ฟังก์ชัน renderFollowUp/renderAppointments ด้านล่างไม่ถูกเรียกแล้ว */
+let weekOffset = 0;
+const WK_DAYS = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสฯ', 'ศุกร์'];
+function renderWeekCalendar(){
+  const grid = document.getElementById('wkGrid');
+  if (!grid) return;
+  const todayStr = todayYmd(), today = parseYmd(todayStr);
+  const dow = today.getDay();   // เสาร์–อาทิตย์ แสดงสัปดาห์ถัดไปเป็นค่าเริ่มต้น
+  const mon = new Date(today); mon.setDate(mon.getDate() + (dow === 0 ? 1 : dow === 6 ? 2 : 1 - dow) + weekOffset * 7);
+  const days = [0, 1, 2, 3, 4].map(i => { const d = new Date(mon); d.setDate(mon.getDate() + i); return d; });
+  const fri = days[4];
+  const yy = d => String((d.getFullYear() + 543) % 100);
+  document.getElementById('wkRange').textContent = (days[0].getMonth() === fri.getMonth()
+    ? days[0].getDate() + ' – ' + fri.getDate() + ' ' + THAI_MONTHS_SHORT[fri.getMonth()] + ' ' + yy(fri)
+    : days[0].getDate() + ' ' + THAI_MONTHS_SHORT[days[0].getMonth()] + ' – ' + fri.getDate() + ' ' + THAI_MONTHS_SHORT[fri.getMonth()] + ' ' + yy(fri));
+  document.getElementById('wkPrev').onclick = () => { weekOffset--; renderWeekCalendar(); };
+  document.getElementById('wkNext').onclick = () => { weekOffset++; renderWeekCalendar(); };
+
+  const open = records.filter(isOpenCase);
+  const overdue = open.filter(r => deadlineInfo(r).key === 'overdue').length;
+  const docsMissing = open.filter(r => { const p = docProgress(r); return p.have < p.need; }).length;
+  const info = document.getElementById('wkInfo');
+  info.innerHTML = `<span class="wk-chip ${overdue ? 'bad clickable' : ''}" id="wkOverdue"><b>${overdue}</b> เกินกำหนดส่งสะสม${overdue ? ' · กดดูรายการ' : ''}</span>`
+    + `<span class="wk-chip"><b>${docsMissing}</b> เอกสารยังไม่ครบ</span>`;
+  const ob = document.getElementById('wkOverdue');
+  if (overdue && ob) ob.onclick = () => goToFilteredList('ทั้งหมด', { deadline: 'overdue' });
+
+  const seqMap = computeSeqMap();
+  const items = {};   // 'YYYY-MM-DD' -> [{cls, label, r}]
+  const put = (key, cls, label, r) => { (items[key] = items[key] || []).push({ cls, label, r }); };
+  open.forEach(r => {
+    if (r.appointDate && !r.pointedDate) put(r.appointDate, 'ap', r.appointDate < todayStr ? 'เลยนัดชี้แนวเขต' : 'นัดชี้แนวเขต', r);
+    if (r.pointedDate && !r.sentDate) {
+      const due = deadlineInfo(r).due;
+      if (due) put(due, due < todayStr ? 'ov' : 'rp', due < todayStr ? 'ส่งรายงานเลยกำหนด' : 'ครบกำหนดส่งรายงาน', r);
+    }
+  });
+  const dayHtml = (d, i) => {
+    const key = ymd(d), list = items[key] || [], isToday = key === todayStr;
+    const shown = list.slice(0, 4);
+    return `<div class="wk-day ${isToday ? 'today' : ''}"><div class="wk-dh"><b>${d.getDate()}</b><span>${WK_DAYS[i]}</span>${isToday ? '<span class="wk-tag">วันนี้</span>' : ''}</div>`
+      + (list.length ? shown.map(x => `<div class="wk-it ${x.cls}" data-id="${escapeHtml(x.r.id)}">${escapeHtml(x.label)}<small>ทล.${escapeHtml(String(x.r.highway))} กม.${escapeHtml(formatKm(x.r.km))} · ${escapeHtml(x.r.ownerName || '-')}</small></div>`).join('')
+        + (list.length > shown.length ? `<div class="wk-more">และอีก ${list.length - shown.length} รายการ</div>` : '')
+        : '<div class="wk-empty">ว่าง</div>') + '</div>';
+  };
+  grid.innerHTML = days.map(dayHtml).join('');
+  grid.querySelectorAll('.wk-it').forEach(el => { el.onclick = () => openCaseDetailModal(el.dataset.id); });
+
+  // นัดที่ตกวันเสาร์–อาทิตย์ของสัปดาห์นี้ (ไม่มีคอลัมน์) แจ้งไว้ท้ายกล่อง
+  const sat = new Date(mon); sat.setDate(mon.getDate() + 5);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+  const wkend = (items[ymd(sat)] || []).length + (items[ymd(sun)] || []).length;
+  document.getElementById('wkFoot').innerHTML = '<span><i style="background:#185fa5"></i>นัดชี้แนวเขต</span><span><i style="background:#ba7517"></i>ครบกำหนดส่งรายงาน (5 วันทำการ)</span><span><i style="background:#a32d2d"></i>เลยกำหนด</span>'
+    + (wkend ? `<span>มีกำหนดตกวันเสาร์–อาทิตย์ ${wkend} รายการ</span>` : '');
 }
 // กล่อง "นัดหมายชี้แนวเขต" — เรื่องที่มีวันนัดและยังไม่ได้ชี้แนวเขต เรียงตามวันนัด (เลยนัดขึ้นก่อน) ไม่ขึ้นกับตัวกรองปีงบ
 function renderAppointments(){
