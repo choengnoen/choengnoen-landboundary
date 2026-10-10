@@ -3431,7 +3431,8 @@ async function buildCaseImage(){
     if (items.length > 1) {
       const receipt = card.querySelector(':scope > .cd-receipt');
       const half = Math.ceil(items.length / 2);
-      const list = mk('snap-items2', [mk('', items.slice(0, half)), mk('', items.slice(half))]);
+      const cells = []; for (let i = 0; i < half; i++) cells.push(items[i], items[half + i] || mk('', []));   // เรียงสลับซ้าย-ขวาเป็นแถว ให้บรรทัดสองคอลัมน์ตรงกัน
+    const list = mk('snap-items2', cells);
       if (receipt) card.insertBefore(list, receipt); else card.appendChild(list);
     }
   });
@@ -3452,6 +3453,11 @@ async function buildCaseImage(){
   stage.className = 'cd-snap-stage';
   stage.appendChild(shell);
   document.body.appendChild(stage);
+  // ตรากรมในหัวรูป: ใช้ตรากลางจากฮับ (ถ้าโหลดไม่ได้ใช้ logo.png ของระบบ)
+  const emb = shell.querySelector('.cd-logo');
+  if (emb && window.CNMaster && CNMaster.EMBLEM_URL) {
+    await new Promise(res => { emb.crossOrigin = 'anonymous'; emb.onload = res; emb.onerror = () => { emb.removeAttribute('crossorigin'); emb.src = 'logo.png'; res(); }; emb.src = CNMaster.EMBLEM_URL; setTimeout(res, 4000); });
+  }
   try {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
     const canvas = await window.html2canvas(shell, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, windowWidth: 1100 });
@@ -3551,7 +3557,7 @@ function openCaseDetailModal(id){
       <div class="modal modal-lg case-modal">
         <div class="modal-head cd-hd">
           <div class="cd-band">
-            <img src="logo.png" alt="" class="cd-logo">
+            <img src="logo.png" alt="ตรากรมทางหลวง" data-cn-emblem class="cd-logo">
             <div class="cd-type">รายการชี้แนวเขต</div>
             <div class="cd-pills"><span class="cd-pill">รับเรื่อง ${escapeHtml(formatThaiDate(rec.dateReceived))}</span></div>
             <div class="cd-hd-actions"><button class="cd-copy" id="caseDetailCopy" type="button" title="คัดลอกเป็นรูป" aria-label="คัดลอกเป็นรูป"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><button class="modal-close" id="caseDetailCloseX" type="button">×</button></div>
