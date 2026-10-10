@@ -2217,7 +2217,7 @@ async function renderDirNotice(){
   if (!document.getElementById('dirNotice')) return;
   const bad = st.missing.length + st.extra.length;
   if (st.ready && !bad) {
-    box.innerHTML = '<p class="hint" style="margin-top:14px">🔒 สมุดชื่อล็อกอิน: ย้ายแล้ว — คนที่ยังไม่ล็อกอินมองไม่เห็นว่าใครเป็นเจ้าของ/ผู้ดูแลระบบ</p>';
+    box.innerHTML = '';
     return;
   }
   const why = !st.ready
