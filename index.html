@@ -1433,9 +1433,9 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <div class="section-title" style="justify-content:space-between"><span>เรื่องที่ต้องติดตาม</span><span class="follow-head-sub" id="followSub"></span></div>
         <div id="followList"></div>
       </div>
-      <div class="card" id="pipeCard">
-        <div class="section-title" style="justify-content:space-between"><span>เรื่องค้างแยกตามขั้นตอน</span><span class="follow-head-sub" id="pipeSub"></span></div>
-        <div id="pipeList"></div>
+      <div class="card" id="apptCard">
+        <div class="section-title" style="justify-content:space-between"><span>นัดหมายชี้แนวเขต</span><span class="follow-head-sub" id="apptSub"></span></div>
+        <div id="apptList"></div>
       </div>
     </div>
   </div>
@@ -3759,7 +3759,7 @@ function renderDashboard(){
     firstRow.style.gridTemplateColumns = '1fr';
   }
   try { renderFollowUp(); } catch (e) { console.error('follow-up render failed', e); }
-  try { renderPipeline(open); } catch (e) { console.error('pipeline render failed', e); }
+  try { renderAppointments(); } catch (e) { console.error('appointments render failed', e); }
 }
 
 // กล่อง "เรื่องที่ต้องติดตาม": เรื่องที่ยังไม่เสร็จ เรียงตามความเร่งด่วน (เกินกำหนด → ใกล้ครบ → ที่เหลือตามวันที่รับเรื่องเก่าสุด)
@@ -3806,20 +3806,27 @@ function renderFollowUp(){
   const more = document.getElementById('followMoreLink');
   if (more) more.onclick = () => goToFilteredList(dashYear, { status: 'open' });
 }
-// กล่อง "เรื่องค้างแยกตามขั้นตอน" — นับเรื่องที่ยังไม่เสร็จ ตามขั้นที่กำลังรอ
-function renderPipeline(open){
-  const el = document.getElementById('pipeList');
+// กล่อง "นัดหมายชี้แนวเขต" — เรื่องที่มีวันนัดและยังไม่ได้ชี้แนวเขต เรียงตามวันนัด (เลยนัดขึ้นก่อน) ไม่ขึ้นกับตัวกรองปีงบ
+function renderAppointments(){
+  const el = document.getElementById('apptList');
   if (!el) return;
-  const counts = STEPS.map(() => 0);
-  open.forEach(r => { const i = currentStepIndex(r) + 1; if (i >= 1 && i < STEPS.length) counts[i]++; });
-  const maxN = Math.max(1, ...counts);
-  document.getElementById('pipeSub').textContent = open.length + ' เรื่อง';
-  el.innerHTML = open.length ? STEPS.slice(1).map((s, j) => {
-    const i = j + 1;
-    return `<div class="pipe-row" data-step="${i}"><span class="rank">${i + 1}</span><span>${escapeHtml(s.wait)}<span class="c-sub">${escapeHtml(s.who)}</span></span>
-      <div class="mini-track"><i style="width:${Math.round(counts[i] / maxN * 100)}%"></i></div><b class="mono" style="text-align:right">${counts[i]}</b></div>`;
-  }).join('') : '<p class="hint" style="color:var(--green)">✓ ไม่มีเรื่องค้างในขั้นตอนใด</p>';
-  el.querySelectorAll('.pipe-row').forEach(row => { row.onclick = () => goToFilteredList(dashYear, { step: row.dataset.step }); });
+  const today = parseYmd(todayYmd());
+  const list = records.filter(r => isOpenCase(r) && r.appointDate && !r.pointedDate)
+    .sort((a, b) => a.appointDate.localeCompare(b.appointDate));
+  const seqMap = computeSeqMap();
+  document.getElementById('apptSub').textContent = list.length ? list.length + ' นัด' : '';
+  if (!list.length) { el.innerHTML = '<p class="hint">ยังไม่มีนัดหมายที่รอชี้แนวเขต</p>'; return; }
+  el.innerHTML = list.slice(0, 7).map(r => {
+    const diff = Math.round((parseYmd(r.appointDate) - today) / 86400000);
+    const when = diff < 0 ? { cls: 'bad', text: 'เลยนัด ' + (-diff) + ' วัน' } : diff === 0 ? { cls: 'warn', text: 'วันนี้' } : diff === 1 ? { cls: 'warn', text: 'พรุ่งนี้' } : { cls: '', text: 'อีก ' + diff + ' วัน' };
+    const place = [r.tambon, r.amphoe].filter(Boolean).join(' · ');
+    return `<div class="follow-row" data-id="${escapeHtml(r.id)}">
+      <div class="f-main"><b>${escapeHtml(formatThaiDate(r.appointDate))}</b> · ทล.${escapeHtml(String(r.highway))} กม.${escapeHtml(formatKm(r.km))}
+        <div class="f-sub">${escapeHtml(caseNoOf(r, seqMap))} · ${escapeHtml(r.ownerName || '-')}${place ? ' · ' + escapeHtml(place) : ''}</div></div>
+      <div class="f-right"><span class="age-pill ${when.cls}">${when.text}</span></div>
+    </div>`;
+  }).join('') + (list.length > 7 ? '<p class="hint" style="margin-top:6px">และอีก ' + (list.length - 7) + ' นัด — ดูทั้งหมดในหน้ารายการ</p>' : '');
+  el.querySelectorAll('.follow-row').forEach(row => { row.onclick = () => openCaseDetailModal(row.dataset.id); });
 }
 
 // ไปหน้ารายการพร้อมตัวกรอง (ใช้จากการ์ด/กล่องในหน้าภาพรวม)
