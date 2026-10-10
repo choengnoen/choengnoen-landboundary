@@ -970,7 +970,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .rb-sn.dx::after{content:'';position:absolute;inset:-10px;border-radius:inherit;border:2.5px solid #f07a1f}
 .rb-lbl{position:absolute;font-size:13px;line-height:1.4;z-index:3;text-align:center}
 .rb-lbl.l{text-align:left}.rb-lbl.r{text-align:right}
-.rb-tt{font-size:13px;font-weight:600;color:var(--ink,#182430)}
+.rb-tt{font-size:13px;font-weight:600;color:var(--ink,#182430);text-wrap:balance}
+.rb-w{display:inline-block}
 .rb-ch{margin-top:5px;display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
 .rb-lbl.l .rb-ch{justify-content:flex-start}.rb-lbl.r .rb-ch{justify-content:flex-end}
 .rb-nb{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 5px;border-radius:6px;background:var(--paper-2,#eceee9);border:1px solid var(--line,#dfe2dd);color:var(--ink-soft,#4d5a66);font-size:12px;font-weight:600;margin-right:5px;vertical-align:1px}
@@ -979,7 +980,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .rb-rch i.o{border-radius:50%}.rb-rch i.q{border-radius:2px;transform:rotate(45deg);width:7px;height:7px}
 .rb-warn{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--amber-glow,#fdf1de);color:var(--amber-deep,#a3660a)}
 .rb-isl{position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;width:150px;z-index:2;font-size:14px;font-weight:600;color:var(--ink,#182430)}
-.rb-it{width:46px;height:46px;border-radius:12px;background:var(--c1);color:#fff;display:flex;align-items:center;justify-content:center}
+.rb-it{width:50px;height:50px;border-radius:14px;background:linear-gradient(145deg,#FFFFFF 0%,#E3E6EB 100%);color:#3F4651;border:1.5px solid #B9BDC4;box-shadow:0 6px 14px -4px rgba(63,70,81,.35),inset 0 1px 0 #fff;display:flex;align-items:center;justify-content:center}
 @media (prefers-reduced-motion:no-preference){
 @keyframes rb-pop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}
 @keyframes rb-pr{from{opacity:.9;transform:scale(.85)}to{opacity:0;transform:scale(1.4)}}
@@ -3890,7 +3891,7 @@ function rbIconKey(t){
 function renderFlowRoundabout(host, opt){
   if (!host) return;
   const esc = escapeHtml, st = opt.steps, n = st.length, th = opt.theme;
-  const cx = 340, cy = 282, R = 124, H = 570, LW = 140;
+  const cx = 340, cy = 282, R = 124, H = 570, LW = 164;
   const reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const ring = `M${cx} ${cy - R} A${R} ${R} 0 1 1 ${cx} ${cy + R} A${R} ${R} 0 1 1 ${cx} ${cy - R}`;
   const body = '<rect x="-16" y="-9" width="32" height="18" rx="7" fill="#FFD21F" stroke="#B38F00" stroke-width="1"/><rect x="3" y="-6.5" width="8" height="13" rx="2.5" fill="#3F3E3A" opacity=".85"/><rect x="-11" y="-6" width="5" height="12" rx="2" fill="#3F3E3A" opacity=".55"/><circle cx="15" cy="-5.5" r="1.6" fill="#fff"/><circle cx="15" cy="5.5" r="1.6" fill="#fff"/>';
@@ -3905,7 +3906,7 @@ function renderFlowRoundabout(host, opt){
     else if (ux > 0) { tf = 'translate(0,-50%)'; al = 'l'; }
     else { tf = 'translate(-100%,-50%)'; al = 'r'; }
     h += `<div class="rb-stw" style="left:${sx - 24}px;top:${sy - 24}px;animation-delay:${i * 90}ms"><div class="rb-sn ${s.h ? 'hd' : 'ad'}${s.dec ? ' dx' : ''}">${rbSvg(rbIconKey(s.text), 21)}</div></div>`;
-    h += `<div class="rb-lbl ${al}" style="left:${lx}px;top:${ly}px;width:${LW}px;transform:${tf}"><div class="rb-tt"><span class="rb-nb">${i + 1}</span>${esc(s.text)}</div><div class="rb-ch"><span class="rb-rch" style="--rc:${s.h ? 'var(--c2)' : 'var(--c1)'}"><i class="${s.h ? 'q' : 'o'}"></i>${s.h ? 'หัวหน้า' : 'ธุรการ'}</span></div>${s.loop ? `<div class="rb-ch"><span class="rb-warn">${rbSvg('redo', 12)}วนแก้ไข</span></div>` : ''}</div>`;
+    h += `<div class="rb-lbl ${al}" style="left:${lx}px;top:${ly}px;width:${LW}px;transform:${tf}"><div class="rb-tt"><span class="rb-nb">${i + 1}</span>${esc(s.text).split(' ').map(w => `<span class="rb-w">${w}</span>`).join(' ')}</div><div class="rb-ch"><span class="rb-rch" style="--rc:${s.h ? 'var(--c2)' : 'var(--c1)'}"><i class="${s.h ? 'q' : 'o'}"></i>${s.h ? 'หัวหน้า' : 'ธุรการ'}</span></div>${s.loop ? `<div class="rb-ch"><span class="rb-warn">${rbSvg('redo', 12)}วนแก้ไข</span></div>` : ''}</div>`;
   });
   const hasLoop = st.some(s => s.loop);
   host.innerHTML = `<div class="rb-wrap" style="--c1:${th[0]};--c2:${th[1]}">
