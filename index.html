@@ -905,6 +905,27 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .land-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px 12px}
 .land-grid .s2{grid-column:span 2}.land-grid .s3{grid-column:span 3}.land-grid .s4{grid-column:span 4}.land-grid .s5{grid-column:span 5}.land-grid .s6{grid-column:span 6}.land-grid .s8{grid-column:span 8}
 @media(max-width:720px){.land-grid{grid-template-columns:1fr 1fr}.land-grid .field{grid-column:span 1 !important}.land-grid .s8,.land-grid .s5,.land-grid .s6{grid-column:1/-1 !important}}
+/* กล่อง "ที่ดินและที่ตั้ง": กล่องเทา 2 กล่อง · กลุ่มละคอลัมน์ · ช่องกว้างพอดีกับข้อมูล */
+.lbox{margin-top:0}
+.lbox+.lbox{margin-top:12px}
+.lcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.lcol{padding:0 20px;border-left:1px solid #d9dcd6;min-width:0}
+.lcol:first-child{padding-left:0;border-left:0}
+.lcol:last-child{padding-right:0}
+.lg-h{font-family:'Kanit',sans-serif;font-weight:700;font-size:13px;color:var(--navy-900);display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.lg-h::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--amber-500)}
+.lln{display:flex;gap:10px}
+.lln+.lln{margin-top:8px}
+.lln .field{min-width:0}
+.lcol .field label{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.lcol .field label .hint{margin-left:auto;font-weight:600;font-size:11.5px}
+.auto-tag{font-size:10px;font-weight:600;background:#e8f1fb;color:#1d4e83;border-radius:20px;padding:0 7px;line-height:16px}
+.lk-btn{margin-left:auto;border:0;background:none;padding:0;font:600 12px 'Sarabun',sans-serif;color:#1d4e83;cursor:pointer}
+.lk-btn:hover{color:var(--amber);text-decoration:underline}
+.section-title .sec-note{margin-left:auto;font-weight:400;font-size:12px;color:var(--ink-soft)}
+.filled-auto{background:#e8f1fb !important;border-color:#bcd5f1 !important;animation:autoPop .6s}
+@keyframes autoPop{0%{box-shadow:0 0 0 5px #bcd5f1}100%{box-shadow:0 0 0 0 transparent}}
+@media(max-width:900px){.lcols{grid-template-columns:1fr}.lcol{padding:12px 0;border-left:0;border-top:1px solid #d9dcd6}.lcol:first-child{border-top:0;padding-top:0}.lln{flex-wrap:wrap}.lln .field{flex:1 1 140px !important;width:auto !important}.section-title .sec-note{display:none}}
 #f_sectionView{background:var(--paper-2);color:var(--ink-soft)}
 .rep-info{margin-top:6px;font-size:13px;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;line-height:1.6}
 .rep-info b{color:var(--navy-900)}
@@ -1341,10 +1362,13 @@ tr.route-editable:hover td{background:var(--amber-glow)}
     </div>
 
     <div class="card" id="fsec2">
-      <div class="section-title"><span class="num">2</span> ที่ดินและที่ตั้ง <span class="sub">ข้อมูลก่อนออกไปชี้แนวเขต</span></div>
-      <div class="sec-sub" style="margin-top:0;padding-top:0;border-top:0">หลักฐานที่ดิน</div>
-      <div class="land-grid">
-        <div class="field s4">
+      <div class="section-title"><span class="num">2</span> ที่ดินและที่ตั้ง <span class="sec-note">🔔 แจ้งเตือน LINE ล่วงหน้า 1 วันทำการ · แก้รายชื่อ/เบอร์ตัวแทนแขวงที่หน้า "ตั้งค่า"</span></div>
+      <div class="party-block lbox">
+      <div class="lcols">
+      <div class="lcol">
+        <div class="lg-h">หลักฐานที่ดิน</div>
+        <div class="lln">
+        <div class="field" style="flex:1">
           <label>ประเภทหลักฐาน</label>
           <select id="f_deedType">
             <option value="โฉนดที่ดิน">โฉนดที่ดิน (น.ส.4 จ.)</option>
@@ -1363,80 +1387,114 @@ tr.route-editable:hover td{background:var(--amber-glow)}
             <option value="อื่นๆ">อื่นๆ (ระบุเอง)</option>
           </select>
           <input type="text" id="f_deedOther" placeholder="ระบุประเภทหลักฐาน" style="display:none;margin-top:6px">
+          <span class="hint km-hint" id="deedHint"></span>
         </div>
-        <div class="field s3">
+        </div>
+        <div class="lln">
+        <div class="field" style="flex:1.3">
           <label>เลขที่หลักฐาน</label>
           <input type="text" id="f_deedNo" placeholder="เช่น 12345">
         </div>
-        <div class="field s2">
+        <div class="field" style="flex:1">
           <label>เลขที่ดิน</label>
           <input type="text" id="f_landNo">
         </div>
-        <div class="field s3">
-          <label>ระวาง</label>
-          <input type="text" id="f_mapSheet" placeholder="เช่น 5135 II 6234">
-        </div>
-        <div class="field s3">
-          <label>หน้าสำรวจ</label>
-          <input type="text" id="f_surveyPage">
         </div>
       </div>
 
-      <div class="sec-sub">ที่ดินตั้งอยู่</div>
-      <div class="land-grid">
-        <div class="field s4">
-          <label>ตำบล</label>
+      <div class="lcol">
+        <div class="lg-h">ที่ดินตั้งอยู่</div>
+        <div class="lln">
+        <div class="field" style="flex:1">
+          <label>ตำบล <button type="button" class="lk-btn" id="btnLandTamOwner" title="ดึงตำบลจากที่อยู่เจ้าของที่ดิน (กล่อง 1)">ใช้ตามเจ้าของ</button></label>
           <input type="text" id="f_tambon" list="dlLTam" autocomplete="off">
         </div>
-        <div class="field s4">
-          <label>อำเภอ</label>
+        <div class="field" style="flex:1">
+          <label>อำเภอ <span class="auto-tag">อัตโนมัติ</span></label>
           <input type="text" id="f_amphoe" list="dlLAmp" autocomplete="off">
         </div>
-        <div class="field s4">
-          <label>จังหวัด</label>
+        </div>
+        <div class="lln">
+        <div class="field" style="width:170px">
+          <label>จังหวัด <span class="auto-tag">อัตโนมัติ</span></label>
           <input type="text" id="f_province" list="dlLProv" autocomplete="off">
+        </div>
         </div>
       </div>
       <datalist id="dlLProv"></datalist><datalist id="dlLAmp"></datalist><datalist id="dlLTam"></datalist>
 
-      <div class="sec-sub">ที่ดินดังกล่าวอยู่ติดทางหลวง</div>
-      <div class="land-grid">
-        <div class="field s4">
+      <div class="lcol">
+        <div class="lg-h">ที่ดินดังกล่าวอยู่ติดทางหลวง</div>
+        <div class="lln">
+        <div class="field" style="width:170px">
           <label>ทางหลวงหมายเลข <span class="req">*</span></label>
           <select id="f_highway"></select>
           <span class="hint km-hint" id="highwayHint"></span>
           <input type="hidden" id="f_section">
+          <input type="hidden" id="f_km"><span id="kmHint" hidden></span>
         </div>
-        <div class="field s5">
-          <label>ตอน</label>
+        </div>
+        <div class="lln">
+        <div class="field" style="flex:1">
+          <label>ตอน <span class="auto-tag">อัตโนมัติ</span></label>
           <input type="text" id="f_sectionView" readonly tabindex="-1" placeholder="แสดงอัตโนมัติตามทางหลวงที่เลือก">
         </div>
-        <div class="field s3">
-          <label>กม. <span class="req">*</span></label>
-          <input type="text" id="f_km" placeholder="เช่น 230+500">
-          <span class="hint km-hint" id="kmHint"></span>
         </div>
       </div>
+      </div>
+      <input type="hidden" id="f_mapSheet"><input type="hidden" id="f_surveyPage">
+      </div>
 
-      <div class="sec-sub">นัดชี้แนวเขต / ตัวแทนแขวง</div>
-      <div class="land-grid">
-        <div class="field s4">
-          <label>นัดชี้แนวเขต วันที่</label>
+      <div class="party-block lbox">
+      <div class="lcols">
+      <div class="lcol">
+        <div class="lg-h">นัดชี้แนวเขต</div>
+        <div class="lln">
+        <div class="field" style="width:190px">
+          <label>วันที่นัด <span class="hint" id="appointDayHint"></span></label>
           <input type="date" id="f_appointDate">
         </div>
-        <div class="field s3">
+        </div>
+        <div class="lln">
+        <div class="field" style="width:140px">
           <label>เวลา</label>
           <input type="time" id="f_appointTime">
         </div>
-        <div class="field s5">
+        </div>
+      </div>
+      <div class="lcol">
+        <div class="lg-h">ตัวแทนแขวง</div>
+        <div class="lln">
+        <div class="field" style="flex:1">
           <label>ตัวแทนแขวง</label>
           <select id="f_repId"></select>
         </div>
-        <div class="full" style="grid-column:1/-1">
-          <span class="hint km-hint">ระบบแจ้งเตือน LINE ล่วงหน้า 1 วันทำการ · รายชื่อตัวแทนแขวงเพิ่ม/แก้ได้ที่หน้า "ตั้งค่า"</span>
-          <div class="rep-info" id="repInfo" style="display:none"></div>
-          <input type="hidden" id="f_repName"><input type="hidden" id="f_repPosition"><input type="hidden" id="f_repPhone"><input type="hidden" id="f_repMobile">
         </div>
+        <div class="lln">
+        <div class="field" style="width:180px">
+          <label>เบอร์โทร <span class="auto-tag">อัตโนมัติ</span></label>
+          <input type="text" id="f_repMobile" inputmode="tel" placeholder="0xx-xxx-xxxx" autocomplete="off">
+        </div>
+        </div>
+        <input type="hidden" id="f_repName"><input type="hidden" id="f_repPosition"><input type="hidden" id="f_repPhone">
+      </div>
+      <div class="lcol">
+        <div class="lg-h">ช่างรังวัด</div>
+        <div class="lln">
+        <div class="field" style="flex:1">
+          <label>ชื่อ-นามสกุล</label>
+          <input type="text" id="f_surveyorName" list="dlSurveyor" autocomplete="off" placeholder="เช่น นายสมศักดิ์ รังวัดดี">
+          <datalist id="dlSurveyor"></datalist>
+        </div>
+        </div>
+        <div class="lln">
+        <div class="field" style="width:180px">
+          <label>โทรศัพท์ <span class="auto-tag" id="surveyorPhoneTag" style="display:none">อัตโนมัติ</span></label>
+          <input type="text" id="f_surveyorPhone" inputmode="tel" placeholder="0xx-xxx-xxxx" autocomplete="off">
+        </div>
+        </div>
+      </div>
+      </div>
       </div>
     </div>
 
@@ -2984,7 +3042,7 @@ function updateCancelUi(){
 const TEXT_FIELDS = ['incomingNo', 'side', 'location', 'deedNo', 'landNo', 'surveyPage',
   'tambon', 'amphoe', 'province', 'areaRai', 'areaNgan', 'areaWa', 'rowDistance', 'ownerName', 'ownerPhone', 'ownerAddress',
   'proxyName', 'proxyPhone', 'proxyRelation', 'pointedBy', 'pointedWith', 'certNo', 'sentTo', 'archiveLocation', 'note', 'cancelReason', 'appointDate', 'coords',
-  'deedOther', 'mapSheet', 'appointTime', 'repId', 'repName', 'repPosition', 'repPhone', 'repMobile', 'pinKm0', 'pinDir', 'rowWork'];
+  'deedOther', 'mapSheet', 'appointTime', 'repId', 'repName', 'repPosition', 'repPhone', 'repMobile', 'surveyorName', 'surveyorPhone', 'pinKm0', 'pinDir', 'rowWork'];
 const DEFAULT_PROVINCE = 'ระยอง';
 
 /* ============ รูปถ่ายประกอบเคส (ไม่เกิน 2 รูป · เก็บใน Google Drive ผ่าน drive-bridge) ============
@@ -3335,12 +3393,13 @@ async function saveForm(){
   const fiscalYear = parseInt(document.getElementById('f_fiscalYear').value, 10);
   const dateReceived = document.getElementById('f_dateReceived').value;
   const highway = document.getElementById('f_highway').value;
-  const km = parseKm(document.getElementById('f_km').value);
+  // กม. ไม่บังคับตอนรับเรื่อง (ยังไม่ทราบก่อนออกไปชี้แนวเขต) · ถ้ายังว่างแต่กรอก "กม. หมุดที่ 1" ในส่วนผลชี้แนวเขตแล้ว ใช้ค่านั้นเป็น กม. ของเรื่อง
+  let km = parseKm(document.getElementById('f_km').value);
+  if (km === null) km = parseKm(document.getElementById('f_pinKm0').value);
   const ownerName = document.getElementById('f_ownerName').value.trim();
 
   if (!dateReceived) { showToast('กรุณากรอกวันที่หนังสือ'); return; }
   if (!highway) { showToast('กรุณาเลือกทางหลวง (ทล.)'); return; }
-  if (km === null) { showToast('กรุณากรอก กม. ให้ถูกรูปแบบ เช่น 230+500'); return; }
   if (!ownerName) { showToast('กรุณากรอกชื่อเจ้าของที่ดิน'); return; }
   // วันที่ของขั้นตอนต้องไม่ก่อนวันที่รับเรื่อง
   const snap = stepSnapshot();
@@ -3690,7 +3749,7 @@ function renderTable(){
     const dl = deadlineInfo(r);
     tr.innerHTML = `
       <td class="case-cell nowrap-cell"><b>${formatThaiDate(r.dateReceived)}</b><span class="c-sub">${escapeHtml(caseNoOf(r, seqMap))}</span></td>
-      <td class="hw-cell nowrap-cell">ทล.${escapeHtml(r.highway)} · กม.${escapeHtml(formatKm(r.km))}<span class="c-sub">${escapeHtml([r.side, r.section].filter(Boolean).join(' · '))}</span></td>
+      <td class="hw-cell nowrap-cell">ทล.${escapeHtml(r.highway)} · ${formatKm(r.km) ? 'กม.' + escapeHtml(formatKm(r.km)) : 'กม.รอระบุ'}<span class="c-sub">${escapeHtml([r.side, r.section].filter(Boolean).join(' · '))}</span></td>
       <td>${escapeHtml(r.ownerName || '-')}${r.hasProxy === 'มี' && r.proxyName ? `<span class="c-sub">มอบอำนาจ: ${escapeHtml(r.proxyName)}</span>` : ''}</td>
       <td>${escapeHtml(deedText(r))}<span class="c-sub">${escapeHtml(placeText(r))}</span></td>
       <td>${statusPillOf(r)}</td>
@@ -3995,7 +4054,7 @@ function openCaseDetailModal(id){
           <div class="cd-cells">
             <div class="cd-cell"><span class="cd-k">ทางหลวง</span><span class="cd-v">ทล.${escapeHtml(rec.highway)}</span></div>
             <div class="cd-cell cd-grow"><span class="cd-k">ตอน</span><span class="cd-v">${escapeHtml(rec.section)}</span></div>
-            <div class="cd-cell"><span class="cd-k">กิโลเมตร</span><span class="cd-v">กม.${escapeHtml(formatKm(rec.km))}</span></div>${rec.side ? '<div class="cd-cell"><span class="cd-k">ฝั่ง</span><span class="cd-v">' + escapeHtml(rec.side) + '</span></div>' : ''}
+            <div class="cd-cell"><span class="cd-k">กิโลเมตร</span><span class="cd-v">${formatKm(rec.km) ? 'กม.' + escapeHtml(formatKm(rec.km)) : 'ยังไม่ระบุ'}</span></div>${rec.side ? '<div class="cd-cell"><span class="cd-k">ฝั่ง</span><span class="cd-v">' + escapeHtml(rec.side) + '</span></div>' : ''}
           </div>
         </div>
         <div class="modal-body">
@@ -4007,8 +4066,6 @@ function openCaseDetailModal(id){
                 <dl class="cd-dl">
                   <dt>เอกสารสิทธิ์</dt><dd>${escapeHtml(deedText(rec)) || '-'}</dd>
                   <dt>เลขที่ดิน</dt><dd>${escapeHtml(rec.landNo) || '-'}</dd>
-                  <dt>ระวาง</dt><dd>${escapeHtml(rec.mapSheet) || '-'}</dd>
-                  <dt>หน้าสำรวจ</dt><dd>${escapeHtml(rec.surveyPage) || '-'}</dd>
                   <dt>ที่ตั้ง</dt><dd>${escapeHtml(placeText(rec)) || '-'}</dd>
                   <dt>เนื้อที่</dt><dd>${escapeHtml(areaText(rec)) || '-'}</dd>
                   <dt>บริเวณ</dt><dd>${escapeHtml(rec.location) || '-'}</dd>
@@ -4016,6 +4073,7 @@ function openCaseDetailModal(id){
                   <dt>ระยะเขตทางกันแนวเขต</dt><dd>${rec.rowWork ? escapeHtml(rec.rowWork) + ' ม.' : '-'}</dd>
                   <dt>วันนัดชี้แนว</dt><dd>${rec.appointDate ? escapeHtml(formatThaiDate(rec.appointDate)) + (rec.appointTime ? ' เวลา ' + escapeHtml(rec.appointTime) + ' น.' : '') : '-'}</dd>
                   <dt>ตัวแทนแขวง</dt><dd>${rec.repName ? escapeHtml(rec.repName) + (rec.repPosition ? '<br><small>' + escapeHtml(rec.repPosition) + '</small>' : '') + ([rec.repPhone, rec.repMobile].filter(Boolean).length ? '<br><small>' + escapeHtml([rec.repPhone ? 'โทร ' + rec.repPhone : '', rec.repMobile ? 'มือถือ ' + rec.repMobile : ''].filter(Boolean).join(' · ')) + '</small>' : '') : '-'}</dd>
+                  <dt>ช่างรังวัด</dt><dd>${rec.surveyorName ? escapeHtml(rec.surveyorName) + (rec.surveyorPhone ? '<br><small>โทร ' + escapeHtml(rec.surveyorPhone) + '</small>' : '') : '-'}</dd>
                   <dt>พิกัดแปลง</dt><dd>${coordsHtml(rec.coords)}</dd>
                 </dl></div>
               <div class="cd-card"><div class="cd-sec">เจ้าของที่ดิน${rec.hasProxy === 'มี' ? ' / ผู้รับมอบอำนาจ' : ''}</div>
@@ -4530,7 +4588,74 @@ function landRefreshLists(){
   const prov = document.getElementById('f_province').value.trim(), amp = document.getElementById('f_amphoe').value.trim();
   const ry = prov === ADDR_DEFAULT_PROV;
   fillDatalist('dlLAmp', ry ? Object.keys(ADDR_RAYONG) : []);
-  fillDatalist('dlLTam', ry && ADDR_RAYONG[amp] ? ADDR_RAYONG[amp] : []);
+  // ยังไม่ระบุอำเภอ: เสนอตำบลทั้งหมดของระยอง (เลือกตำบลแล้วระบบเติมอำเภอให้) · ระบุอำเภอแล้ว: เสนอเฉพาะตำบลของอำเภอนั้น
+  fillDatalist('dlLTam', ry ? (ADDR_RAYONG[amp] ? ADDR_RAYONG[amp] : (amp ? [] : Object.keys(ADDR_TAM_AMP))) : []);
+}
+/* ===== ช่องที่ระบบกรอกให้ในกล่อง "ที่ดินและที่ตั้ง" ===== */
+function markAutoFilled(el){ if (!el) return; el.classList.remove('filled-auto'); void el.offsetWidth; el.classList.add('filled-auto'); }
+function landTambonAutofill(){
+  const t = document.getElementById('f_tambon').value.trim(), a = ADDR_TAM_AMP[t];
+  if (!a) return;
+  const amp = document.getElementById('f_amphoe'), prov = document.getElementById('f_province');
+  if (amp.value.trim() !== a) { amp.value = a; markAutoFilled(amp); }
+  if (prov.value.trim() !== ADDR_DEFAULT_PROV) { prov.value = ADDR_DEFAULT_PROV; markAutoFilled(prov); }
+  landRefreshLists();
+}
+function landFromOwner(){
+  const t = addrEl('Tam') ? addrEl('Tam').value.trim() : '';
+  if (!t) { showToast('ยังไม่ได้กรอกตำบลในที่อยู่เจ้าของที่ดิน'); return; }
+  document.getElementById('f_tambon').value = t;
+  const a = addrEl('Amp').value.trim(), p = addrEl('Prov').value.trim();
+  if (a) document.getElementById('f_amphoe').value = a;
+  if (p) document.getElementById('f_province').value = p;
+  landTambonAutofill(); landRefreshLists();
+  ['f_tambon', 'f_amphoe', 'f_province'].forEach(id => markAutoFilled(document.getElementById(id)));
+}
+function deedUi(){
+  const none = document.getElementById('f_deedType').value === 'ไม่มีเอกสารสิทธิ์';
+  ['f_deedNo', 'f_landNo'].forEach(id => { document.getElementById(id).disabled = none; });
+  const h = document.getElementById('deedHint');
+  if (none) { h.textContent = 'ไม่มีเอกสารสิทธิ์ จึงไม่ต้องกรอกเลขที่หลักฐาน/เลขที่ดิน'; h.classList.remove('warn'); return; }
+  const no = document.getElementById('f_deedNo').value.trim();
+  const dup = no ? records.find(r => r.id !== editingId && !r.cancelled && String(r.deedNo || '').trim() === no && (r.deedType || '') === document.getElementById('f_deedType').value) : null;
+  h.textContent = dup ? '⚠ เลขที่หลักฐานนี้มีเรื่องเดิมแล้ว' + (dup.ownerName ? ' (' + dup.ownerName + ')' : '') : '';
+  h.classList.toggle('warn', !!dup);
+}
+function appointDayHint(){
+  const v = document.getElementById('f_appointDate').value, h = document.getElementById('appointDayHint');
+  if (!h) return;
+  if (!v) { h.textContent = ''; return; }
+  const d = new Date(v + 'T00:00:00'), w = d.getDay();
+  h.textContent = (w === 0 || w === 6) ? '⚠ วันหยุดเสาร์-อาทิตย์' : 'วัน' + ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'][w];
+  h.style.color = (w === 0 || w === 6) ? 'var(--rust)' : 'var(--green)';
+}
+// ช่างรังวัด: เสนอชื่อที่เคยบันทึกไว้ในเรื่องก่อนๆ (เรียงตามที่ใช้บ่อย) · เลือกแล้วเติมเบอร์ที่เคยใช้ให้
+function surveyorRefreshList(){
+  const cnt = {}, phone = {};
+  records.forEach(r => { const n = (r.surveyorName || '').trim(); if (!n) return; cnt[n] = (cnt[n] || 0) + 1; if (r.surveyorPhone) phone[n] = r.surveyorPhone; });
+  window.SURVEYOR_PHONE = phone;
+  const dl = document.getElementById('dlSurveyor');
+  if (dl) dl.innerHTML = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a] || a.localeCompare(b, 'th')).map(n => '<option value="' + escapeHtml(n) + '"></option>').join('');
+}
+function surveyorAutofill(){
+  const n = document.getElementById('f_surveyorName').value.trim(), p = (window.SURVEYOR_PHONE || {})[n];
+  const ph = document.getElementById('f_surveyorPhone');
+  if (p && !ph.value.trim()) { ph.value = p; markAutoFilled(ph); }
+}
+function initLandBoxExtras(){
+  document.getElementById('f_tambon').addEventListener('input', landTambonAutofill);
+  document.getElementById('f_tambon').addEventListener('change', landTambonAutofill);
+  document.getElementById('btnLandTamOwner').addEventListener('click', landFromOwner);
+  ['f_deedType', 'f_deedNo'].forEach(id => { const el = document.getElementById(id); el.addEventListener('input', deedUi); el.addEventListener('change', deedUi); });
+  document.getElementById('f_appointDate').addEventListener('change', appointDayHint);
+  document.getElementById('f_appointDate').addEventListener('input', appointDayHint);
+  ['f_repMobile', 'f_surveyorPhone'].forEach(id => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => { el.value = formatPhone(el.value); el.classList.remove('filled-auto'); });
+  });
+  document.getElementById('f_surveyorName').addEventListener('input', surveyorAutofill);
+  document.getElementById('f_surveyorName').addEventListener('change', surveyorAutofill);
+  ['f_amphoe', 'f_province'].forEach(id => document.getElementById(id).addEventListener('input', () => document.getElementById(id).classList.remove('filled-auto')));
 }
 function syncSectionView(){
   const v = document.getElementById('f_sectionView');
@@ -4581,7 +4706,8 @@ function onRepChange(){
   const id = document.getElementById('f_repId').value;
   const s = STAFF.find(x => x.id === id);
   const set = (k, v) => { document.getElementById('f_' + k).value = v || ''; };
-  if (s) { set('repName', s.name); set('repPosition', s.position); set('repPhone', s.phone); set('repMobile', s.mobile); }
+  // ช่องเบอร์โทรที่เห็นในฟอร์ม = repMobile : ใช้มือถือก่อน ถ้าไม่มีใช้เบอร์โทรศัพท์ (กันเบอร์ซ้ำสองช่อง)
+  if (s) { set('repName', s.name); set('repPosition', s.position); set('repMobile', formatPhone(s.mobile || s.phone)); set('repPhone', s.mobile ? s.phone : ''); markAutoFilled(document.getElementById('f_repMobile')); }
   else if (!id) { set('repName', ''); set('repPosition', ''); set('repPhone', ''); set('repMobile', ''); }
   renderRepInfo();
 }
@@ -4791,6 +4917,7 @@ function initDraftCard(){
   ['f_province', 'f_amphoe'].forEach(id => document.getElementById(id).addEventListener('input', landRefreshLists));
   fillDatalist('dlLProv', ADDR_PROVINCES);
   document.getElementById('f_repId').addEventListener('change', onRepChange);
+  initLandBoxExtras();
   document.getElementById('btnAddStaff').addEventListener('click', () => openStaffModal(''));
   refreshRepOptions('');
 }
@@ -4799,6 +4926,12 @@ function afterFormFill(rec){
   rec = rec || {};
   updateDeedOtherUi();
   landRefreshLists();
+  // เรื่องเก่าที่มีเบอร์ตัวแทนแค่ช่องโทรศัพท์: ย้ายมาแสดงในช่องเบอร์ที่เห็น (กันเบอร์หายจากหน้าฟอร์ม)
+  const rm = document.getElementById('f_repMobile'), rp = document.getElementById('f_repPhone');
+  if (!rm.value.trim() && rp.value.trim()) { rm.value = rp.value.trim(); rp.value = ''; }
+  surveyorRefreshList();
+  deedUi();
+  appointDayHint();
   const dir = document.getElementById('f_pinDir');
   if (dir.value !== 'down') dir.value = 'up';
   syncSectionView();
@@ -5278,9 +5411,9 @@ function buildCasesSheet(wb, rows, seqMap){
     ['ด้าน', 1, 10, 'text', r => r.side || ''],
     ['เอกสารสิทธิ์', 1, 20, 'text', r => deedText(r)],
     ['เลขที่ดิน', 1, 10, 'text', r => r.landNo || ''],
-    ['หน้าสำรวจ', 1, 10, 'text', r => r.surveyPage || ''],
     ['ที่ตั้ง', 1, 26, 'text', r => placeText(r)],
     ['เนื้อที่', 1, 18, 'text', r => areaText(r)],
+    ['ช่างรังวัด', 1, 22, 'text', r => [r.surveyorName, r.surveyorPhone].filter(Boolean).join(' · ')],
     ['เจ้าของที่ดิน', 2, 24, 'text', r => r.ownerName || ''],
     ['โทร', 2, 13, 'text', r => r.ownerPhone || ''],
     ['ผู้รับมอบอำนาจ', 2, 22, 'text', r => r.hasProxy === 'มี' ? (r.proxyName || '(ไม่ระบุชื่อ)') : ''],

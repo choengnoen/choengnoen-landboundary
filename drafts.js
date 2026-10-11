@@ -338,14 +338,15 @@
   async function afterCaseSaved(rec, isNew) {
     if (!CFG) return;
     try {
-      var start = d10(CFG.startOf(rec)), hw = String(rec.highway == null ? '' : rec.highway), km = Number(rec.km);
+      // กม. อาจยังว่าง (ยังไม่ได้ออกไปชี้แนวเขต) → ไม่เขียนทับ กม. ของร่าง และไม่ใช้จับคู่ร่าง
+      var start = d10(CFG.startOf(rec)), hw = String(rec.highway == null ? '' : rec.highway), noKm = rec.km == null || rec.km === '', km = noKm ? null : Number(rec.km);
       var p = pendingId ? byId(pendingId) : null, pe = pendingExisting; pendingId = null; pendingExisting = '';
-      if (p && !p.caseId && (isNew || pe === String(rec.id))) { await FBL.saveDraft({ id: p.id, caseId: rec.id, startDate: start || p.startDate, highway: hw, km: km }); return; }
+      if (p && !p.caseId && (isNew || pe === String(rec.id))) { await FBL.saveDraft({ id: p.id, caseId: rec.id, startDate: start || p.startDate, highway: hw, km: noKm ? p.km : km }); return; }
       var linked = null;
       drafts.forEach(function (d) { if (d.caseId === rec.id && d.status !== 'cancelled') linked = d; });
       if (linked) {
-        if (linked.startDate !== start || String(linked.highway) !== hw || Number(linked.km) !== km)
-          await FBL.saveDraft({ id: linked.id, startDate: start || linked.startDate, highway: hw, km: km });
+        if (linked.startDate !== start || String(linked.highway) !== hw || (!noKm && Number(linked.km) !== km))
+          await FBL.saveDraft({ id: linked.id, startDate: start || linked.startDate, highway: hw, km: noKm ? linked.km : km });
         return;
       }
       if (!start) return;
@@ -353,7 +354,7 @@
       if (d10(CFG.sentOf(rec)) || CFG.doneOf(rec)) return;
       if (!isNew && workLeft(today(), start) < -22) return;
       var match = null;
-      drafts.forEach(function (d) { if (!d.caseId && d.status !== 'cancelled' && d.startDate === start && String(d.highway) === hw && Number(d.km) === km) match = d; });
+      if (!noKm) drafts.forEach(function (d) { if (!d.caseId && d.status !== 'cancelled' && d.startDate === start && String(d.highway) === hw && Number(d.km) === km) match = d; });
       if (match) { await FBL.saveDraft({ id: match.id, caseId: rec.id }); return; }
       await FBL.saveDraft({ id: 'a-' + rec.id, startDate: start, highway: hw, km: km, caseId: rec.id, status: 'open', source: 'auto', note: '', createdAt: new Date().toISOString(), createdBy: who() });
     } catch (e) { console.error('draft link failed', e); toast('บันทึกเคสแล้ว แต่ผูกกับรายการร่างไม่สำเร็จ'); }
@@ -367,7 +368,7 @@
     FBL.watch('drafts', function (col, docs) { drafts = docs.map(norm); render(); }).then(function (docs) { drafts = docs.map(norm); render(); });
   }
   function norm(d) {
-    return { id: d.id || d.__id, startDate: d10(d.startDate), highway: String(d.highway == null ? '' : d.highway), km: Number(d.km),
+    return { id: d.id || d.__id, startDate: d10(d.startDate), highway: String(d.highway == null ? '' : d.highway), km: (d.km == null || d.km === '') ? null : Number(d.km),
       caseId: d.caseId || '', status: d.status === 'cancelled' ? 'cancelled' : 'open', source: d.source || '', note: d.note || '', createdAt: d.createdAt || '', createdBy: d.createdBy || '' };
   }
 
