@@ -875,6 +875,17 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .addr-grid .a-prov,.addr-grid .a-amp,.addr-grid .a-tam,.addr-grid .a-zip{grid-column:span 3}
 @media(max-width:720px){.addr-grid{grid-template-columns:1fr 1fr}.addr-grid .field{grid-column:span 1 !important}.addr-grid .a-name,.addr-grid .a-street{grid-column:1/-1 !important}}
 .addr-preview{margin-top:8px;font-size:12.5px;color:var(--ink-soft)}
+/* ที่อยู่เจ้าของที่ดิน: บ้านเลขที่/หมู่/ซอย/ตำบล แถวเดียว · อำเภอ-จังหวัด-รหัส เติมให้เป็นป้ายเขียว (กด "แก้" เปิดช่องเอง) */
+.addr-grid .a-house{grid-column:span 2}.addr-grid .a-moo{grid-column:span 1}.addr-grid .a-street{grid-column:span 3}
+.addr-grid .a-tam{grid-column:span 2}.addr-grid .a-chip{grid-column:span 4}
+.addr-grid.addr-manual{margin-top:10px}.addr-grid.addr-manual .a-prov,.addr-grid.addr-manual .a-amp,.addr-grid.addr-manual .a-zip{grid-column:span 4}
+.addr-chip{display:flex;align-items:center;gap:8px;height:39px;padding:0 10px;background:#fff;border:1px solid #cfe6d9;border-radius:8px;font-size:14.5px;white-space:nowrap}
+.addr-chip.empty{border:1px dashed #c9cec7;background:#fafbfa;color:var(--ink-mute);font-size:13px}
+.addr-chip #addrChipText{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.addr-chip .ok{color:var(--green);font-weight:700}
+.addr-chip .chip-edit{margin-left:auto;flex:none;font-size:12.5px;font-weight:600;color:var(--amber);cursor:pointer}
+.party-block-title .seg{font-family:'Sarabun',sans-serif;font-weight:400}
+@media(max-width:720px){.addr-grid .a-chip{grid-column:1/-1 !important}.addr-grid .a-tam{grid-column:span 1 !important}}
 .addr-preview:empty{display:none}
 .proxy-toggle{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
 .proxy-toggle .pt-label{font-size:13px;font-weight:600;color:var(--navy-900)}
@@ -1246,7 +1257,16 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       </div>
       <div class="sec-sub">เจ้าของที่ดิน / ผู้รับมอบอำนาจ</div>
       <div class="party-block">
-        <div class="party-block-title"><span>เจ้าของที่ดิน</span></div>
+        <div class="party-block-title"><span>เจ้าของที่ดิน</span>
+          <div class="seg" id="proxySeg">
+            <button type="button" data-v="ไม่มี">เจ้าของมาเอง</button>
+            <button type="button" data-v="มี">มีผู้รับมอบอำนาจ</button>
+          </div>
+          <select id="f_hasProxy" style="display:none">
+            <option value="ไม่มี">ไม่มี (เจ้าของมาเอง)</option>
+            <option value="มี">มี (ผู้รับมอบอำนาจ)</option>
+          </select>
+        </div>
         <div class="addr-grid">
           <div class="field a-name">
             <label>ชื่อ-นามสกุล เจ้าของที่ดิน <span class="req">*</span></label>
@@ -1269,6 +1289,16 @@ tr.route-editable:hover td{background:var(--amber-glow)}
             <label>ซอย / ถนน</label>
             <input type="text" id="f_addrStreet" placeholder="เช่น ซ.สุขุมวิท 10">
           </div>
+          <div class="field a-tam">
+            <label>ตำบล</label>
+            <input type="text" id="f_addrTam" list="dlTam" placeholder="เชิงเนิน" autocomplete="off">
+          </div>
+          <div class="field a-chip">
+            <label>อำเภอ · จังหวัด · รหัสไปรษณีย์</label>
+            <div class="addr-chip empty" id="addrChip"><span id="addrChipText"></span><span class="chip-edit" id="addrChipEdit" role="button" tabindex="0">แก้</span></div>
+          </div>
+        </div>
+        <div class="addr-grid addr-manual" id="addrManual" style="display:none">
           <div class="field a-prov">
             <label>จังหวัด</label>
             <input type="text" id="f_addrProv" list="dlProv" placeholder="ระยอง" autocomplete="off">
@@ -1277,29 +1307,13 @@ tr.route-editable:hover td{background:var(--amber-glow)}
             <label>อำเภอ</label>
             <input type="text" id="f_addrAmp" list="dlAmp" placeholder="เมืองระยอง" autocomplete="off">
           </div>
-          <div class="field a-tam">
-            <label>ตำบล</label>
-            <input type="text" id="f_addrTam" list="dlTam" placeholder="เชิงเนิน" autocomplete="off">
-          </div>
           <div class="field a-zip">
             <label>รหัสไปรษณีย์</label>
             <input type="text" id="f_addrZip" inputmode="numeric" maxlength="5" placeholder="21000">
           </div>
         </div>
         <input type="hidden" id="f_ownerAddress">
-        <div class="addr-preview" id="addrPreview"></div>
         <datalist id="dlProv"></datalist><datalist id="dlAmp"></datalist><datalist id="dlTam"></datalist>
-      </div>
-      <div class="proxy-toggle">
-        <span class="pt-label">การมอบอำนาจ</span>
-        <div class="seg" id="proxySeg">
-          <button type="button" data-v="ไม่มี">เจ้าของมาเอง</button>
-          <button type="button" data-v="มี">มีผู้รับมอบอำนาจ</button>
-        </div>
-        <select id="f_hasProxy" style="display:none">
-          <option value="ไม่มี">ไม่มี (เจ้าของมาเอง)</option>
-          <option value="มี">มี (ผู้รับมอบอำนาจ)</option>
-        </select>
       </div>
       <div class="party-block" id="proxyBlock" style="display:none">
         <div class="party-block-title"><span>ผู้รับมอบอำนาจ</span></div>
@@ -4857,11 +4871,33 @@ function fillDatalist(id, items){
   const dl = document.getElementById(id);
   if (dl) dl.innerHTML = items.map(x => '<option value="' + escapeHtml(x) + '"></option>').join('');
 }
+// ตำบล → อำเภอ (ระยอง) และรหัสไปรษณีย์ที่ยืนยันแล้ว: เลือกตำบลแล้วระบบเติมอำเภอ/จังหวัด/รหัสให้ (ตำบลที่ไม่มีรหัสในรายการ ให้กด "แก้" แล้วกรอกเอง)
+const ADDR_TAM_AMP = {};
+Object.keys(ADDR_RAYONG).forEach(a => ADDR_RAYONG[a].forEach(t => { ADDR_TAM_AMP[t] = a; }));
+const ADDR_TAM_ZIP = { 'เชิงเนิน':'21000','ท่าประดู่':'21000','ตะพง':'21000','ปากน้ำ':'21000','น้ำคอก':'21000','ทับมา':'21000','เนินพระ':'21150','มาบตาพุด':'21150','เพ':'21160' };
 function addrRefreshLists(){
   const prov = addrEl('Prov').value.trim(), amp = addrEl('Amp').value.trim();
   const isRy = prov === ADDR_DEFAULT_PROV;
   fillDatalist('dlAmp', isRy ? Object.keys(ADDR_RAYONG) : []);
-  fillDatalist('dlTam', isRy && ADDR_RAYONG[amp] ? ADDR_RAYONG[amp] : []);
+  // ยังไม่ได้เลือกอำเภอ = เสนอตำบลทั้งจังหวัด (ระยอง) · เลือกอำเภอแล้ว = เสนอเฉพาะของอำเภอนั้น
+  const all = Object.keys(ADDR_TAM_AMP);
+  fillDatalist('dlTam', isRy && ADDR_RAYONG[amp] ? ADDR_RAYONG[amp] : (!amp && (!prov || isRy) ? all : []));
+}
+// พิมพ์/เลือกตำบลที่รู้จัก → เติมอำเภอ จังหวัด รหัสไปรษณีย์
+function addrAutofillFromTam(){
+  const t = addrEl('Tam').value.trim(), amp = ADDR_TAM_AMP[t];
+  if (!amp) return false;
+  addrEl('Amp').value = amp; addrEl('Prov').value = ADDR_DEFAULT_PROV;
+  addrEl('Zip').value = ADDR_TAM_ZIP[t] || '';
+  return true;
+}
+function addrChipRender(){
+  const amp = addrEl('Amp').value.trim(), prov = addrEl('Prov').value.trim(), zip = addrEl('Zip').value.trim();
+  const chip = document.getElementById('addrChip'), tx = document.getElementById('addrChipText');
+  if (!chip || !tx) return;
+  const parts = [amp, prov, zip].filter(Boolean);
+  chip.classList.toggle('empty', !parts.length);
+  tx.innerHTML = parts.length ? '<span class="ok">✓</span> ' + escapeHtml(parts.join(' · ')) : 'เลือกตำบล ระบบเติมให้';
 }
 function addrCompose(){
   const g = k => addrEl(k).value.trim();
@@ -4881,8 +4917,7 @@ function addrCompose(){
 function addrSync(){
   const v = addrCompose();
   document.getElementById('f_ownerAddress').value = v;
-  const pv = document.getElementById('addrPreview');
-  if (pv) pv.textContent = v ? 'ที่อยู่: ' + v : '';
+  addrChipRender();
 }
 // แยกที่อยู่เดิมที่เป็นข้อความเดียวลงช่องย่อย — แยกไม่ได้ให้ใส่ไว้ในช่อง ซอย/ถนน ทั้งหมด
 function addrParse(text){
@@ -4903,6 +4938,7 @@ function addrParse(text){
   }
   addrRefreshLists();
   addrSync();
+  addrManualToggle(false);
 }
 function initAddressFields(){
   fillDatalist('dlProv', ADDR_PROVINCES);
@@ -4911,12 +4947,27 @@ function initAddressFields(){
   });
   addrEl('Zip').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5); });
   addrEl('Prov').addEventListener('focus', e => { if (!e.target.value) { e.target.value = ADDR_DEFAULT_PROV; addrRefreshLists(); addrSync(); } });
+  // ตำบลที่รู้จัก → เติมอำเภอ/จังหวัด/รหัสให้ · ตำบลที่ไม่รู้จัก (นอกเขตระยอง) → เปิดช่องให้กรอกเอง
+  addrEl('Tam').addEventListener('input', () => { if (addrAutofillFromTam()) { addrRefreshLists(); addrSync(); } });
+  addrEl('Tam').addEventListener('change', () => {
+    if (addrEl('Tam').value.trim() && !ADDR_TAM_AMP[addrEl('Tam').value.trim()] && !addrEl('Amp').value.trim()) addrManualToggle(true);
+    else if (addrEl('Tam').value.trim() && ADDR_TAM_AMP[addrEl('Tam').value.trim()] && !addrEl('Zip').value.trim()) addrManualToggle(true);
+  });
+  const ed = document.getElementById('addrChipEdit');
+  ed.addEventListener('click', () => addrManualToggle());
+  ed.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addrManualToggle(); } });
   document.querySelectorAll('#proxySeg button').forEach(b => b.addEventListener('click', () => {
     const sel = document.getElementById('f_hasProxy');
     sel.value = b.dataset.v;
     sel.dispatchEvent(new Event('change', { bubbles: true }));
     syncProxySeg();
   }));
+}
+function addrManualToggle(force){
+  const box = document.getElementById('addrManual'), ed = document.getElementById('addrChipEdit');
+  const open = typeof force === 'boolean' ? force : box.style.display === 'none';
+  box.style.display = open ? '' : 'none';
+  ed.textContent = open ? 'ปิด' : 'แก้';
 }
 function syncProxySeg(){
   const v = document.getElementById('f_hasProxy').value;
