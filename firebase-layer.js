@@ -537,7 +537,7 @@
         else if (s.onChange) { try { s.onChange(col, s.docs); } catch (e) { console.error(e); } }
       }, function (err) {
         console.error('watch ' + col + ' failed', err);
-        if (col === 'drafts') { FBL.watchFailed = FBL.watchFailed || {}; FBL.watchFailed.drafts = thErr(err); }
+        if (col === 'drafts' || col === 'staff') { FBL.watchFailed = FBL.watchFailed || {}; FBL.watchFailed[col] = thErr(err); }   // staff: ยังไม่ได้ประกาศ Rules ใหม่ → แจ้งในหน้าตั้งค่า ไม่เด้งเตือนทั้งระบบ
         else if (FBL.onError && col !== 'presence') FBL.onError(thErr(err));   // presence: ยังไม่ได้ประกาศ Rules ก็ไม่ต้องเตือน
         if (!s.firstDone) { s.firstDone = true; resolve([]); }
       });
@@ -746,6 +746,22 @@
         if (phUrlCache[p]) { URL.revokeObjectURL(phUrlCache[p]); delete phUrlCache[p]; }
       } catch (e) { console.warn('deletePhotoFiles', p, e && e.message); }
     }
+  };
+
+  /* ---------- ตัวแทนแขวง (เจ้าหน้าที่ไปชี้แนวเขต) — ตั้งค่าในหน้า "ตั้งค่า" · แก้ไขได้เฉพาะเจ้าของ/ผู้ดูแลระบบ ---------- */
+  FBL.saveStaff = async function (s) {
+    requirePrivileged();
+    if (!s || !s.id) throw new Error('ไม่มีรหัสรายชื่อ');
+    await db.collection('staff').doc(String(s.id)).set(clean({
+      id: String(s.id), name: s.name || '', position: s.position || '',
+      phone: s.phone || '', mobile: s.mobile || '',
+      yearFrom: s.yearFrom || '', yearTo: s.yearTo || '',
+      updatedAt: nowIso(), updatedBy: FBL.user ? FBL.user.name : ''
+    }), { merge: true });
+  };
+  FBL.deleteStaff = async function (id) {
+    requirePrivileged();
+    await db.collection('staff').doc(String(id)).delete();
   };
 
   /* ---------- สายทาง ---------- */
