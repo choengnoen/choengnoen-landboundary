@@ -868,6 +868,19 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .dsel.it-preset{width:190px;padding:0;border:0;border-radius:0;background:none}
 .dsel.it-preset .dsel-btn{border-radius:10px;padding:9px 12px;font-size:14px}.ins-row{grid-template-columns:1fr 2fr}
 @media(max-width:720px){.ins-row{grid-template-columns:1fr}}
+.addr-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:10px 12px}
+.addr-grid .a-name{grid-column:span 8}.addr-grid .a-phone{grid-column:span 4}
+.addr-grid .a-house{grid-column:span 3}.addr-grid .a-moo{grid-column:span 2}.addr-grid .a-street{grid-column:span 7}
+.addr-grid .a-prov,.addr-grid .a-amp,.addr-grid .a-tam,.addr-grid .a-zip{grid-column:span 3}
+@media(max-width:720px){.addr-grid{grid-template-columns:1fr 1fr}.addr-grid .field{grid-column:span 1 !important}.addr-grid .a-name,.addr-grid .a-street{grid-column:1/-1 !important}}
+.addr-preview{margin-top:8px;font-size:12.5px;color:var(--ink-soft)}
+.addr-preview:empty{display:none}
+.proxy-toggle{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
+.proxy-toggle .pt-label{font-size:13px;font-weight:600;color:var(--navy-900)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.seg button{border:0;background:transparent;padding:7px 14px;font:inherit;font-size:13.5px;color:var(--ink-soft);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--navy-900);color:#fff;font-weight:600}
 .ref-field{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;transition:border-color .15s ease,box-shadow .15s ease}
 .ref-field:focus-within{border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(224,98,15,.14)}
 .ref-prefix{display:flex;align-items:center;padding:0 10px;background:var(--paper-2);color:var(--ink-soft);font-size:14px;white-space:nowrap;border-right:1px solid var(--line);user-select:none}
@@ -1211,13 +1224,86 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         </div>
         <div class="field">
           <label>เลขที่หนังสือ</label>
-          <input type="text" id="f_incomingNo" placeholder="เลขที่หนังสือ">
+          <div class="ref-field" id="inField"><span class="ref-prefix">ที่ คค 06087/12/70/ม.1/</span><input type="text" id="f_incomingNo"></div>
         </div>
       </div>
     </div>
 
+    <div class="card" id="fsec3">
+      <div class="section-title"><span class="num">2</span> เจ้าของที่ดิน / ผู้รับมอบอำนาจ</div>
+      <div class="party-block">
+        <div class="party-block-title"><span>เจ้าของที่ดิน</span></div>
+        <div class="addr-grid">
+          <div class="field a-name">
+            <label>ชื่อ-นามสกุล เจ้าของที่ดิน <span class="req">*</span></label>
+            <input type="text" id="f_ownerName">
+          </div>
+          <div class="field a-phone">
+            <label>เบอร์โทร</label>
+            <input type="text" id="f_ownerPhone" inputmode="tel" placeholder="08x-xxx-xxxx">
+          </div>
+          <div class="field a-house">
+            <label>บ้านเลขที่</label>
+            <input type="text" id="f_addrHouse" placeholder="12/3">
+          </div>
+          <div class="field a-moo">
+            <label>หมู่</label>
+            <input type="text" id="f_addrMoo" inputmode="numeric" placeholder="5">
+          </div>
+          <div class="field a-street">
+            <label>ซอย / ถนน</label>
+            <input type="text" id="f_addrStreet" placeholder="เช่น ซ.สุขุมวิท 10">
+          </div>
+          <div class="field a-prov">
+            <label>จังหวัด</label>
+            <input type="text" id="f_addrProv" list="dlProv" placeholder="ระยอง" autocomplete="off">
+          </div>
+          <div class="field a-amp">
+            <label>อำเภอ</label>
+            <input type="text" id="f_addrAmp" list="dlAmp" placeholder="เมืองระยอง" autocomplete="off">
+          </div>
+          <div class="field a-tam">
+            <label>ตำบล</label>
+            <input type="text" id="f_addrTam" list="dlTam" placeholder="เชิงเนิน" autocomplete="off">
+          </div>
+          <div class="field a-zip">
+            <label>รหัสไปรษณีย์</label>
+            <input type="text" id="f_addrZip" inputmode="numeric" maxlength="5" placeholder="21000">
+          </div>
+        </div>
+        <input type="hidden" id="f_ownerAddress">
+        <div class="addr-preview" id="addrPreview"></div>
+        <datalist id="dlProv"></datalist><datalist id="dlAmp"></datalist><datalist id="dlTam"></datalist>
+      </div>
+      <div class="proxy-toggle">
+        <span class="pt-label">การมอบอำนาจ</span>
+        <div class="seg" id="proxySeg">
+          <button type="button" data-v="ไม่มี">เจ้าของมาเอง</button>
+          <button type="button" data-v="มี">มีผู้รับมอบอำนาจ</button>
+        </div>
+        <select id="f_hasProxy" style="display:none">
+          <option value="ไม่มี">ไม่มี (เจ้าของมาเอง)</option>
+          <option value="มี">มี (ผู้รับมอบอำนาจ)</option>
+        </select>
+      </div>
+      <div class="party-block" id="proxyBlock" style="display:none">
+        <div class="party-block-title"><span>ผู้รับมอบอำนาจ</span></div>
+        <div class="grid grid-2">
+          <div class="field">
+            <label>ชื่อ-นามสกุล ผู้รับมอบอำนาจ</label>
+            <input type="text" id="f_proxyName">
+          </div>
+          <div class="field">
+            <label>ความเกี่ยวข้องกับเจ้าของ</label>
+            <input type="text" id="f_proxyRelation" placeholder="เช่น บุตร, ตัวแทนบริษัทรังวัด">
+          </div>
+        </div>
+        <input type="hidden" id="f_proxyPhone">
+      </div>
+    </div>
+
     <div class="card" id="fsec2">
-      <div class="section-title"><span class="num">2</span> ที่ตั้งที่ดิน</div>
+      <div class="section-title"><span class="num">3</span> ที่ตั้งที่ดิน</div>
       <div class="grid grid-4">
         <div class="field">
           <label>ทล. (สายทาง) <span class="req">*</span></label>
@@ -1311,63 +1397,15 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       </div>
     </div>
 
-    <div class="card" id="fsec3">
-      <div class="section-title"><span class="num">3</span> เจ้าของที่ดิน / ผู้รับมอบอำนาจ</div>
-      <div class="party-block">
-        <div class="party-block-title"><span>เจ้าของที่ดิน</span></div>
-        <div class="grid grid-3">
-          <div class="field">
-            <label>ชื่อ-นามสกุล เจ้าของที่ดิน <span class="req">*</span></label>
-            <input type="text" id="f_ownerName">
-          </div>
-          <div class="field">
-            <label>เบอร์โทร</label>
-            <input type="text" id="f_ownerPhone" inputmode="tel">
-          </div>
-          <div class="field">
-            <label>ที่อยู่</label>
-            <input type="text" id="f_ownerAddress">
-          </div>
-        </div>
-      </div>
-      <div class="grid ins-row" style="margin-top:12px">
-        <div class="field">
-          <label>มีการมอบอำนาจหรือไม่</label>
-          <select id="f_hasProxy">
-            <option value="ไม่มี">ไม่มี (เจ้าของมาเอง)</option>
-            <option value="มี">มี (ผู้รับมอบอำนาจ)</option>
-          </select>
-        </div>
-      </div>
-      <div class="party-block" id="proxyBlock" style="display:none">
-        <div class="party-block-title"><span>ผู้รับมอบอำนาจ</span></div>
-        <div class="grid grid-3">
-          <div class="field">
-            <label>ชื่อ-นามสกุล ผู้รับมอบอำนาจ</label>
-            <input type="text" id="f_proxyName">
-          </div>
-          <div class="field">
-            <label>เบอร์โทร</label>
-            <input type="text" id="f_proxyPhone" inputmode="tel">
-          </div>
-          <div class="field">
-            <label>ความเกี่ยวข้องกับเจ้าของ</label>
-            <input type="text" id="f_proxyRelation" placeholder="เช่น บุตร, ตัวแทนบริษัทรังวัด">
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="card" id="fsec4">
-      <div class="section-title"><span class="num">4</span> ขั้นตอนการดำเนินงาน <span class="sub">ลงวันที่เมื่อทำขั้นนั้นเสร็จ (กรอกภายหลังได้)</span></div>
+      <div class="section-title"><span class="num">4</span> รับ - ชี้แนวเขต - ส่งแขวง <span class="sub">ต้องส่งแขวงภายใน 10 วันทำการ นับจากวันที่ชี้แนวเขต (กรอกภายหลังได้)</span></div>
       <div class="step-list" id="stepList"></div>
       <div class="deadline-box" id="deadlineBox"></div>
     </div>
 
     <div class="card" id="fsec5">
-      <div class="section-title"><span class="num">5</span> เอกสารหลักฐานที่ต้องจัดส่ง <span class="sub" id="docCountSub"></span></div>
-      <div class="doc-list" id="docList"></div>
-      <div class="grid grid-2" style="margin-top:14px">
+      <div class="section-title"><span class="num">5</span> หมายเหตุ</div>
+      <div class="grid grid-2">
         <div class="field">
           <label>หมายเหตุ</label>
           <input type="text" id="f_note">
@@ -1438,7 +1476,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <thead>
             <tr>
               <th style="width:11%">วันที่</th><th style="width:17%">สายทาง / กม.</th><th style="width:20%">เจ้าของที่ดิน</th>
-              <th style="width:18%">เอกสารสิทธิ์ / ที่ตั้ง</th><th style="width:16%">ขั้นตอน</th><th style="width:18%">กำหนดส่งรายงาน</th>
+              <th style="width:18%">เอกสารสิทธิ์ / ที่ตั้ง</th><th style="width:16%">สถานะ</th><th style="width:18%">กำหนดส่งแขวง</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
@@ -1456,9 +1494,9 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
     <div class="stat-cards">
       <div class="stat-card"><div class="big mono" id="statTotal">0</div><div class="lbl">ชี้แนวเขตทั้งหมด (เรื่อง)</div></div>
-      <div class="stat-card amber clickable" id="cardOpen"><div class="big mono" id="statOpen">0</div><div class="lbl">รอส่งรายงาน (เรื่อง)</div></div>
-      <div class="stat-card green clickable" id="cardDone"><div class="big mono" id="statDone">0</div><div class="lbl">เสร็จสิ้น (เรื่อง)</div></div>
-      <div class="stat-card rust clickable" id="cardOverdue" title="เรื่องที่ยังไม่เสร็จสิ้น"><div class="big mono" id="statOverdue">0</div><div class="lbl">ไม่เสร็จสิ้น (เรื่อง)</div></div>
+      <div class="stat-card amber clickable" id="cardOpen"><div class="big mono" id="statOpen">0</div><div class="lbl">รอส่งแขวง (เรื่อง)</div></div>
+      <div class="stat-card green clickable" id="cardDone"><div class="big mono" id="statDone">0</div><div class="lbl">ส่งแขวงแล้ว (เรื่อง)</div></div>
+      <div class="stat-card rust clickable" id="cardOverdue" title="ชี้แนวเขตแล้วแต่ยังไม่ส่งแขวง และเกินกำหนด 10 วันทำการนับจากวันที่ชี้แนวเขต"><div class="big mono" id="statOverdue">0</div><div class="lbl">เกินกำหนดส่ง (เรื่อง)</div></div>
       <div class="stat-card ins clickable" id="cardWaitPoint" title="รับเรื่องแล้ว แต่ยังไม่ได้ออกไปชี้แนวเขต"><div class="big mono" id="statWaitPoint">0</div><div class="lbl">รอชี้แนวเขต (เรื่อง)</div></div>
     </div>
 
@@ -1523,10 +1561,10 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <div class="section-title">เกี่ยวกับระบบ</div>
       <p class="hint">
         ระบบติดตามงานระวังชี้แนวเขตที่ดิน หมวดทางหลวงเชิงเนิน — ขั้นตอนและเอกสารหลักฐานเป็นไปตามผังกระบวนงานสถิติหมวดการทาง
-        "กระบวนงานการระวังชี้แนวเขตที่ดิน" (ส่งรายงานภายใน 5 วันทำการหลังดำเนินการระวังชี้แนวเขตที่ดิน และเก็บสำเนาหลักฐานไว้ 1 ชุด)
+        "กระบวนงานการระวังชี้แนวเขตที่ดิน" (ส่งรายงานภายใน 10 วันทำการหลังดำเนินการระวังชี้แนวเขตที่ดิน และเก็บสำเนาหลักฐานไว้ 1 ชุด)
         ใช้ร่วมกันภายในหน่วยงาน
       </p>
-      <p class="hint">การนับ 5 วันทำการ นับเฉพาะวันจันทร์–ศุกร์ ยังไม่หักวันหยุดนักขัตฤกษ์</p>
+      <p class="hint">การนับ 10 วันทำการ นับเฉพาะวันจันทร์–ศุกร์ ยังไม่หักวันหยุดนักขัตฤกษ์</p>
     </div>
   </div>
 
@@ -1549,10 +1587,10 @@ const STEPS = [
   { field: 'pointedDate',   label: 'ทำการระวังชี้แนวเขต',                       wait: 'รอชี้แนวเขต',        who: 'หัวหน้าหมวดการทาง' },
   { field: 'preparedDate',  label: 'จัดทำบันทึกพร้อมหนังสือรับรองเขตที่ดิน',     wait: 'รอจัดทำบันทึก',      who: 'ธุรการหมวดการทาง',  desc: 'บันทึกข้อความ + หนังสือรับรองเขตที่ดิน (ม.1-03)' },
   { field: 'signedDate',    label: 'ลงนาม',                                   wait: 'รอลงนาม',           who: 'หัวหน้าหมวดการทาง' },
-  { field: 'sentDate',      label: 'ออกเลข / ทำสำเนา / ลงสมุดส่ง',              wait: 'รอออกเลข/ส่ง',      who: 'ธุรการหมวดการทาง',  desc: 'กำหนดส่งภายใน 5 วันทำการหลังชี้แนวเขต' },
+  { field: 'sentDate',      label: 'ออกเลข / ทำสำเนา / ลงสมุดส่ง',              wait: 'รอออกเลข/ส่ง',      who: 'ธุรการหมวดการทาง',  desc: 'กำหนดส่งภายใน 10 วันทำการหลังชี้แนวเขต' },
   { field: 'archivedDate',  label: 'เก็บสำเนาเอกสาร',                          wait: 'รอเก็บสำเนา',        who: 'ธุรการหมวดการทาง',  desc: 'เก็บสำเนาหลักฐานที่เกี่ยวข้อง 1 ชุด' }
 ];
-const REPORT_WORKDAYS = 5;   // ส่งรายงานภายใน 5 วันทำการ หลังดำเนินการระวังชี้แนวเขตที่ดิน
+const REPORT_DAYS = 10;   // ระเบียบ: ส่งแขวงภายใน 10 วันทำการ นับจากวันที่ชี้แนวเขต (นับเฉพาะวันทำการ จันทร์–ศุกร์)
 
 /* ===== เอกสารหลักฐานที่ต้องจัดส่ง (ตามคู่มือ) — proxy = ต้องมีเฉพาะกรณีมอบอำนาจ ===== */
 const DOCS = [
@@ -1576,14 +1614,12 @@ function currentStepIndex(r){
   STEPS.forEach((s, i) => { if (r[s.field]) idx = i; });
   return idx;
 }
-function isDone(r){ return !r.cancelled && !!r.archivedDate; }
-function isOpenCase(r){ return !r.cancelled && !r.archivedDate; }
+function isDone(r){ return !r.cancelled && !!r.sentDate; }
+function isOpenCase(r){ return !r.cancelled && !r.sentDate; }
 function caseStatus(r){
   if (r.cancelled) return { cls: 'cancel', text: 'ยกเลิก' };
-  if (isDone(r)) return { cls: 'done', text: 'เสร็จสิ้น' };
-  const i = currentStepIndex(r);
-  const next = STEPS[Math.min(STEPS.length - 1, i + 1)];
-  return { cls: 'step', text: next.wait || next.label, nextIndex: i + 1 };
+  if (isDone(r)) return { cls: 'done', text: 'ส่งแขวงแล้ว' };
+  return { cls: 'step', text: r.pointedDate ? 'รอส่งแขวง' : 'รอชี้แนวเขต' };
 }
 
 /* ===== วันทำการ (จันทร์–ศุกร์ ยังไม่หักวันหยุดนักขัตฤกษ์) ===== */
@@ -1608,11 +1644,21 @@ function workdaysBetween(a, b){
   return n;
 }
 function todayYmd(){ return ymd(new Date()); }
-// กำหนดส่งรายงาน: นับ 5 วันทำการจากวันที่ชี้แนวเขต
+// กำหนดส่งแขวง: ภายใน 10 วันทำการ นับจากวันที่ชี้แนวเขต
+function addDays(dateStr, n){
+  const d = parseYmd(dateStr);
+  if (!d) return '';
+  d.setDate(d.getDate() + n);
+  return ymd(d);
+}
+function daysBetween(a, b){   // จำนวนวันปฏิทินจาก a ถึง b (ติดลบถ้า b มาก่อน a)
+  const da = parseYmd(a), db = parseYmd(b);
+  return (da && db) ? Math.round((db - da) / 86400000) : 0;
+}
 function deadlineInfo(r){
   if (r.cancelled) return { key: 'na', cls: 'na', text: 'ยกเลิก', due: '' };
   if (!r.pointedDate) return { key: 'none', cls: 'na', text: 'ยังไม่ชี้แนวเขต', due: '' };
-  const due = addWorkdays(r.pointedDate, REPORT_WORKDAYS);
+  const due = addWorkdays(r.pointedDate, REPORT_DAYS);
   if (r.sentDate) {
     const late = workdaysBetween(due, r.sentDate);
     return late > 0
@@ -2764,13 +2810,19 @@ const STEP_EXTRAS = {
 };
 function buildStepRows(){
   const box = document.getElementById('stepList');
-  box.innerHTML = STEPS.map((s, i) => `
+  // แสดงเฉพาะ "รับจากแขวงเมื่อ" และ "ส่งแขวงเมื่อ" — ขั้นอื่นซ่อนไว้ (ยังเก็บค่าเดิมของเรื่องเก่าไว้ ไม่ให้หาย)
+  const SHOW = { dateReceived: 'รับจากแขวงเมื่อ', pointedDate: 'ชี้แนวเขตเมื่อ', sentDate: 'ส่งแขวงเมื่อ' };
+  box.innerHTML = STEPS.map((s, i) => SHOW[s.field] ? `
     <div class="step-row" data-step="${i}">
-      <span class="step-no">${i + 1}</span>
-      <div class="step-name">${escapeHtml(s.label)}<span class="step-who">${escapeHtml(s.who)}${s.desc ? ' · ' + escapeHtml(s.desc) : ''}</span></div>
-      ${i === 0
+      <span class="step-no">${({ dateReceived: '↓', pointedDate: '◎', sentDate: '↑' })[s.field]}</span>
+      <div class="step-name">${SHOW[s.field]}</div>
+      ${s.field === 'dateReceived'
         ? `<input type="date" id="f_step_${s.field}" disabled title="ตามวันที่หนังสือในส่วนที่ 1">`
-        : `<input type="date" id="f_step_${s.field}" title="วันที่ทำขั้นนี้เสร็จ">`}
+        : `<input type="date" id="f_step_${s.field}" title="วันที่ทำรายการนี้">`}
+      <div style="display:none">${STEP_EXTRAS[s.field] || ''}</div>
+    </div>` : `
+    <div class="step-row" data-step="${i}" style="display:none">
+      <input type="date" id="f_step_${s.field}">
       ${STEP_EXTRAS[s.field] || ''}
     </div>`).join('');
   box.addEventListener('change', updateStepUi);
@@ -2797,31 +2849,15 @@ function updateStepUi(){
   const box = document.getElementById('deadlineBox');
   const d = deadlineInfo(snap);
   if (!snap.pointedDate) {
-    box.innerHTML = `<span>⏱ กำหนดส่งรายงาน: ภายใน ${REPORT_WORKDAYS} วันทำการ หลังวันที่ชี้แนวเขต (ขั้นที่ 3)</span>`;
+    box.innerHTML = `<span>⏱ กำหนดส่งแขวง: ภายใน ${REPORT_DAYS} วัน นับจากวันที่ชี้แนวเขต</span>`;
   } else {
-    box.innerHTML = `<span>⏱ ชี้แนวเขต ${escapeHtml(formatThaiDate(snap.pointedDate))} → ต้องส่งรายงานภายใน <b>${escapeHtml(formatThaiDate(d.due))}</b></span><span class="dl-pill ${d.cls}">${escapeHtml(d.text)}</span>`;
+    box.innerHTML = `<span>⏱ ชี้แนวเขต ${escapeHtml(formatThaiDate(snap.pointedDate))} → ต้องส่งแขวงภายใน <b>${escapeHtml(formatThaiDate(d.due))}</b></span><span class="dl-pill ${d.cls}">${escapeHtml(d.text)}</span>`;
   }
-}
-function buildDocList(){
-  const box = document.getElementById('docList');
-  const row = d => `<label class="doc-item" data-doc="${d.k}"><input type="checkbox" id="f_doc_${d.k}"><span>${escapeHtml(d.label)}</span><span class="doc-qty">${escapeHtml(d.qty)}</span></label>`;
-  box.innerHTML = DOCS.filter(d => !d.proxy).map(row).join('')
-    + `<div id="proxyDocs"><div class="doc-sub">กรณีมีการมอบอำนาจจากเจ้าของที่ดิน ต้องมีเอกสารเพิ่มเติม</div><div class="doc-list">${DOCS.filter(d => d.proxy).map(row).join('')}</div></div>`;
-  box.addEventListener('change', updateDocUi);
 }
 function updateDocUi(){
   const hasProxy = document.getElementById('f_hasProxy').value === 'มี';
   document.getElementById('proxyBlock').style.display = hasProxy ? '' : 'none';
-  document.getElementById('proxyDocs').style.display = hasProxy ? '' : 'none';
-  const docs = collectDocs();
-  document.querySelectorAll('#docList .doc-item').forEach(el => el.classList.toggle('checked', !!docs[el.dataset.doc]));
-  const p = docProgress({ hasProxy: hasProxy ? 'มี' : 'ไม่มี', docs });
-  document.getElementById('docCountSub').textContent = 'ครบ ' + p.have + ' / ' + p.need + ' รายการ';
-}
-function collectDocs(){
-  const out = {};
-  DOCS.forEach(d => { const el = document.getElementById('f_doc_' + d.k); if (el && el.checked) out[d.k] = true; });
-  return out;
+  syncProxySeg();
 }
 function updateCancelUi(){
   document.getElementById('cancelReasonWrap').style.display = document.getElementById('f_cancelled').checked ? '' : 'none';
@@ -3053,7 +3089,7 @@ function requestCloseForm(){
   document.getElementById('fmLeaveStay').focus();
 }
 /* แถบเส้นเวลา (ขั้นตอนฟอร์ม) — กดเลื่อนไปส่วนนั้น ไฮไลต์ตามตำแหน่งที่เลื่อน และบอกสถานะช่องบังคับของแต่ละส่วน */
-const FM_STEPS = [['fsec1', 'รับเรื่อง'], ['fsec2', 'ที่ตั้งที่ดิน'], ['fsec3', 'เจ้าของที่ดิน'], ['fsec4', 'ขั้นตอน'], ['fsec5', 'เอกสาร'], ['fsecPhoto', 'รูปถ่าย']];
+const FM_STEPS = [['fsec1', 'รับเรื่อง'], ['fsec3', 'เจ้าของที่ดิน'], ['fsec2', 'ที่ตั้งที่ดิน'], ['fsec4', 'ขั้นตอน'], ['fsec5', 'หมายเหตุ'], ['fsecPhoto', 'รูปถ่าย']];
 let fmStepsBuilt = false;
 function fmCards(){ return FM_STEPS.map(s => document.getElementById(s[0])); }
 function fmStepGo(i){
@@ -3129,7 +3165,8 @@ function clearForm(){
   document.getElementById('f_hasProxy').value = 'ไม่มี';
   STEPS.forEach(s => { const el = document.getElementById('f_step_' + s.field); if (el) el.value = ''; });
   setReferenceNoField('');
-  DOCS.forEach(d => { document.getElementById('f_doc_' + d.k).checked = false; });
+  setIncomingNoField('');
+  addrParse('');
   document.getElementById('f_cancelled').checked = false;
   updateDocUi();
   updateCancelUi();
@@ -3161,7 +3198,8 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_hasProxy').value = rec.hasProxy === 'มี' ? 'มี' : 'ไม่มี';
   STEPS.forEach(s => { const el = document.getElementById('f_step_' + s.field); if (el) el.value = rec[s.field] || ''; });
   setReferenceNoField(rec.outgoingNo);
-  DOCS.forEach(d => { document.getElementById('f_doc_' + d.k).checked = !!(rec.docs && rec.docs[d.k]); });
+  setIncomingNoField(rec.incomingNo);
+  addrParse(rec.ownerAddress);
   document.getElementById('f_cancelled').checked = !!rec.cancelled;
   updateDocUi();
   updateCancelUi();
@@ -3202,7 +3240,7 @@ async function saveForm(){
     deedType: document.getElementById('f_deedType').value,
     hasProxy: document.getElementById('f_hasProxy').value,
     outgoingNo: getReferenceNoField(),
-    docs: collectDocs(),
+    docs: old.docs || {},
     cancelled: document.getElementById('f_cancelled').checked,
     recordedBy: old.recordedBy || recorderName,
     updatedBy: recorderName,
@@ -3210,8 +3248,9 @@ async function saveForm(){
     updatedAt: now
   };
   TEXT_FIELDS.forEach(k => { rec[k] = document.getElementById('f_' + k).value.trim(); });
+  rec.incomingNo = getIncomingNoField();
   STEPS.forEach(s => { rec[s.field] = snap[s.field] || ''; });
-  if (rec.hasProxy !== 'มี') { rec.proxyName = ''; rec.proxyPhone = ''; rec.proxyRelation = ''; delete rec.docs.proxyLetter; delete rec.docs.proxyId; }
+  if (rec.hasProxy !== 'มี') { rec.proxyName = ''; rec.proxyPhone = ''; rec.proxyRelation = ''; }
   if (!rec.cancelled) rec.cancelReason = '';
 
   setSaveButtonLoading(true);
@@ -3487,8 +3526,8 @@ function statusPillOf(r){
 function populateStatusFilter(){
   const sel = document.getElementById('filterStatus');
   const n = { '': records.length, open: 0, done: 0, cancelled: 0 };
-  records.forEach(r => { if (r.cancelled) n.cancelled++; else if (r.archivedDate) n.done++; else n.open++; });
-  const base = { '': 'ทั้งหมด', open: 'กำลังดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' };
+  records.forEach(r => { if (r.cancelled) n.cancelled++; else if (r.sentDate) n.done++; else n.open++; });
+  const base = { '': 'ทั้งหมด', open: 'รอส่งแขวง', done: 'ส่งแขวงแล้ว', cancelled: 'ยกเลิก' };
   [...sel.options].forEach(o => { if (o.value in base) { const t = base[o.value] + (o.value ? ' (' + n[o.value] + ')' : ''); if (o.textContent !== t) o.textContent = t; } });
 }
 // เรียงตามความเร่งด่วน: เรื่องที่ยังดำเนินการอยู่ก่อน (เกินกำหนดนานสุด → ใกล้ครบ → ยังไม่ถึงกำหนด → ยังไม่ชี้แนว) ตามด้วยเรื่องเสร็จสิ้น/ยกเลิก
@@ -3514,7 +3553,7 @@ function renderTable(){
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = '';
   document.getElementById('emptyState').style.display = rows.length ? 'none' : 'block';
-  const cardNote = fState.waitPoint ? ' · เฉพาะที่รอชี้แนวเขต' : fState.waitReport ? ' · เฉพาะที่รอส่งรายงาน' : '';
+  const cardNote = fState.waitPoint ? ' · เฉพาะที่รอชี้แนวเขต' : fState.waitReport ? ' · เฉพาะที่รอส่งแขวง' : '';
   document.getElementById('listCount').textContent = (rows.length === records.length ? ('ทั้งหมด ' + records.length + ' เรื่อง') : ('แสดง ' + rows.length + ' จาก ' + records.length + ' เรื่อง')) + cardNote;
 
   rows.forEach(r => {
@@ -3527,7 +3566,7 @@ function renderTable(){
       <td>${escapeHtml(r.ownerName || '-')}${r.hasProxy === 'มี' && r.proxyName ? `<span class="c-sub">มอบอำนาจ: ${escapeHtml(r.proxyName)}</span>` : ''}</td>
       <td>${escapeHtml(deedText(r))}<span class="c-sub">${escapeHtml(placeText(r))}</span></td>
       <td>${statusPillOf(r)}</td>
-      <td>${dl.due ? `<span class="c-sub" style="margin:0 0 3px">ภายใน ${escapeHtml(formatThaiDate(dl.due))}</span>` : ''}${deadlinePill(r)}</td>
+      <td><span class="c-sub" style="margin:0 0 3px">${r.sentDate ? 'ส่งเมื่อ ' + escapeHtml(formatThaiDate(r.sentDate)) : (dl.due ? 'ภายใน ' + escapeHtml(formatThaiDate(dl.due)) : '')}</span>${deadlinePill(r)}</td>
     `;
     tr.addEventListener('click', () => openCaseDetailModal(r.id));
     tbody.appendChild(tr);
@@ -3782,20 +3821,20 @@ function openCaseDetailModal(id){
   const caseNo = caseNoOf(rec, seqMap);
   const st = caseStatus(rec);
   const dl = deadlineInfo(rec);
-  const dp = docProgress(rec);
   const cur = currentStepIndex(rec);
 
   // ระยะเวลาดำเนินการ: เรื่องที่ยังไม่เสร็จ = นับถึงวันนี้ / เสร็จแล้ว = นับถึงวันเก็บสำเนา
   const start = parseYmd(rec.dateReceived);
-  const end = rec.archivedDate ? parseYmd(rec.archivedDate) : new Date();
+  const end = rec.sentDate ? parseYmd(rec.sentDate) : new Date();
   const days = start ? Math.max(0, Math.floor((end - start) / 86400000)) : null;
 
   const tile = (cls, icon, label, value) => `<div class="cd-tile ${cls}"><div class="cd-ic">${icon}</div><div><span>${label}</span><b>${value}</b></div></div>`;
   const tilesHtml = `<div class="cd-tiles">
       ${tile(st.cls === 'done' ? 'ok' : st.cls === 'cancel' ? 'n' : 'warn', '📌', 'สถานะ', escapeHtml(st.text))}
-      ${tile(dl.cls === 'ok' ? 'ok' : dl.cls === 'bad' ? 'bad' : dl.cls === 'near' ? 'warn' : 'n', '⏱', 'กำหนดส่งรายงาน', escapeHtml(dl.due ? formatThaiDate(dl.due) + ' · ' + dl.text : dl.text))}
-      ${tile(dp.have === dp.need ? 'ok' : 'warn', '📎', 'เอกสารหลักฐาน', 'ครบ ' + dp.have + ' / ' + dp.need)}
-      ${tile('n', '📅', rec.archivedDate ? 'ใช้เวลาทั้งหมด' : 'ระยะเวลาตั้งแต่รับเรื่อง', days === null ? '-' : days.toLocaleString('th-TH') + ' วัน')}
+      ${tile('n', '📥', 'รับจากแขวงเมื่อ', escapeHtml(rec.dateReceived ? formatThaiDate(rec.dateReceived) : '-'))}
+      ${tile(rec.pointedDate ? 'ok' : 'n', '📍', 'ชี้แนวเขตเมื่อ', escapeHtml(rec.pointedDate ? formatThaiDate(rec.pointedDate) : 'ยังไม่ชี้แนวเขต'))}
+      ${tile(rec.sentDate ? 'ok' : 'n', '📤', 'ส่งแขวงเมื่อ', escapeHtml(rec.sentDate ? formatThaiDate(rec.sentDate) : 'ยังไม่ส่ง'))}
+      ${tile(dl.cls === 'ok' ? 'ok' : dl.cls === 'bad' ? 'bad' : dl.cls === 'near' ? 'warn' : 'n', '⏱', 'กำหนดส่งแขวง', escapeHtml(dl.due ? formatThaiDate(dl.due) + ' · ' + dl.text : dl.text))}
     </div>`;
 
   const stepExtra = (s) => {
@@ -3813,11 +3852,6 @@ function openCaseDetailModal(id){
       <div class="tl-name">${escapeHtml(s.label)}</div>
       <div class="tl-sub">${date ? escapeHtml(formatThaiDate(date)) : (cls === 'next' ? 'ขั้นถัดไป' : 'ยังไม่ดำเนินการ')} · ${escapeHtml(s.who)}${extra ? '<br>' + escapeHtml(extra) : ''}</div></li>`;
   }).join('')}</ul>`;
-
-  const docsHtml = requiredDocs(rec).map(d => {
-    const ok = !!(rec.docs && rec.docs[d.k]);
-    return `<div class="cd-doc${ok ? '' : ' miss'}"><span class="ic">${ok ? '✅' : '⬜'}</span><span>${escapeHtml(d.label)}</span><span class="q">${escapeHtml(d.qty)}</span></div>`;
-  }).join('');
 
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
@@ -3875,17 +3909,13 @@ function openCaseDetailModal(id){
             </div>
             <div>
               ${casePhotosCardHtml(rec)}
-              <div class="cd-card"><div class="cd-sec">ขั้นตอนการดำเนินงาน <span class="cd-count">${Math.max(0, cur + 1)} / ${STEPS.length} ขั้น</span></div>
-                ${timelineHtml}</div>
-              <div class="cd-card"><div class="cd-sec">เอกสารหลักฐานที่ต้องจัดส่ง <span class="cd-count">ครบ ${dp.have} / ${dp.need}</span></div>
-                ${docsHtml}</div>
             </div>
           </div>
         </div>
         <div class="cd-foot">
           <button class="btn btn-danger" id="caseDetailDelete" style="margin-right:auto">ลบเรื่อง</button>
           <button class="btn btn-outline" id="caseDetailClose">ปิด</button>
-          <button class="btn btn-primary" id="caseDetailEdit">แก้ไข / อัปเดตขั้นตอน</button>
+          <button class="btn btn-primary" id="caseDetailEdit">แก้ไข / บันทึกวันส่งแขวง</button>
         </div>
       </div>
     </div>`;
@@ -3929,9 +3959,9 @@ function renderDashboard(){
   const active = rows.filter(r => !r.cancelled);
   const open = active.filter(isOpenCase);
   document.getElementById('statTotal').textContent = active.length;
-  document.getElementById('statOpen').textContent = open.filter(r => r.pointedDate && !r.sentDate).length;
+  document.getElementById('statOpen').textContent = open.filter(r => r.pointedDate).length;
   document.getElementById('statDone').textContent = active.filter(isDone).length;
-  document.getElementById('statOverdue').textContent = open.length;
+  document.getElementById('statOverdue').textContent = open.filter(r => deadlineInfo(r).key === 'overdue').length;
   document.getElementById('statWaitPoint').textContent = open.filter(r => !r.pointedDate).length;
   document.getElementById('cardOpen').onclick = () => goToFilteredList(dashYear, { waitReport: true });
   document.getElementById('cardDone').onclick = () => goToFilteredList(dashYear, { status: 'done' });
@@ -3974,17 +4004,15 @@ function renderFollowUp(){
   if (!el) return;
   const open = dashRows().filter(isOpenCase);
   const today = parseYmd(todayYmd());
-  const list = open.slice().sort((a, b) => urgencyOf(a) - urgencyOf(b) || (a.dateReceived || '').localeCompare(b.dateReceived || ''));
   const overdue = open.filter(r => deadlineInfo(r).key === 'overdue').length;
-  const waitSend = open.filter(r => r.pointedDate && !r.sentDate).length;
-  const missingDocs = open.filter(r => { const p = docProgress(r); return p.have < p.need; }).length;
+  const list = open.slice().sort((a, b) => urgencyOf(a) - urgencyOf(b) || (a.dateReceived || '').localeCompare(b.dateReceived || ''));
+
   document.getElementById('followSub').textContent = (dashYear !== 'ทั้งหมด' ? 'ปีงบ ' + dashYear + ' · ' : '') + 'กำลังดำเนินการ ' + open.length + ' เรื่อง';
   const statsHtml = `
     <div class="fstat-grid">
       <div class="fstat ${overdue ? 'bad' : 'ok'}"><b>${overdue}</b><span>เกินกำหนดส่ง</span></div>
-      <div class="fstat acc"><b>${waitSend}</b><span>ชี้แล้ว รอส่งรายงาน</span></div>
+      <div class="fstat acc"><b>${open.filter(r => r.pointedDate).length}</b><span>ชี้แล้ว รอส่งแขวง</span></div>
       <div class="fstat"><b>${open.filter(r => !r.pointedDate).length}</b><span>รอชี้แนวเขต</span></div>
-      <div class="fstat"><b>${missingDocs}</b><span>เอกสารยังไม่ครบ</span></div>
     </div>`;
   const seqMap = computeSeqMap();
   const rowsHtml = list.slice(0, 6).map(r => {
@@ -4006,7 +4034,7 @@ function renderFollowUp(){
   if (more) more.onclick = () => goToFilteredList(dashYear, { status: 'open' });
 }
 /* กล่อง "ปฏิทินสัปดาห์นี้" (แทน "เรื่องที่ต้องติดตาม" + "นัดหมายชี้แนวเขต")
-   จันทร์–ศุกร์: นัดชี้แนวเขต (ฟ้า) · ครบกำหนดส่งรายงาน 5 วันทำการ (เหลือง) · เลยกำหนด (แดง)
+   จันทร์–ศุกร์: นัดชี้แนวเขต (ฟ้า) · ครบกำหนดส่งแขวง 10 วันทำการ (เหลือง) · เลยกำหนด (แดง)
    ไม่ขึ้นกับตัวกรองปีงบ เพราะเป็นงานที่ต้องทำตอนนี้ — ฟังก์ชัน renderFollowUp/renderAppointments ด้านล่างไม่ถูกเรียกแล้ว */
 let weekOffset = 0;
 const WK_DAYS = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสฯ', 'ศุกร์'];
@@ -4032,9 +4060,9 @@ function renderWeekCalendar(){
   const put = (key, cls, label, r) => { (items[key] = items[key] || []).push({ cls, label, r }); };
   open.forEach(r => {
     if (r.appointDate && !r.pointedDate) put(r.appointDate, 'ap', r.appointDate < todayStr ? 'เลยนัดชี้แนวเขต' : 'นัดชี้แนวเขต', r);
-    if (r.pointedDate && !r.sentDate) {
+    {
       const due = deadlineInfo(r).due;
-      if (due) put(due, due < todayStr ? 'ov' : 'rp', due < todayStr ? 'ส่งรายงานเลยกำหนด' : 'ครบกำหนดส่งรายงาน', r);
+      if (due) put(due, due < todayStr ? 'ov' : 'rp', due < todayStr ? 'ส่งแขวงเลยกำหนด' : 'ครบกำหนดส่งแขวง', r);
     }
   });
   const dayHtml = (d, i) => {
@@ -4052,7 +4080,7 @@ function renderWeekCalendar(){
   const sat = new Date(mon); sat.setDate(mon.getDate() + 5);
   const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
   const wkend = (items[ymd(sat)] || []).length + (items[ymd(sun)] || []).length;
-  document.getElementById('wkFoot').innerHTML = '<span><i style="background:#185fa5"></i>นัดชี้แนวเขต</span><span><i style="background:#ba7517"></i>ครบกำหนดส่งรายงาน (5 วันทำการ)</span><span><i style="background:#a32d2d"></i>เลยกำหนด</span>'
+  document.getElementById('wkFoot').innerHTML = '<span><i style="background:#185fa5"></i>นัดชี้แนวเขต</span><span><i style="background:#ba7517"></i>ครบกำหนดส่งแขวง (10 วันทำการ)</span><span><i style="background:#a32d2d"></i>เลยกำหนด</span>'
     + (wkend ? `<span>มีกำหนดตกวันเสาร์–อาทิตย์ ${wkend} รายการ</span>` : '');
 }
 // กล่อง "นัดหมายชี้แนวเขต" — เรื่องที่มีวันนัดและยังไม่ได้ชี้แนวเขต เรียงตามวันนัด (เลยนัดขึ้นก่อน) ไม่ขึ้นกับตัวกรองปีงบ
@@ -4111,7 +4139,7 @@ const GUIDE_DATA = {
       { label: 'หนังสือมอบอำนาจ (ปิดอากรแสตมป์)', qty: '2 ชุด' },
       { label: 'สำเนาบัตรประชาชนและสำเนาทะเบียนบ้านของผู้รับมอบอำนาจ', qty: '2 ชุด' }
     ] },
-    due: 'ภายใน 5 วันทำการ หลังจากดำเนินการระวังชี้แนวเขตที่ดิน',
+    due: 'ภายใน 10 วันทำการ หลังจากดำเนินการระวังชี้แนวเขตที่ดิน',
     keep: 'เก็บสำเนาหลักฐานที่เกี่ยวข้อง จำนวน 1 ชุด'
   }]
 };
@@ -4188,9 +4216,6 @@ function renderGuide(){
       <div class="gd-h" style="margin-top:0">รายละเอียดการปฏิบัติงาน</div>
       <ol class="gd-ol">${t.steps.map(s => `<li>${esc(s.text)}${s.subs ? `<ul>${s.subs.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</li>`).join('')}</ol>
       ${t.forms && t.forms.length ? `<div class="gd-h">แบบฟอร์ม/เอกสารที่เกี่ยวข้อง</div><ul class="gd-ul">${t.forms.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
-      <div class="gd-h">เอกสารหลักฐานที่ต้องจัดส่ง</div>
-      ${t.docs.map((d, i) => `<div class="gd-doc"><span class="ic">${i + 1}.</span><span>${esc(d.label)}${d.cond ? ` <small>(${esc(d.cond)})</small>` : ''}</span><span class="q">${esc(d.qty || '')}</span></div>`).join('')}
-      ${t.extra ? `<div class="gd-h">${esc(t.extra.title)}</div>${t.extra.docs.map((d, i) => `<div class="gd-doc"><span class="ic">${i + 1}.</span><span>${esc(d.label)}</span><span class="q">${esc(d.qty || '')}</span></div>`).join('')}` : ''}
       <div class="gd-meta"><span>กำหนดส่งรายงาน: <b>${esc(t.due)}</b></span><span>การจัดเก็บสำเนา: <b>${esc(t.keep)}</b></span></div>
     </div>`).join('');
   root.innerHTML = `
@@ -4359,7 +4384,115 @@ function initReferenceNoField(){
     if (refFree && !input.value.trim()) { refFree = false; box.classList.remove('ref-free'); } // ล้างช่องแล้วกลับมาใช้ส่วนหน้ามาตรฐาน
   });
 }
-const EXCELJS_URL = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+/* ===== ที่อยู่เจ้าของที่ดิน: แยกช่องย่อย แล้วรวมเป็นข้อความเดียวเก็บใน ownerAddress (ข้อมูลเดิมยังใช้ได้) ===== */
+const ADDR_PROVINCES = ['กรุงเทพมหานคร','กระบี่','กาญจนบุรี','กาฬสินธุ์','กำแพงเพชร','ขอนแก่น','จันทบุรี','ฉะเชิงเทรา','ชลบุรี','ชัยนาท','ชัยภูมิ','ชุมพร','เชียงราย','เชียงใหม่','ตรัง','ตราด','ตาก','นครนายก','นครปฐม','นครพนม','นครราชสีมา','นครศรีธรรมราช','นครสวรรค์','นนทบุรี','นราธิวาส','น่าน','บึงกาฬ','บุรีรัมย์','ปทุมธานี','ประจวบคีรีขันธ์','ปราจีนบุรี','ปัตตานี','พระนครศรีอยุธยา','พังงา','พัทลุง','พิจิตร','พิษณุโลก','เพชรบุรี','เพชรบูรณ์','แพร่','พะเยา','ภูเก็ต','มหาสารคาม','มุกดาหาร','แม่ฮ่องสอน','ยโสธร','ยะลา','ร้อยเอ็ด','ระนอง','ระยอง','ราชบุรี','ลพบุรี','ลำปาง','ลำพูน','เลย','ศรีสะเกษ','สกลนคร','สงขลา','สตูล','สมุทรปราการ','สมุทรสงคราม','สมุทรสาคร','สระแก้ว','สระบุรี','สิงห์บุรี','สุโขทัย','สุพรรณบุรี','สุราษฎร์ธานี','สุรินทร์','หนองคาย','หนองบัวลำภู','อ่างทอง','อำนาจเจริญ','อุดรธานี','อุตรดิตถ์','อุทัยธานี','อุบลราชธานี'];
+// อำเภอ/ตำบลของจังหวัดระยอง (พิมพ์ชื่ออื่นเองได้เสมอ)
+const ADDR_RAYONG = {
+  'เมืองระยอง': ['ท่าประดู่','เชิงเนิน','ตะพง','ปากน้ำ','เพ','บ้านแลง','นาตาขวัญ','เนินพระ','กะเฉด','ทับมา','น้ำคอก','มาบตาพุด'],
+  'บ้านฉาง': ['บ้านฉาง','พลา','สำนักท้อน'],
+  'ปลวกแดง': ['ปลวกแดง','ตาสิทธิ์','ละหาร','แม่น้ำคู้','มาบยางพร'],
+  'แกลง': [], 'วังจันทร์': [], 'บ้านค่าย': [], 'เขาชะเมา': [], 'นิคมพัฒนา': []
+};
+const ADDR_DEFAULT_PROV = 'ระยอง';
+function addrEl(id){ return document.getElementById('f_addr' + id); }
+function fillDatalist(id, items){
+  const dl = document.getElementById(id);
+  if (dl) dl.innerHTML = items.map(x => '<option value="' + escapeHtml(x) + '"></option>').join('');
+}
+function addrRefreshLists(){
+  const prov = addrEl('Prov').value.trim(), amp = addrEl('Amp').value.trim();
+  const isRy = prov === ADDR_DEFAULT_PROV;
+  fillDatalist('dlAmp', isRy ? Object.keys(ADDR_RAYONG) : []);
+  fillDatalist('dlTam', isRy && ADDR_RAYONG[amp] ? ADDR_RAYONG[amp] : []);
+}
+function addrCompose(){
+  const g = k => addrEl(k).value.trim();
+  const house = g('House'), moo = g('Moo'), street = g('Street'), tam = g('Tam'), amp = g('Amp'), prov = g('Prov'), zip = g('Zip');
+  if (!house && !moo && !street && !tam && !amp && !zip && (!prov || prov === ADDR_DEFAULT_PROV)) return '';
+  const bkk = prov === 'กรุงเทพมหานคร';
+  const parts = [];
+  if (house) parts.push(house);
+  if (moo) parts.push('ม.' + moo.replace(/^ม\.?\s*/, ''));
+  if (street) parts.push(street);
+  if (tam) parts.push((bkk ? 'แขวง' : 'ต.') + tam.replace(/^(ต\.|ตำบล|แขวง)\s*/, ''));
+  if (amp) parts.push((bkk ? 'เขต' : 'อ.') + amp.replace(/^(อ\.|อำเภอ|เขต)\s*/, ''));
+  if (prov) parts.push((bkk ? '' : 'จ.') + prov.replace(/^(จ\.|จังหวัด)\s*/, ''));
+  if (zip) parts.push(zip);
+  return parts.join(' ');
+}
+function addrSync(){
+  const v = addrCompose();
+  document.getElementById('f_ownerAddress').value = v;
+  const pv = document.getElementById('addrPreview');
+  if (pv) pv.textContent = v ? 'ที่อยู่: ' + v : '';
+}
+// แยกที่อยู่เดิมที่เป็นข้อความเดียวลงช่องย่อย — แยกไม่ได้ให้ใส่ไว้ในช่อง ซอย/ถนน ทั้งหมด
+function addrParse(text){
+  let s = String(text || '').trim();
+  ['House','Moo','Street','Prov','Amp','Tam','Zip'].forEach(k => { addrEl(k).value = ''; });
+  if (s) {
+    const take = (re) => { const m = re.exec(s); if (!m) return ''; s = (s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length)).trim(); return m[1].trim(); };
+    const zip = take(/(?:^|\s)(\d{5})(?=\s|$)/);
+    const prov = take(/(?:จ\.|จังหวัด)\s*([^\s]+)/);
+    const amp = take(/(?:อ\.|อำเภอ|เขต)\s*([^\s]+)/);
+    const tam = take(/(?:ต\.|ตำบล|แขวง)\s*([^\s]+)/);
+    const moo = take(/(?:ม\.|หมู่ที่|หมู่)\s*(\d+)/);
+    let house = '';
+    const hm = /^(\d+(?:\/\d+)?)(?:\s+|$)/.exec(s);
+    if (hm) { house = hm[1]; s = s.slice(hm[0].length).trim(); }
+    addrEl('House').value = house; addrEl('Moo').value = moo; addrEl('Street').value = s.replace(/\s+/g, ' ');
+    addrEl('Prov').value = prov; addrEl('Amp').value = amp; addrEl('Tam').value = tam; addrEl('Zip').value = zip;
+  }
+  addrRefreshLists();
+  addrSync();
+}
+function initAddressFields(){
+  fillDatalist('dlProv', ADDR_PROVINCES);
+  ['House','Moo','Street','Prov','Amp','Tam','Zip'].forEach(k => {
+    addrEl(k).addEventListener('input', () => { addrRefreshLists(); addrSync(); });
+  });
+  addrEl('Zip').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 5); });
+  addrEl('Prov').addEventListener('focus', e => { if (!e.target.value) { e.target.value = ADDR_DEFAULT_PROV; addrRefreshLists(); addrSync(); } });
+  document.querySelectorAll('#proxySeg button').forEach(b => b.addEventListener('click', () => {
+    const sel = document.getElementById('f_hasProxy');
+    sel.value = b.dataset.v;
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    syncProxySeg();
+  }));
+}
+function syncProxySeg(){
+  const v = document.getElementById('f_hasProxy').value;
+  document.querySelectorAll('#proxySeg button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+}
+/* ===== เลขที่หนังสือ (ช่องรับเรื่อง): ส่วนหน้าตายตัว "ที่ คค 06087/12/70/ม.1/" ระบบใส่ให้ เจ้าหน้าที่พิมพ์เฉพาะเลขท้าย ===== */
+const IN_PREFIX = 'ที่ คค 06087/12/70/ม.1/';
+const IN_PREFIX_RE = /^\s*ที่?\s*คค\s*06087\s*\/\s*12\s*\/\s*70\s*\/\s*ม\.?\s*1\s*\//;
+let inFree = false;   // เลขเก่าที่ขึ้นต้นไม่ตรงรูปแบบนี้: แสดงทั้งข้อความในช่อง ไม่ตัดส่วนหน้า
+function inRestOf(text){ return String(text || '').replace(IN_PREFIX_RE, '').replace(/\s+/g, ''); }
+function setIncomingNoField(full){
+  const input = document.getElementById('f_incomingNo'), box = document.getElementById('inField');
+  const v = String(full || '').trim();
+  if (!v) { input.value = ''; inFree = false; }
+  else if (IN_PREFIX_RE.test(v)) { input.value = inRestOf(v); inFree = false; }
+  else { input.value = v; inFree = true; }
+  if (box) box.classList.toggle('ref-free', inFree);
+}
+function getIncomingNoField(){
+  const v = document.getElementById('f_incomingNo').value.trim();
+  if (!v) return '';
+  if (inFree) return v;
+  const rest = inRestOf(v);
+  return rest ? IN_PREFIX + rest : '';
+}
+function initIncomingNoField(){
+  const input = document.getElementById('f_incomingNo'), box = document.getElementById('inField');
+  if (!input || !box) return;
+  input.addEventListener('input', () => {
+    if (!inFree && IN_PREFIX_RE.test(input.value)) input.value = inRestOf(input.value);
+    if (inFree && !input.value.trim()) { inFree = false; box.classList.remove('ref-free'); }
+  });
+}
+const EXCELJS_URL ='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
 const EXCELJS_SRI = 'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz';
 let excelJsLoading = null;
 function loadExcelJs(){
@@ -4414,7 +4547,7 @@ function recordMatchesList(r, f, seqMap){
   if (f.status === 'done' && !isDone(r)) return false;
   if (f.status === 'cancelled' && !r.cancelled) return false;
   if (f.waitPoint && (!isOpenCase(r) || r.pointedDate)) return false;
-  if (f.waitReport && (!isOpenCase(r) || !r.pointedDate || r.sentDate)) return false;
+  if (f.waitReport && (!isOpenCase(r) || !r.pointedDate)) return false;
   if (f.q) {
     const hay = [caseNoOf(r, seqMap), r.ownerName, r.proxyName, r.deedNo, r.landNo, r.tambon, r.amphoe, r.section, r.location,
       r.incomingNo, r.outgoingNo, r.certNo, r.note, formatKm(r.km), formatThaiDate(r.dateReceived), r.dateReceived].join(' ').toLowerCase();
@@ -4437,7 +4570,7 @@ function describeListFilters(){
   if (f.hw) out.push('ทล.' + f.hw);
   if (f.status) out.push(({ open: 'กำลังดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' })[f.status]);
   if (f.waitPoint) out.push('รอชี้แนวเขต');
-  if (f.waitReport) out.push('รอส่งรายงาน');
+  if (f.waitReport) out.push('รอส่งแขวง');
   if (f.q) out.push('คำค้น "' + document.getElementById('searchBox').value.trim() + '"');
   return out;
 }
@@ -4514,11 +4647,11 @@ function buildSummarySheet(wb, rows, meta){
 
   const kpis = [
     ['จำนวนเรื่อง (ไม่รวมยกเลิก)', s.total],
-    ['กำลังดำเนินการ', s.open],
-    ['เสร็จสิ้น (เก็บสำเนาแล้ว)', s.done],
-    ['เกินกำหนดส่ง 5 วันทำการ (ยังไม่ส่ง)', s.overdue],
-    ['ส่งรายงานทันกำหนด', s.ontime],
-    ['ส่งรายงานเกินกำหนด', s.late],
+    ['รอส่งแขวง', s.open],
+    ['ส่งแขวงแล้ว', s.done],
+    ['เกินกำหนดส่ง 10 วันทำการ (ยังไม่ส่ง)', s.overdue],
+    ['ส่งแขวงทันกำหนด', s.ontime],
+    ['ส่งแขวงเกินกำหนด', s.late],
     ['ยกเลิก / ถอนเรื่อง', s.cancelled]
   ];
   line('ตัวเลขสำคัญ', { bold: true, size: 12, color: { argb: XL.navy } });
@@ -4581,24 +4714,17 @@ function buildCasesSheet(wb, rows, seqMap){
     ['เจ้าของที่ดิน', 2, 24, 'text', r => r.ownerName || ''],
     ['โทร', 2, 13, 'text', r => r.ownerPhone || ''],
     ['ผู้รับมอบอำนาจ', 2, 22, 'text', r => r.hasProxy === 'มี' ? (r.proxyName || '(ไม่ระบุชื่อ)') : ''],
-    ['รับเรื่อง', 3, 12, 'date', r => xlDate(r.dateReceived)],
-    ['ตรวจสถานที่', 3, 12, 'date', r => xlDate(r.inspectedDate)],
+    ['รับจากแขวง', 3, 12, 'date', r => xlDate(r.dateReceived)],
     ['ชี้แนวเขต', 3, 12, 'date', r => xlDate(r.pointedDate)],
-    ['จัดทำบันทึก', 3, 12, 'date', r => xlDate(r.preparedDate)],
-    ['ลงนาม', 3, 12, 'date', r => xlDate(r.signedDate)],
-    ['ส่ง', 3, 12, 'date', r => xlDate(r.sentDate)],
-    ['เก็บสำเนา', 3, 12, 'date', r => xlDate(r.archivedDate)],
+    ['ส่งแขวง', 3, 12, 'date', r => xlDate(r.sentDate)],
     ['สถานะ', 4, 16, 'status', r => caseStatus(r).text],
     ['กำหนดส่ง', 4, 12, 'date', r => xlDate(deadlineInfo(r).due)],
     ['ผลการส่ง', 4, 22, 'deadline', r => deadlineInfo(r).text],
-    ['เอกสารครบ', 4, 10, 'text', r => { const p = docProgress(r); return p.have + '/' + p.need; }],
-    ['ผู้ชี้แนวเขต', 5, 20, 'text', r => r.pointedBy || ''],
-    ['เลขที่ ม.1-03', 5, 14, 'text', r => r.certNo || ''],
     ['เลขที่หนังสือส่ง', 5, 26, 'text', r => r.outgoingNo || ''],
     ['หมายเหตุ', 5, 28, 'text', r => [r.cancelled ? 'ยกเลิก: ' + (r.cancelReason || '-') : '', r.note].filter(Boolean).join(' · ')],
     ['ผู้บันทึก', 5, 20, 'text', r => r.recordedBy || '']
   ];
-  const GROUPS = ['การรับเรื่อง', 'ที่ดิน', 'เจ้าของที่ดิน', 'วันที่ของแต่ละขั้นตอน', 'สถานะและกำหนดส่ง', 'อ้างอิง'];
+  const GROUPS = ['การรับเรื่อง', 'ที่ดิน', 'เจ้าของที่ดิน', 'วันที่รับ-ส่ง', 'สถานะและกำหนดส่ง', 'อ้างอิง'];
   ws.columns = C.map(c => ({ width: c[2] }));
   for (let g = 0; g < GROUPS.length; g++) {
     const idxs = C.map((c, i) => c[1] === g ? i : -1).filter(i => i >= 0);
@@ -4694,6 +4820,7 @@ function buildReportHtml(rows, meta){
       <td class="c nw">${r.sentDate ? th(formatThaiDate(r.sentDate)) : '-'}</td>
       <td class="c"><span class="pl ${st.cls === 'done' ? 'ok' : st.cls === 'cancel' ? 'na' : 'wait'}">${th(st.text)}</span></td>
       <td class="c">${dl.due ? `<div class="sub">${th(formatThaiDate(dl.due))}</div>` : ''}<span class="pl ${dl.cls === 'ok' ? 'ok' : dl.cls === 'bad' ? 'bad' : dl.cls === 'near' ? 'wait' : 'na'}">${th(dl.text)}</span></td>
+
     </tr>`;
   }).join('');
   const title = 'รายงานชี้แนวเขตที่ดิน_' + exportFileBase(rows, meta).replace(/^ชี้แนวเขตที่ดิน_/, '');
@@ -4734,17 +4861,17 @@ tbody tr.tot td{font-weight:700;background:#ecefe9;border-top:2px solid ${themeC
 <div class="scope">ขอบเขตข้อมูล: ${meta.filters.length ? 'ตามตัวกรอง — ' + th(meta.filters.join(' · ')) : 'ทั้งหมด'}</div>
 <div class="tiles">
   <div class="tile"><b>${s.total.toLocaleString('th-TH')}</b><span>เรื่องทั้งหมด (ไม่รวมยกเลิก)</span></div>
-  <div class="tile"><b>${s.done.toLocaleString('th-TH')}</b><span>เสร็จสิ้น</span></div>
-  <div class="tile"><b>${s.open.toLocaleString('th-TH')}</b><span>กำลังดำเนินการ</span></div>
-  <div class="tile"><b>${s.ontime.toLocaleString('th-TH')}</b><span>ส่งรายงานทันกำหนด</span></div>
-  <div class="tile"><b>${(s.late + s.overdue).toLocaleString('th-TH')}</b><span>ส่งเกิน/เกินกำหนด 5 วันทำการ</span></div>
+  <div class="tile"><b>${s.done.toLocaleString('th-TH')}</b><span>ส่งแขวงแล้ว</span></div>
+  <div class="tile"><b>${s.open.toLocaleString('th-TH')}</b><span>รอส่งแขวง</span></div>
+  <div class="tile"><b>${s.ontime.toLocaleString('th-TH')}</b><span>ส่งแขวงทันกำหนด</span></div>
+  <div class="tile"><b>${(s.late + s.overdue).toLocaleString('th-TH')}</b><span>ส่งเกิน/เกินกำหนด 10 วันทำการ</span></div>
 </div>
 <table class="rep">
-<thead><tr class="sp"><td colspan="9"></td></tr><tr><th style="width:7%">เลขที่เรื่อง</th><th style="width:8%">รับเรื่อง</th><th style="width:15%">สายทาง / กม.</th><th style="width:16%">เจ้าของที่ดิน</th><th style="width:17%">เอกสารสิทธิ์ / ที่ตั้ง</th><th style="width:8%">ชี้แนวเขต</th><th style="width:8%">ส่งรายงาน</th><th style="width:10%">สถานะ</th><th style="width:11%">กำหนดส่ง</th></tr></thead>
+<thead><tr class="sp"><td colspan="9"></td></tr><tr><th style="width:7%">เลขที่เรื่อง</th><th style="width:9%">รับจากแขวง</th><th style="width:13%">สายทาง / กม.</th><th style="width:15%">เจ้าของที่ดิน</th><th style="width:16%">เอกสารสิทธิ์ / ที่ตั้ง</th><th style="width:8%">ชี้แนวเขต</th><th style="width:8%">ส่งแขวง</th><th style="width:9%">สถานะ</th><th style="width:15%">กำหนดส่ง</th></tr></thead>
 <tbody>${body}<tr class="tot"><td colspan="9" class="r">รวม ${rows.length.toLocaleString('th-TH')} เรื่อง</td></tr></tbody>
 <tfoot><tr class="sp"><td colspan="9"></td></tr></tfoot>
 </table>
-<div class="foot">ข้อมูลจากระบบงานระวังชี้แนวเขตที่ดิน หมวดทางหลวงเชิงเนิน — กำหนดส่งรายงานภายใน 5 วันทำการหลังดำเนินการระวังชี้แนวเขตที่ดิน (นับจันทร์–ศุกร์)</div>
+<div class="foot">ข้อมูลจากระบบงานระวังชี้แนวเขตที่ดิน หมวดทางหลวงเชิงเนิน — ต้องส่งแขวงภายใน 10 วันทำการ นับจากวันที่ชี้แนวเขต</div>
 </body></html>`;
 }
 function exportPdf(rows, meta){
@@ -5134,7 +5261,6 @@ function syncFiscalYearFromDate(){
 async function init(){
   initModalScroll();
   buildStepRows();
-  buildDocList();
   initCustomSelects();
   document.getElementById('f_dateReceived').addEventListener('change', () => { syncFiscalYearFromDate(); updateStepUi(); });
   document.getElementById('f_coords').addEventListener('input', updateCoordsHint);
@@ -5149,6 +5275,8 @@ async function init(){
   });
   populateFiscalYearSelect();
   initReferenceNoField();
+  initIncomingNoField();
+  initAddressFields();
   clearForm();
 
   document.getElementById('f_hasProxy').addEventListener('change', updateDocUi);
