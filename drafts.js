@@ -21,7 +21,7 @@
   var HOL_KEY = 'cn_draft_holidays_v1';
   // URL Web app (ลงท้าย /exec) ของ Apps Script "แจ้งเตือน LINE" — ใส่แล้วหน้าเว็บจะดึงรายการวันหยุดตัวเดียวกับที่ LINE ใช้ (ตาราง public_holidays ของระบบบริหารหมวด) ให้วันครบกำหนดตรงกัน · เว้นว่าง = ใช้รายการสำรองข้างบน
   var HOLIDAY_URL = '';
-  var CFG = null, drafts = [], holSet = null, started = false, pendingId = null, pendingExisting = '', editingDraftId = null, showClosed = false, ACC = false;
+  var CFG = null, drafts = [], holSet = null, started = false, pendingId = null, pendingExisting = '', editingDraftId = null, ACC = false;
 
   /* ---------- วันที่ / วันทำการ ---------- */
   function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -93,7 +93,6 @@
       '.dr-chip.g{background:#E1F5EE;color:#085041}.dr-chip.y{background:#FAEEDA;color:#633806}.dr-chip.r{background:#FCEBEB;color:#791F1F}.dr-chip.n{background:#EEE;color:#555}' +
       '#draftCard .dr-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 8px;margin-bottom:14px}' +
       '#draftCard .dr-top .sp{flex:1}' +
-      '#draftCard .dr-closed{font-size:13px;cursor:pointer;color:var(--ink-soft,#666);margin-right:6px}' +
       '#draftCard .dr-gp{border:1px solid var(--line,#e3e3e3);border-radius:12px;overflow:hidden;margin-bottom:12px}' +
       '#draftCard .dr-gh{display:flex;align-items:center;gap:9px;padding:9px 14px;font-family:Kanit,Sarabun,sans-serif;font-weight:600;font-size:14.5px}' +
       '#draftCard .dr-gh i{width:9px;height:9px;border-radius:50%;flex:none}' +
@@ -181,16 +180,11 @@
         return;
       }
       var v = viewOf(d, t); if (v.hide) return;
-      var isClosed = v.state !== 'open';
-      if (isClosed) {
-        // แสดงเฉพาะเมื่อติ๊ก "แสดงที่ปิดแล้ว" (ส่งแล้ว/จบ/ยกเลิก) — จำกัดช่วงล่าสุดจากวันเริ่มนับ
-        if (!showClosed) return;
-        if (v.start && workLeft(t, v.start) < -60 && v.state !== 'cancelled') return;
-      } else {
-        counts.open++;
-        if (v.left < 0 || v.left === 0) counts.over++; else if (v.left <= WARN_LEFT) counts.warn++;
-      }
-      rows.push({ d: d, v: v, closed: isClosed });
+      // ร่างที่ปิดแล้ว (ส่งแขวงแล้ว / เรื่องจบ / ยกเลิก) ไม่แสดงในตารางนี้ — เรื่องที่จบแล้วไปดูที่ตารางในหน้ารายการ
+      if (v.state !== 'open') return;
+      counts.open++;
+      if (v.left <= 0) counts.over++; else if (v.left <= WARN_LEFT) counts.warn++;
+      rows.push({ d: d, v: v, closed: false });
     });
     rows.sort(function (a, b) {
       if (a.closed !== b.closed) return a.closed ? 1 : -1;
@@ -199,15 +193,15 @@
     });
 
     var failed = window.FBL && FBL.watchFailed && FBL.watchFailed.drafts;
-    var html = '<div class="card" id="draftCard"><div class="section-title"><span class="num">▤</span> รายการร่าง' + (ACC ? '' : ' — ติดตามจนส่งเอกสารถึงแขวง') + '</div>';
+    var html = '<div class="card" id="draftCard"><div class="section-title"><span class="num">▤</span> รายการร่าง</div>';
     if (failed) html += '<div class="dr-warn">ยังอ่านรายการร่างไม่ได้ (' + esc(failed) + ') — ถ้าเพิ่งติดตั้งฟีเจอร์นี้ ให้วาง firestore.rules ใหม่ใน Firebase Console ก่อน</div>';
     html += '<div class="dr-top">' +
       '<span class="dr-chip n">ค้าง ' + counts.open + '</span>' +
       (counts.warn ? '<span class="dr-chip y">ใกล้ครบ ' + counts.warn + '</span>' : '') +
       (counts.over ? '<span class="dr-chip r">ครบ/เลยกำหนด ' + counts.over + '</span>' : '') +
       '<span class="sp"></span>' +
-      (ACC ? '' : '<label class="dr-closed"><input type="checkbox" id="drShowClosed"' + (showClosed ? ' checked' : '') + '> แสดงที่ปิดแล้ว</label>') +
-      '<button type="button" class="btn btn-primary" id="drAddBtn">＋ เพิ่มร่าง</button></div>';
+      '<button type="button" class="btn btn-outline" id="drAddBtn">ร่างรายการ</button>' +
+      '<button type="button" class="btn btn-primary" id="drNewBtn">＋ รายการใหม่</button></div>';
 
     if (!rows.length) {
       html += '<div class="dr-empty">ยังไม่มีรายการร่างที่ค้างอยู่</div>';
@@ -215,15 +209,13 @@
       var groups = [
         { k: 'r', title: 'เลยกำหนด / ครบกำหนดวันนี้', f: function (r) { return !r.closed && r.v.left <= 0; } },
         { k: 'y', title: 'ใกล้ครบกำหนด · เหลือไม่เกิน ' + WARN_LEFT + ' วันทำการ', f: function (r) { return !r.closed && r.v.left > 0 && r.v.left <= WARN_LEFT; } },
-        { k: 'g', title: 'ยังมีเวลา', f: function (r) { return !r.closed && r.v.left > WARN_LEFT; } },
-        { k: 'n', title: 'ปิดแล้ว (ส่งแขวงแล้ว / เรื่องจบ / ยกเลิก)', f: function (r) { return r.closed; } }
+        { k: 'g', title: 'ยังมีเวลา', f: function (r) { return !r.closed && r.v.left > WARN_LEFT; } }
       ];
       groups.forEach(function (g) {
         var list = rows.filter(g.f); if (!list.length) return;
         html += '<div class="dr-gp"><div class="dr-gh ' + g.k + '"><i></i>' + g.title + '<span class="c">' + list.length + ' เรื่อง</span></div>' + list.map(rowHtml).join('') + '</div>';
       });
     }
-    if (!ACC) html += '<div class="dr-note" style="margin-top:8px">กำหนดส่ง = ' + esc(CFG.startLabel) + ' + ' + LIMIT_DAYS + ' วันทำการ · เมื่อกรอก "ส่งเอกสารถึงแขวง" ในเคส ร่างจะปิดเอง · แจ้งเตือน LINE: เหลือ ' + WARN_LEFT + ' วันทำการ และวันครบกำหนด</div>';
     html += '</div>';
     el.innerHTML = html;
     bind(el);
@@ -232,7 +224,8 @@
   function bind(el) {
     var q = function (id) { return el.querySelector('#' + id); };
     q('drAddBtn').onclick = function () { openModal(null); };
-    if (q('drShowClosed')) q('drShowClosed').onchange = function () { showClosed = this.checked; render(); };
+    // "＋ รายการใหม่" = เปิดฟอร์มเต็มว่าง ๆ ได้เลยโดยไม่ต้องมีร่าง (บันทึกแล้วระบบสร้างร่างติดตามให้เองใน afterCaseSaved)
+    q('drNewBtn').onclick = function () { if (CFG.openBlank) CFG.openBlank(); };
     el.querySelectorAll('.dr-ln').forEach(function (row) {
       var id = row.getAttribute('data-id');
       function go() { var d = byId(id); if (!d || d.status === 'cancelled') return; if (!ACC && d.caseId) openCase(d); else makeCase(d); }
