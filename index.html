@@ -919,7 +919,6 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .lln .field{min-width:0}
 .lcol .field label{display:flex;align-items:center;gap:6px;white-space:nowrap}
 .lcol .field label .hint{margin-left:auto;font-weight:600;font-size:11.5px}
-.auto-tag{font-size:10px;font-weight:600;background:#e8f1fb;color:#1d4e83;border-radius:20px;padding:0 7px;line-height:16px}
 .lk-btn{margin-left:auto;border:0;background:none;padding:0;font:600 12px 'Sarabun',sans-serif;color:#1d4e83;cursor:pointer}
 .lk-btn:hover{color:var(--amber);text-decoration:underline}
 .section-title .sec-note{margin-left:auto;font-weight:400;font-size:12px;color:var(--ink-soft)}
@@ -1362,7 +1361,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
     </div>
 
     <div class="card" id="fsec2">
-      <div class="section-title"><span class="num">2</span> ที่ดินและที่ตั้ง <span class="sec-note">🔔 แจ้งเตือน LINE ล่วงหน้า 1 วันทำการ · แก้รายชื่อ/เบอร์ตัวแทนแขวงที่หน้า "ตั้งค่า"</span></div>
+      <div class="section-title"><span class="num">2</span> ที่ดินและที่ตั้ง</div>
       <div class="party-block lbox">
       <div class="lcols">
       <div class="lcol">
@@ -1393,7 +1392,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <div class="lln">
         <div class="field" style="flex:1.3">
           <label>เลขที่หลักฐาน</label>
-          <input type="text" id="f_deedNo" placeholder="เช่น 12345">
+          <input type="text" id="f_deedNo">
         </div>
         <div class="field" style="flex:1">
           <label>เลขที่ดิน</label>
@@ -1406,17 +1405,17 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <div class="lg-h">ที่ดินตั้งอยู่</div>
         <div class="lln">
         <div class="field" style="flex:1">
-          <label>ตำบล <button type="button" class="lk-btn" id="btnLandTamOwner" title="ดึงตำบลจากที่อยู่เจ้าของที่ดิน (กล่อง 1)">ใช้ตามเจ้าของ</button></label>
+          <label>ตำบล</label>
           <input type="text" id="f_tambon" list="dlLTam" autocomplete="off">
-        </div>
-        <div class="field" style="flex:1">
-          <label>อำเภอ <span class="auto-tag">อัตโนมัติ</span></label>
-          <input type="text" id="f_amphoe" list="dlLAmp" autocomplete="off">
         </div>
         </div>
         <div class="lln">
-        <div class="field" style="width:170px">
-          <label>จังหวัด <span class="auto-tag">อัตโนมัติ</span></label>
+        <div class="field" style="flex:1">
+          <label>อำเภอ</label>
+          <input type="text" id="f_amphoe" list="dlLAmp" autocomplete="off">
+        </div>
+        <div class="field" style="flex:1">
+          <label>จังหวัด</label>
           <input type="text" id="f_province" list="dlLProv" autocomplete="off">
         </div>
         </div>
@@ -1426,7 +1425,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <div class="lcol">
         <div class="lg-h">ที่ดินดังกล่าวอยู่ติดทางหลวง</div>
         <div class="lln">
-        <div class="field" style="width:170px">
+        <div class="field" style="flex:1">
           <label>ทางหลวงหมายเลข <span class="req">*</span></label>
           <select id="f_highway"></select>
           <span class="hint km-hint" id="highwayHint"></span>
@@ -1436,7 +1435,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         </div>
         <div class="lln">
         <div class="field" style="flex:1">
-          <label>ตอน <span class="auto-tag">อัตโนมัติ</span></label>
+          <label>ตอน</label>
           <input type="text" id="f_sectionView" readonly tabindex="-1" placeholder="แสดงอัตโนมัติตามทางหลวงที่เลือก">
         </div>
         </div>
@@ -1472,8 +1471,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         </div>
         <div class="lln">
         <div class="field" style="width:180px">
-          <label>เบอร์โทร <span class="auto-tag">อัตโนมัติ</span></label>
-          <input type="text" id="f_repMobile" inputmode="tel" placeholder="0xx-xxx-xxxx" autocomplete="off">
+          <label>เบอร์โทร</label>
+          <input type="text" id="f_repMobile" inputmode="tel" autocomplete="off">
         </div>
         </div>
         <input type="hidden" id="f_repName"><input type="hidden" id="f_repPosition"><input type="hidden" id="f_repPhone">
@@ -1483,14 +1482,14 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <div class="lln">
         <div class="field" style="flex:1">
           <label>ชื่อ-นามสกุล</label>
-          <input type="text" id="f_surveyorName" list="dlSurveyor" autocomplete="off" placeholder="เช่น นายสมศักดิ์ รังวัดดี">
+          <input type="text" id="f_surveyorName" list="dlSurveyor" autocomplete="off">
           <datalist id="dlSurveyor"></datalist>
         </div>
         </div>
         <div class="lln">
         <div class="field" style="width:180px">
-          <label>โทรศัพท์ <span class="auto-tag" id="surveyorPhoneTag" style="display:none">อัตโนมัติ</span></label>
-          <input type="text" id="f_surveyorPhone" inputmode="tel" placeholder="0xx-xxx-xxxx" autocomplete="off">
+          <label>โทรศัพท์</label>
+          <input type="text" id="f_surveyorPhone" inputmode="tel" autocomplete="off">
         </div>
         </div>
       </div>
@@ -4601,16 +4600,6 @@ function landTambonAutofill(){
   if (prov.value.trim() !== ADDR_DEFAULT_PROV) { prov.value = ADDR_DEFAULT_PROV; markAutoFilled(prov); }
   landRefreshLists();
 }
-function landFromOwner(){
-  const t = addrEl('Tam') ? addrEl('Tam').value.trim() : '';
-  if (!t) { showToast('ยังไม่ได้กรอกตำบลในที่อยู่เจ้าของที่ดิน'); return; }
-  document.getElementById('f_tambon').value = t;
-  const a = addrEl('Amp').value.trim(), p = addrEl('Prov').value.trim();
-  if (a) document.getElementById('f_amphoe').value = a;
-  if (p) document.getElementById('f_province').value = p;
-  landTambonAutofill(); landRefreshLists();
-  ['f_tambon', 'f_amphoe', 'f_province'].forEach(id => markAutoFilled(document.getElementById(id)));
-}
 function deedUi(){
   const none = document.getElementById('f_deedType').value === 'ไม่มีเอกสารสิทธิ์';
   ['f_deedNo', 'f_landNo'].forEach(id => { document.getElementById(id).disabled = none; });
@@ -4643,9 +4632,12 @@ function surveyorAutofill(){
   if (p && !ph.value.trim()) { ph.value = p; markAutoFilled(ph); }
 }
 function initLandBoxExtras(){
+  // ตัวเลือกตำบล/อำเภอ/จังหวัด ใช้เมนูของระบบ (เมนูขาว ติ๊กถูกสีส้ม) เหมือนช่องที่อยู่เจ้าของที่ดิน แทนกล่องดำของเบราว์เซอร์
+  enhanceCombo(document.getElementById('f_tambon'), 'dlLTam');
+  enhanceCombo(document.getElementById('f_amphoe'), 'dlLAmp');
+  enhanceCombo(document.getElementById('f_province'), 'dlLProv');
   document.getElementById('f_tambon').addEventListener('input', landTambonAutofill);
   document.getElementById('f_tambon').addEventListener('change', landTambonAutofill);
-  document.getElementById('btnLandTamOwner').addEventListener('click', landFromOwner);
   ['f_deedType', 'f_deedNo'].forEach(id => { const el = document.getElementById(id); el.addEventListener('input', deedUi); el.addEventListener('change', deedUi); });
   document.getElementById('f_appointDate').addEventListener('change', appointDayHint);
   document.getElementById('f_appointDate').addEventListener('input', appointDayHint);
