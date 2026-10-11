@@ -295,17 +295,18 @@
     }
     var dup = drafts.some(function (d) { return d.status !== 'cancelled' && d.startDate === date && String(d.highway) === String(hw) && Number(d.km) === km; }) ||
       caseDocs().some(function (c) { return !c.deletedAt && d10(CFG.startOf(c)) === date && String(c.highway) === String(hw) && Number(c.km) === km; });
-    if (dup && !(await ask('เพิ่มร่างซ้ำ ?', 'มีร่างหรือเคสวันที่ ทล. และ กม. เดียวกันอยู่แล้ว ต้องการเพิ่มซ้ำหรือไม่', 'เพิ่มซ้ำ', false))) return;
+    if (dup && !(await ask('เพิ่มร่างซ้ำหรือไม่ ?', 'ทล.' + hw + ' กม.' + fmtKm(km), 'มีร่างหรือเคสวันที่ ทล. และ กม. เดียวกันอยู่แล้ว', 'เพิ่มซ้ำ', false))) return;
     var rec = { id: newId(), startDate: date, highway: String(hw), km: km, caseId: '', status: 'open', source: 'web', note: note, createdAt: new Date().toISOString(), createdBy: who() };
     if (await save(rec)) { toast('เพิ่มร่างแล้ว ครบกำหนด ' + tdate(addWork(date, LIMIT_DAYS))); closeModal(); }
   }
-  /* กล่องยืนยันของระบบเอง (หน้าตาเดียวกับกล่องลบรายการ/ออกจากฟอร์ม — ไม่ใช้ confirm() ของเบราว์เซอร์) · Esc / คลิกฉากหลัง / ปุ่ม × = ยกเลิก */
-  function ask(title, msg, okLabel, danger) {
+  /* กล่องยืนยันของระบบเอง (หน้าตาเดียวกับกล่องลบรายการ/ออกจากฟอร์ม — ไม่ใช้ confirm() ของเบราว์เซอร์) · Esc / คลิกฉากหลัง / ปุ่ม × / ปุ่ม กลับ = ยกเลิก */
+  function ask(title, strong, msg, okLabel, danger) {
     return new Promise(function (resolve) {
       var dlg = document.createElement('div'); dlg.className = 'modal-backdrop'; dlg.id = 'drAsk';
-      dlg.innerHTML = '<div class="modal" role="alertdialog" aria-modal="true"><div class="modal-head"><h3>' + esc(title) + '</h3><button class="modal-close" id="drAskX" type="button" aria-label="ปิด">×</button></div>' +
-        '<p>' + esc(msg) + '</p><div class="actions"><button class="btn btn-outline" id="drAskNo" type="button">ยกเลิก</button>' +
-        '<button class="btn ' + (danger ? 'btn-danger' : 'btn-primary') + '" id="drAskOk" type="button">' + esc(okLabel) + '</button></div></div>';
+      dlg.innerHTML = '<div class="modal" role="alertdialog" aria-modal="true" style="max-width:420px"><div class="modal-head"><h3>' + esc(title) + '</h3><button class="modal-close" id="drAskX" type="button" aria-label="ปิด">×</button></div>' +
+        '<div class="modal-body"><p style="margin:10px 0 2px;font-weight:600;color:var(--navy-900)">' + esc(strong) + '</p><p style="margin:0">' + esc(msg) + '</p>' +
+        '<div class="actions" style="margin-top:16px"><button class="btn btn-outline" id="drAskNo" type="button">กลับ</button>' +
+        '<button class="btn ' + (danger ? 'btn-danger' : 'btn-primary') + '" id="drAskOk" type="button">' + esc(okLabel) + '</button></div></div></div>';
       document.body.appendChild(dlg);
       function done(v) { document.removeEventListener('keydown', onK, true); dlg.remove(); resolve(v); }
       function onK(e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); } }
@@ -317,11 +318,10 @@
       document.getElementById('drAskNo').focus();
     });
   }
-
   async function cancelDraft(d) {
     // ลบ/ยกเลิก = ตั้งสถานะ "cancelled" (สมาชิกทุกคนทำได้ · ไม่ต้องแก้ Rules · LINE เลิกติดตามร่างนี้) · คืนค่า true เมื่อทำสำเร็จ
     var word = ACC ? 'ลบร่าง' : 'ยกเลิกร่าง';
-    if (!(await ask(word + ' ?', 'ทล.' + d.highway + ' กม.' + fmtKm(d.km) + ' — ' + (ACC ? 'ร่างจะหายจากตารางและไม่แจ้งเตือนอีก' : 'ร่างจะไม่ถูกติดตามและไม่แจ้งเตือนอีก'), 'ยืนยัน', true))) return false;
+    if (!(await ask(word + 'นี้หรือไม่ ?', 'ทล.' + d.highway + ' กม.' + fmtKm(d.km), (ACC ? 'ร่างจะหายจากตาราง และระบบจะไม่แจ้งเตือนอีก' : 'ร่างจะไม่ถูกติดตาม และระบบจะไม่แจ้งเตือนอีก'), word, true))) return false;
     if (await save({ id: d.id, status: 'cancelled', cancelledAt: new Date().toISOString(), cancelledBy: who() })) { toast(word + 'แล้ว'); return true; }
     return false;
   }
