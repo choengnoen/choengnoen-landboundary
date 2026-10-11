@@ -939,7 +939,20 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .rep-info{margin-top:6px;font-size:13px;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;line-height:1.6}
 .rep-info b{color:var(--navy-900)}
 /* หมุดโฉนด: ช่องกรอกอยู่ซ้าย ใบร่างอยู่ขวา (เห็นใบร่างเปลี่ยนทันทีที่เพิ่มหมุด/ใส่ระยะ) */
-.pin-layout{display:grid;grid-template-columns:minmax(300px,370px) minmax(0,1fr);gap:14px;align-items:start}
+.pin-layout{display:grid;grid-template-columns:minmax(330px,470px) minmax(0,1fr);gap:14px;align-items:start}
+.pin-seg{display:grid;grid-template-columns:minmax(0,1fr) 84px minmax(0,1fr) 30px;gap:8px;align-items:end;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.pin-seg>.field{min-width:0}
+.pin-seg input{min-width:0;width:100%}
+.pin-seg .pin-from-in{background:var(--paper-2);color:var(--ink-soft)}
+.pin-seg .pin-calc{background:#eef4fb !important;border-color:#c4d8ee !important}
+.pin-seg .pin-arrow{margin-left:auto;font-size:11px;font-weight:600;color:var(--navy-700)}
+.pin-seg.warn{border-color:var(--rust)}
+.pin-seg.warn .pin-arrow{color:var(--rust)}
+.pin-seg label{display:flex;align-items:center;white-space:nowrap}
+.pin-seg .pin-del{border:1px solid var(--line);background:#fff;border-radius:8px;height:36px;cursor:pointer;color:var(--ink-soft)}
+.pin-seg .pin-del:hover{color:var(--rust);border-color:var(--rust)}
+.pin-seg.pin-new{animation:pinIn .45s ease}
+@media(max-width:560px){.pin-seg{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 30px}.pin-seg>.field:nth-child(3){grid-column:1/3}}
 .pin-panel{margin-top:0}
 .pin-head{display:grid;grid-template-columns:1fr;gap:10px}
 .pin-rows{display:flex;flex-direction:column;gap:8px;margin-top:12px}
@@ -1507,16 +1520,16 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <div class="pin-layout">
         <div class="party-block pin-panel">
           <div class="lg-h">หมุดโฉนด</div>
-          <div class="pin-head">
-            <div class="field">
+          <!-- ช่อง กม. หมุดที่ 1 ถูกย้ายเข้าแถวแรกของรายการช่วงโดยสคริปต์ (renderPinSegs) · ทิศทาง กม.เพิ่ม/ลด ระบบคำนวณเอง เก็บเป็นค่าซ่อน -->
+          <div id="pinKm0Holder" hidden>
+            <div class="field" id="pinKm0Field">
               <label>กม. หมุดที่ 1</label>
               <input type="text" id="f_pinKm0">
-              <!-- ทิศทาง (กม.เพิ่ม/ลด) ระบบคำนวณเองจาก กม. ของหมุดที่กรอก — เก็บไว้เป็นค่าซ่อน -->
               <input type="hidden" id="f_pinDir" value="up">
             </div>
           </div>
           <div class="pin-rows" id="pinRows"></div>
-          <button type="button" class="pin-add" id="btnAddPin">＋ เพิ่มหมุด</button>
+          <button type="button" class="pin-add" id="btnAddPin">＋ เพิ่มช่วง (หมุดถัดไป)</button>
         </div>
         <div class="draft-box" id="draftSvgWrap"></div>
       </div>
@@ -4823,7 +4836,8 @@ function draftSvg(m){
   const base = draftBase(m), gaps = Array.isArray(m.pinGaps) ? m.pinGaps : [];
   const dir = m.pinDir === 'down' ? 'down' : 'up';
   const kms = pinKms(base, gaps, dir), N = kms.length;
-  const W = 780, padX = 100, left = padX, right = W - padX, step = N > 1 ? (right - left) / (N - 1) : 0;
+  // เส้นหมุดยืดเต็มความกว้างใบร่าง: หลายช่วง → ขอบซ้าย-ขวาแคบลง (เหลือเฉพาะที่พอวางป้าย กม.) และถ้าหมุดมากมาก ขยายความกว้างใบร่างให้ป้ายไม่ทับกัน
+  const padX = N > 2 ? 44 : 60, W = Math.max(780, 2 * padX + (N - 1) * 78), left = padX, right = W - padX, step = N > 1 ? (right - left) / (N - 1) : 0;
   const xOf = i => dir === 'down' ? right - i * step : left + i * step;
   const valid = kms.filter(k => k !== null);
   const kmTop = valid.length ? Math.min.apply(null, valid) : null, kmEnd = valid.length ? Math.max.apply(null, valid) : null;
@@ -4869,15 +4883,6 @@ function updateDraftPreview(){
   if (!wrap) return;
   const m = draftModelFromForm();
   wrap.innerHTML = draftSvg(m);
-  // ข้อความข้างช่อง กม. ของแต่ละหมุด: ระยะที่ระบบคำนวณจากหมุดก่อนหน้า (ห่างกี่เมตร) หรือเตือนถ้าทิศสวนกัน
-  const d = derivePins();
-  document.querySelectorAll('#pinRows .pin-row').forEach((row, i) => {
-    const el = row.querySelector('.pin-km'), inf = d.info[i] || {};
-    el.classList.toggle('warn', !!inf.warn);
-    el.textContent = inf.warn ? '⚠ สวนทิศหมุดก่อนหน้า'
-      : (inf.gap !== null && inf.gap !== undefined) ? 'ห่าง ' + inf.gap + ' ม.'
-      : (d.base === null ? 'กรอก กม. หมุดที่ 1 ก่อน' : '');
-  });
   const p0 = document.getElementById('f_pinKm0');
   if (p0) p0.placeholder = m.km !== null ? 'ว่าง = ใช้ กม. ' + formatKm(m.km) : '';
 }
@@ -4887,71 +4892,136 @@ function pinBase(){
   const b = parseKm(document.getElementById('f_pinKm0').value.trim());
   return b !== null ? b : parseKm(document.getElementById('f_km').value);
 }
+/* 1 บรรทัด = 1 ช่วง: [กม. หมุดต้น] [ระยะ ม.] [กม. หมุดปลาย]
+   - กรอก "ระยะ" → ระบบคำนวณ กม. ปลายให้ · กรอก "กม. ปลาย" → ระบบคำนวณระยะให้ (ช่องที่ระบบคำนวณเป็นสีฟ้าอ่อน)
+   - กม. ต้นของช่วงถัดไปคือ กม. ปลายของช่วงก่อนหน้า ขึ้นให้เอง
+   - ทิศทาง (กม.เพิ่ม/ลด) รู้จากการกรอก กม. ปลาย หรือใส่เครื่องหมาย - หน้าระยอง (เช่น -25.5 = กม.ลดลง) ไม่ใส่ = ตามทิศที่รู้แล้ว/กม.เพิ่ม */
+const r2 = n => Math.round(n * 100) / 100;
+function parseDist(t){
+  t = String(t || '').trim();
+  if (!t) return null;
+  const neg = t.charAt(0) === '-', n = parseFloat(t.replace(/^-/, ''));
+  return isNaN(n) ? null : { abs: n, neg };
+}
 function derivePins(){
   const base = pinBase(), dirEl = document.getElementById('f_pinDir');
-  const inputs = [...document.querySelectorAll('#pinRows .pin-km-in')];
-  let prev = base, dir = null;
+  const rows = [...document.querySelectorAll('#pinRows .pin-seg')];
+  let prev = base, dirKnown = null;
   const gaps = [], info = [];
-  inputs.forEach(inp => {
-    const k = parseKm(inp.value.trim());
-    if (k === null || prev === null) { gaps.push(null); info.push({ gap: null, warn: false }); prev = null; return; }
-    const diff = Math.round((k - prev) * 100) / 100;
-    if (diff !== 0 && dir === null) dir = diff > 0 ? 'up' : 'down';
-    const warn = diff !== 0 && dir !== null && ((diff > 0) !== (dir === 'up'));
-    gaps.push(Math.abs(diff)); info.push({ gap: Math.abs(diff), warn });
-    prev = k;
+  rows.forEach(row => {
+    const fromIn = row.querySelector('.pin-from-in'), dIn = row.querySelector('.pin-dist-in'), tIn = row.querySelector('.pin-to-in');
+    if (fromIn) fromIn.value = prev !== null ? fmtKm2(prev) : '';
+    const dTxt = dIn.value.trim(), tTxt = tIn.value.trim();
+    let src = row.dataset.src || '';
+    if (!src) src = (dTxt && !tTxt) ? 'dist' : (tTxt ? 'to' : '');
+    let gap = null, warn = false, rowDir = null, next = null;
+    if (src === 'to') {
+      const tk = parseKm(tTxt);
+      if (tk !== null) {
+        if (prev !== null) {
+          const diff = r2(tk - prev);
+          gap = Math.abs(diff); rowDir = diff > 0 ? 'up' : (diff < 0 ? 'down' : null);
+          if (rowDir && dirKnown === null) dirKnown = rowDir;
+          warn = !!(rowDir && dirKnown && rowDir !== dirKnown);
+          dIn.value = (rowDir === 'down' ? '-' : '') + gap;
+        }
+        next = tk;
+      } else if (!dTxt || row.dataset.src) dIn.value = '';
+    } else if (src === 'dist') {
+      const d = parseDist(dTxt);
+      if (d) {
+        gap = d.abs;
+        rowDir = d.neg ? 'down' : (dirKnown || (dirEl.value === 'down' ? 'down' : 'up'));
+        warn = !!(d.neg && d.abs !== 0 && dirKnown === 'up');
+        if (d.neg && d.abs !== 0 && dirKnown === null) dirKnown = 'down';
+        if (prev !== null) { next = r2(prev + (rowDir === 'down' ? -1 : 1) * gap); tIn.value = fmtKm2(next); } else tIn.value = '';
+      } else tIn.value = '';
+    }
+    dIn.classList.toggle('pin-calc', src === 'to' && dIn.value !== '');
+    tIn.classList.toggle('pin-calc', src === 'dist' && tIn.value !== '');
+    const arrow = row.querySelector('.pin-arrow');
+    if (arrow) arrow.textContent = warn ? '⚠ สวนทิศ' : (gap ? (rowDir === 'down' ? '▼ ลด' : '▲ เพิ่ม') : '');
+    row.classList.toggle('warn', warn);
+    gaps.push(gap); info.push({ warn, gap });
+    prev = next;
   });
-  const out = dir || (dirEl.value === 'down' ? 'down' : 'up');
+  const out = dirKnown || (dirEl.value === 'down' ? 'down' : 'up');
   dirEl.value = out;
   return { base, gaps, dir: out, info };
 }
-function pinKmTexts(){ return [...document.querySelectorAll('#pinRows .pin-km-in')].map(i => i.value); }
-function renderPinRowTexts(texts, newIdx){
-  const box = document.getElementById('pinRows');
+function pinSegStates(){
+  return [...document.querySelectorAll('#pinRows .pin-seg')].map(r => ({ d: r.querySelector('.pin-dist-in').value, t: r.querySelector('.pin-to-in').value, src: r.dataset.src || '' }));
+}
+function renderPinSegs(states, newIdx){
+  const box = document.getElementById('pinRows'), holder = document.getElementById('pinKm0Holder'), f0 = document.getElementById('pinKm0Field');
   if (!box) return;
-  const list = (Array.isArray(texts) && texts.length) ? texts : [''];
-  box.innerHTML = list.map((t, i) => `
-    <div class="pin-row${i === newIdx ? ' pin-new' : ''}">
-      <span class="pin-dot">${i + 2}</span>
-      <div class="field"><label>กม. หมุดที่ ${i + 2}</label><input type="text" class="pin-km-in" inputmode="text" value="${escapeHtml(String(t || ''))}"></div>
-      <div class="pin-km"></div>
-      <button type="button" class="pin-del" title="ลบหมุดนี้" ${list.length < 2 ? 'disabled style="visibility:hidden"' : ''}>✕</button>
+  if (f0 && holder) holder.appendChild(f0);   // เก็บช่อง กม. หมุดที่ 1 ไว้ก่อนวาดแถวใหม่ (ไม่ให้ค่าหาย)
+  const list = (Array.isArray(states) && states.length) ? states : [{ d: '', t: '', src: '' }];
+  box.innerHTML = list.map((s, i) => `
+    <div class="pin-seg${i === newIdx ? ' pin-new' : ''}" data-src="${escapeHtml(s.src || '')}">
+      ${i === 0 ? '<span class="pin-from-slot"></span>' : '<div class="field"><label>กม. หมุดที่ ' + (i + 1) + '</label><input type="text" class="pin-from-in" readonly tabindex="-1"></div>'}
+      <div class="field"><label>ระยะ (ม.)</label><input type="text" class="pin-dist-in" inputmode="decimal" value="${escapeHtml(String(s.d || ''))}"></div>
+      <div class="field"><label>กม. หมุดที่ ${i + 2} <span class="pin-arrow"></span></label><input type="text" class="pin-to-in" value="${escapeHtml(String(s.t || ''))}"></div>
+      <button type="button" class="pin-del" title="ลบช่วงนี้" ${list.length < 2 ? 'disabled style="visibility:hidden"' : ''}>✕</button>
     </div>`).join('');
+  const slot = box.querySelector('.pin-from-slot');
+  if (slot && f0) slot.replaceWith(f0);
   updateDraftPreview();
 }
-// โหลดเรื่องที่บันทึกไว้ (เก็บเป็นระยะห่าง + ทิศทาง) → แปลงกลับเป็น กม. ของแต่ละหมุดเพื่อแสดงในช่อง
+// โหลดเรื่องที่บันทึกไว้ (เก็บเป็นระยะห่าง + ทิศทาง) → แปลงกลับเป็นช่อง กม. ปลายของแต่ละช่วง
 function renderPinRows(gaps, newIdx){
   const list = (Array.isArray(gaps) && gaps.length) ? gaps : [null];
-  const kms = pinKms(pinBase(), list, document.getElementById('f_pinDir').value === 'down' ? 'down' : 'up').slice(1);
-  renderPinRowTexts(kms.map(k => (k === null || k === undefined) ? '' : fmtKm2(k)), newIdx);
+  const dir = document.getElementById('f_pinDir').value === 'down' ? 'down' : 'up';
+  const kms = pinKms(pinBase(), list, dir).slice(1);
+  renderPinSegs(list.map((g, i) => {
+    if (kms[i] !== null && kms[i] !== undefined) return { d: '', t: fmtKm2(kms[i]), src: 'to' };
+    if (g !== null && g !== undefined && g !== '') return { d: (dir === 'down' ? '-' : '') + g, t: '', src: 'dist' };
+    return { d: '', t: '', src: '' };
+  }), newIdx);
 }
 function currentGaps(){ return derivePins().gaps; }
 function initDraftCard(){
   const box = document.getElementById('pinRows');
   box.addEventListener('input', e => {
-    if (e.target.classList.contains('pin-km-in')) e.target.value = e.target.value.replace(/[^0-9+.]/g, '');
+    const t = e.target, row = t.closest('.pin-seg');
+    if (!row) return;
+    if (t.classList.contains('pin-dist-in')) {
+      t.value = t.value.replace(/[^0-9.\-]/g, '').replace(/(?!^)-/g, '');
+      row.dataset.src = t.value ? 'dist' : '';
+      if (!t.value) row.querySelector('.pin-to-in').value = '';
+    } else if (t.classList.contains('pin-to-in')) {
+      t.value = t.value.replace(/[^0-9+.]/g, '');
+      row.dataset.src = t.value ? 'to' : '';
+      if (!t.value) row.querySelector('.pin-dist-in').value = '';
+    }
     updateDraftPreview();
   });
   // ออกจากช่อง: จัดรูปแบบ กม. ให้เป็นมาตรฐาน (พิมพ์ 1025.5 → 1+025.5)
   const normKm = el => { const k = parseKm(el.value.trim()); if (k !== null) el.value = fmtKm2(k); };
-  box.addEventListener('focusout', e => { if (e.target.classList.contains('pin-km-in')) { normKm(e.target); updateDraftPreview(); } });
+  box.addEventListener('focusout', e => { if (e.target.classList.contains('pin-to-in')) { normKm(e.target); updateDraftPreview(); } });
   document.getElementById('f_pinKm0').addEventListener('blur', e => { normKm(e.target); updateDraftPreview(); });
   box.addEventListener('click', e => {
     const b = e.target.closest('.pin-del');
     if (!b) return;
-    const t = pinKmTexts(), idx = [...box.querySelectorAll('.pin-del')].indexOf(b);
-    t.splice(idx, 1);
-    renderPinRowTexts(t);
+    const s = pinSegStates(), idx = [...box.querySelectorAll('.pin-del')].indexOf(b);
+    s.splice(idx, 1);
+    renderPinSegs(s);
   });
-  // เพิ่มหมุด: แถวใหม่ขึ้นทันที + ใบร่างวาดหมุดใหม่ทันที (ยังไม่ใส่ กม. ก็เห็นหมุดว่างรออยู่) แล้วเลื่อนเคอร์เซอร์ไปช่อง กม.
-  const addPin = () => { const t = pinKmTexts(); t.push(''); renderPinRowTexts(t, t.length - 1); const last = box.querySelector('.pin-row:last-child .pin-km-in'); if (last) { last.focus(); last.scrollIntoView({ block: 'nearest' }); } };
+  // เพิ่มช่วง: แถวใหม่ขึ้นทันที (กม. ต้นมาจากช่วงก่อนหน้าเอง) + ใบร่างวาดหมุดใหม่ทันที แล้วเลื่อนเคอร์เซอร์ไปช่องระยะ
+  const addPin = () => { const s = pinSegStates(); s.push({ d: '', t: '', src: '' }); renderPinSegs(s, s.length - 1); const last = box.querySelector('.pin-seg:last-child .pin-dist-in'); if (last) { last.focus(); last.scrollIntoView({ block: 'nearest' }); } };
   document.getElementById('btnAddPin').addEventListener('click', addPin);
-  // กด Enter ในช่อง กม. ของหมุดล่าสุด = เพิ่มหมุดถัดไป (กรอกต่อเนื่องได้โดยไม่ต้องใช้เมาส์)
+  // Enter: ช่องระยะ → ไปช่อง กม. ปลาย · ช่อง กม. ปลายของช่วงล่าสุด (มีค่าแล้ว) → เพิ่มช่วงถัดไป
   box.addEventListener('keydown', e => {
-    if (e.key !== 'Enter' || !e.target.classList.contains('pin-km-in')) return;
+    if (e.key !== 'Enter') return;
+    const t = e.target, row = t.closest && t.closest('.pin-seg');
+    if (!row) return;
     e.preventDefault();
-    const ins = [...box.querySelectorAll('.pin-km-in')];
-    if (e.target === ins[ins.length - 1] && e.target.value.trim() !== '') { normKm(e.target); addPin(); } else { const nx = ins[ins.indexOf(e.target) + 1]; if (nx) nx.focus(); }
+    if (t.classList.contains('pin-dist-in')) { row.querySelector('.pin-to-in').focus(); return; }
+    if (!t.classList.contains('pin-to-in')) return;
+    normKm(t);
+    const rows = [...box.querySelectorAll('.pin-seg')];
+    if (row === rows[rows.length - 1]) { if (t.value.trim() !== '' || row.querySelector('.pin-dist-in').value.trim() !== '') addPin(); }
+    else rows[rows.indexOf(row) + 1].querySelector('.pin-dist-in').focus();
   });
   ['f_pinKm0', 'f_side', 'f_location', 'f_rowDistance', 'f_rowWork', 'f_areaRai', 'f_areaNgan', 'f_areaWa', 'f_coords'].forEach(id => {
     const el = document.getElementById(id);
