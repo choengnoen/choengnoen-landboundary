@@ -280,6 +280,19 @@ h1,h2,h3,.display{font-family:'Kanit',sans-serif;font-weight:700}
 
  
 .table-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
+/* ตัวกรองแบบปุ่มเดียว เปิดแผงรวม (11 ต.ค. 69) */
+.filter-wrap{position:relative;flex:none}
+.filter-wrap .btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.filter-badge{display:none;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--amber,#e0620f);color:#fff;font-size:11.5px;line-height:18px;text-align:center}
+.filter-wrap.has-filter .filter-badge{display:inline-block}
+.filter-wrap.has-filter>.btn{border-color:var(--amber,#e0620f)}
+.filter-pop{position:absolute;right:0;top:calc(100% + 6px);width:min(360px,92vw);background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px -10px rgba(0,0,0,.28);padding:14px;z-index:50;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px}
+.filter-pop[hidden]{display:none}
+.filter-pop .field label{text-align:left !important;font-size:12.5px}
+.filter-pop .dsel-size{display:none}
+.filter-pop .dsel-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filter-pop .field:nth-child(even) .dsel-menu{left:auto;right:0}
+@media(max-width:480px){.filter-pop{grid-template-columns:minmax(0,1fr)}.filter-pop .field:nth-child(even) .dsel-menu{left:0;right:auto}}
 .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--card)}
 #assetsTable{table-layout:fixed;width:100%}
 #assetsTable th:nth-child(1),#assetsTable td:nth-child(1){width:auto}
@@ -1426,6 +1439,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <input type="text" id="searchBox" name="list-filter" autocomplete="off" placeholder="ค้นหา เลขที่เรื่อง, ชื่อเจ้าของ, เลขโฉนด, กม., ตำบล">
           <button type="button" class="assets-search-clear" id="searchClear" title="ล้างคำค้นหา">✕</button>
         </div>
+        <div class="filter-wrap" id="filterWrap"><button type="button" class="btn btn-outline" id="btnFilterToggle" aria-expanded="false" aria-controls="filterPop">⚙ ตัวกรอง <span class="filter-badge" id="filterBadge">0</span></button><div class="filter-pop" id="filterPop" hidden>
         <div class="field">
           <label style="text-align:center">ปีงบประมาณ</label>
           <select id="filterYear"><option value="">ทั้งหมด</option></select>
@@ -1443,6 +1457,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
             <option value="cancelled">ยกเลิก</option>
           </select>
         </div>
+      </div></div>
       </div>
       <div class="list-count-row"><span class="list-count" id="listCount"></span><button type="button" class="link-clear" id="btnClearFilters" title="ล้างตัวกรองทั้งหมด">↺ ล้างตัวกรอง</button></div>
       <div class="table-wrap">
@@ -5207,6 +5222,25 @@ async function init(){
 }
 init();
 
+</script>
+<script>
+/* ตัวกรองแบบปุ่มเดียว: เปิด/ปิดแผง + เลขบอกจำนวนตัวกรองที่เลือก */
+(function(){
+  var wrap=document.getElementById('filterWrap'), btn=document.getElementById('btnFilterToggle'), pop=document.getElementById('filterPop'), badge=document.getElementById('filterBadge');
+  if(!wrap||!btn||!pop) return;
+  function upd(){
+    var n=0; pop.querySelectorAll('select').forEach(function(s){ if(s.value!=='') n++; });
+    badge.textContent=n; wrap.classList.toggle('has-filter', n>0);
+  }
+  function shut(){ pop.hidden=true; btn.setAttribute('aria-expanded','false'); }
+  btn.addEventListener('click', function(e){ e.stopPropagation(); pop.hidden=!pop.hidden; btn.setAttribute('aria-expanded', String(!pop.hidden)); });
+  document.addEventListener('click', function(e){ if(!pop.hidden && !e.target.closest('#filterWrap')) shut(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !pop.hidden){ shut(); btn.focus(); } });
+  pop.addEventListener('change', upd);
+  var lc=document.getElementById('listCount');
+  if(lc) new MutationObserver(upd).observe(lc,{childList:true,characterData:true,subtree:true});
+  upd();
+})();
 </script>
 </body>
 </html>
