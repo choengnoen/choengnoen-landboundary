@@ -150,7 +150,7 @@ h1,h2,h3,.display{font-family:'Kanit',sans-serif;font-weight:700}
  
 .edit-mode-banner{
   display:none;align-items:center;gap:8px;
-  background:#FAEEDA;border-radius:8px;padding:6px 12px;margin-bottom:12px;
+  background:#FAEEDA;border-radius:8px;padding:5px 12px;margin:0 auto 0 0;width:fit-content;max-width:60%;
   animation:editBannerPop .25s cubic-bezier(.22,.9,.32,1.2);
 }
 @keyframes editBannerPop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
@@ -1197,13 +1197,6 @@ tr.route-editable:hover td{background:var(--amber-glow)}
    <div class="fm-steps" id="fmSteps" role="tablist"></div>
    <div class="form-layout">
     <div class="form-main">
-    <div class="edit-mode-banner" id="editModeBanner">
-      <div class="em-icon">✏️</div>
-      <div class="em-text">
-        <div class="em-title">กำลังแก้ไขเรื่องเดิม</div>
-        <div class="em-sub" id="editModeSub"></div>
-      </div>
-    </div>
 
     <div class="card" id="fsec1">
       <div class="section-title"><span class="num">1</span> ข้อมูลการรับเรื่อง</div>
@@ -1429,7 +1422,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
     </div>
 
     <div class="form-savebar">
-      <span class="hint" id="editingHint" style="margin-right:auto"></span>
+      <span class="hint" id="editingHint" style="display:none"></span>
+      <div class="edit-mode-banner" id="editModeBanner"><span class="em-icon">✏️</span><span class="em-title">กำลังแก้ไขเรื่องเดิม</span><span class="em-sub" id="editModeSub"></span></div>
       <button class="btn btn-outline" id="btnClearForm" type="button">ยกเลิก</button>
       <button class="btn btn-primary" id="btnSave" type="button">บันทึกข้อมูล</button>
     </div>
