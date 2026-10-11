@@ -818,6 +818,18 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .form-main{flex:1;min-height:0;overflow-y:auto;padding:12px 18px 0}
 .fm-box .form-savebar{margin:14px -18px 0;padding:12px 18px;border-width:1px 0 0;border-radius:0 0 18px 18px;box-shadow:none}
 @media(max-width:640px){.fm-box{max-height:none;height:100%}.fm-head{padding:12px 10px}.form-main{padding:10px 10px 0}.fm-box .form-savebar{margin:12px -10px 0;padding:12px 10px;border-radius:0}}
+/* แถบเส้นเวลาใต้ชื่อฟอร์ม: กดข้ามไปแต่ละส่วน · วงกลมแดง ! = ยังขาดช่องบังคับ, เขียว ✓ = ครบ */
+.fm-box .fm-head{border-bottom:0}
+.fm-steps{flex:none;display:flex;align-items:flex-start;padding:4px 18px 12px;border-bottom:1px solid var(--line);background:var(--paper);overflow-x:auto}
+.fm-st{flex:none;display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:none;cursor:pointer;font:500 13px 'Sarabun',sans-serif;color:var(--ink-soft);padding:2px 8px;white-space:nowrap}
+.fm-st .d{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:600 14px 'Kanit',sans-serif;background:#eef0f3;color:var(--ink-soft);border:2px solid #eef0f3;transition:box-shadow .15s,border-color .15s}
+.fm-st.bad .d{background:#fdeceb;color:#d93025;border-color:#f2b5b0}
+.fm-st.ok .d{background:#14935f;color:#fff;border-color:#14935f}
+.fm-st.on .d{border-color:var(--amber-500,#ea7a1a);box-shadow:0 0 0 4px rgba(234,122,26,.18)}
+.fm-st.on{color:var(--ink);font-weight:600}
+.fm-ln{flex:1;min-width:14px;height:3px;background:#e4e6ea;margin-top:18px;border-radius:9px}
+.fm-ln.ok{background:#14935f}
+@media(max-width:640px){.fm-steps{padding:4px 10px 10px}}
 /* หน้าต่างรายละเอียดเคส: เนื้อหาภายใน (หัวข้อการ์ด ยอดรวมสุทธิ ฯลฯ) ใช้ Sarabun ทั้งหมด — หัวสีกรมท่าและปุ่มด้านล่างคงเดิม */
 .case-modal .modal-body,.case-modal .modal-body *{font-family:'Sarabun',sans-serif}
 /* ช่องเลือกแบบเดียวกันทั้งระบบ (แทน select ของเบราว์เซอร์) */
@@ -1052,6 +1064,9 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .hw-tab-filter button.active,.pill-filter button.active{font-family:'Kanit',sans-serif;font-weight:600;box-shadow:0 4px 12px -2px rgba(224,98,15,.4)}
 .hw-tab-filter button.active:hover,.pill-filter button.active:hover{filter:brightness(1.06);color:#fff}
 /* ===== รูปถ่ายประกอบเคส (ไม่เกิน 2 รูป · เก็บใน Google Drive) ===== */
+.ph-count{display:inline-block;padding:2px 10px;border-radius:999px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;background:#eee;color:#555}
+.ph-count.has{background:#E1F5EE;color:#085041}
+.ph-arrow{margin-left:auto;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:400;color:var(--ink-soft)}
 .ph-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:640px){.ph-grid{grid-template-columns:1fr}}
 .ph-slot{border:1px solid var(--line,#dfe2dd);border-radius:12px;padding:10px;background:var(--card,#fff)}
@@ -1158,6 +1173,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
      <span class="fm-title" id="formModalTitle">บันทึกเรื่องชี้แนวเขต</span>
      <button type="button" class="fm-close" id="formModalClose" title="ปิด">✕</button>
    </div>
+   <div class="fm-steps" id="fmSteps" role="tablist"></div>
    <div class="form-layout">
     <div class="form-main">
     <div class="edit-mode-banner" id="editModeBanner">
@@ -1381,10 +1397,15 @@ tr.route-editable:hover td{background:var(--amber-glow)}
     </div>
 
     <div class="card" id="fsecPhoto">
-      <div class="section-title"><span class="num">6</span> รูปถ่ายประกอบ <span class="sub">ไม่เกิน 2 รูป · ไม่บังคับ</span></div>
-      <div class="ph-grid" id="photoGrid"></div>
-      <input type="file" accept="image/*" id="photoFile" style="display:none">
-      <div class="hint" id="photoHint" style="margin-top:10px"></div>
+      <div class="section-title ph-toggle" id="photoToggle" role="button" tabindex="0" aria-expanded="false" style="margin-bottom:0;cursor:pointer">
+        <span class="num">6</span> รูปถ่ายประกอบ <span class="ph-count" id="photoCount">ยังไม่มีรูป</span>
+        <span class="ph-arrow" id="photoArrow">▾ กางออก</span>
+      </div>
+      <div id="photoBody" style="display:none;margin-top:12px">
+        <div class="ph-grid" id="photoGrid"></div>
+        <input type="file" accept="image/*" id="photoFile" style="display:none">
+        <div class="hint" id="photoHint" style="margin-top:10px"></div>
+      </div>
     </div>
 
     <div class="form-savebar">
@@ -2838,12 +2859,21 @@ function resetFormPhotos(saved){
   renderPhotoSlots();
 }
 
+function setPhotoOpen(open){
+  const b = document.getElementById('photoBody'); if (!b) return;
+  b.style.display = open ? 'block' : 'none';
+  document.getElementById('photoToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+  document.getElementById('photoArrow').textContent = open ? '▴ ซ่อน' : '▾ กางออก';
+}
 function renderPhotoSlots(){
   const grid = document.getElementById('photoGrid');
   if (!grid) return;
+  const nPh = formPhotos.filter(Boolean).length, cnt = document.getElementById('photoCount');
+  cnt.textContent = nPh ? ('มี ' + nPh + ' รูป') : 'ยังไม่มีรูป';
+  cnt.classList.toggle('has', nPh > 0);
   const on = !!(window.FBL && FBL.photosEnabled);
   document.getElementById('photoHint').textContent = on
-    ? 'ถ่ายหรือเลือกรูปจากเครื่องได้ ระบบย่อรูปให้อัตโนมัติ (ด้านยาวไม่เกิน 1920 px) แล้วเก็บใน Google Drive ของหมวด · รูปจะถูกอัปโหลดตอนกด "บันทึกข้อมูล"'
+    ? ''
     : 'ยังไม่ได้ตั้งค่าที่เก็บรูป (Google Drive) — ผู้ดูแลระบบดูวิธีตั้งค่าในคู่มือติดตั้ง ส่วนอื่นของระบบใช้งานได้ตามปกติ';
   grid.innerHTML = [0, 1].map(i => {
     const s = formPhotos[i];
@@ -2970,7 +3000,7 @@ function openFormModal(){
   if (!m) return;
   document.getElementById('formModalTitle').textContent = editingId ? 'แก้ไขเรื่องชี้แนวเขต' : 'บันทึกเรื่องชี้แนวเขต';
   m.style.display = 'block';
-  m.scrollTop = 0; var fmMain = m.querySelector('.form-main'); if (fmMain) fmMain.scrollTop = 0; fmMarkOpened();
+  setPhotoOpen(false); m.scrollTop = 0; var fmMain = m.querySelector('.form-main'); if (fmMain) fmMain.scrollTop = 0; fmMarkOpened();
   document.body.style.overflow = 'hidden';
 }
 function closeFormModal(){
@@ -2994,7 +3024,7 @@ function formSnapshot(){
 function fmMarkOpened(){
   const m = document.getElementById('formModal');
   if (!m) return;
-  fmEdited = false; fmFileEdited = false;
+  fmStepsInit(); fmEdited = false; fmFileEdited = false;
   fmBase = formSnapshot();
   setTimeout(() => { if (!fmEdited) fmBase = formSnapshot(); }, 400); // ให้ช่องที่เติมอัตโนมัติหลังเปิดเสร็จก่อนจึงนับเป็นค่าตั้งต้น
   if (fmWatching) return;
@@ -3035,6 +3065,49 @@ function requestCloseForm(){
   document.getElementById('fmLeaveStay').onclick = stay;
   document.getElementById('fmLeaveOk').onclick = () => { stay(); clearForm(); };
   document.getElementById('fmLeaveStay').focus();
+}
+/* แถบเส้นเวลา (ขั้นตอนฟอร์ม) — กดเลื่อนไปส่วนนั้น ไฮไลต์ตามตำแหน่งที่เลื่อน และบอกสถานะช่องบังคับของแต่ละส่วน */
+const FM_STEPS = [['fsec1', 'รับเรื่อง'], ['fsec2', 'ที่ตั้งที่ดิน'], ['fsec3', 'เจ้าของที่ดิน'], ['fsec4', 'ขั้นตอน'], ['fsec5', 'เอกสาร'], ['fsecPhoto', 'รูปถ่าย']];
+let fmStepsBuilt = false;
+function fmCards(){ return FM_STEPS.map(s => document.getElementById(s[0])); }
+function fmStepGo(i){
+  const sc = document.querySelector('#formModal .form-main'), c = fmCards()[i];
+  if (!sc || !c) return;
+  sc.scrollTo({ top: c.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - 8, behavior: 'smooth' });
+}
+function fmStepsInit(){
+  const wrap = document.getElementById('fmSteps'), m = document.getElementById('formModal');
+  if (!wrap || !m) return;
+  if (!fmStepsBuilt) {
+    fmStepsBuilt = true;
+    wrap.innerHTML = FM_STEPS.map((s, i) => (i ? '<span class="fm-ln"></span>' : '') + '<button type="button" class="fm-st" data-fmst="' + i + '"><span class="d">' + (i + 1) + '</span>' + s[1] + '</button>').join('');
+    wrap.addEventListener('click', e => { const b = e.target.closest('[data-fmst]'); if (b) fmStepGo(+b.dataset.fmst); });
+    m.querySelector('.form-main').addEventListener('scroll', fmStepsRefresh);
+    m.addEventListener('input', fmStepsRefresh);
+    m.addEventListener('change', fmStepsRefresh);
+    setInterval(() => { if (m.style.display !== 'none') fmStepsRefresh(); }, 800); // ช่องที่ระบบเติมให้เอง (ไม่มี event) ก็อัปเดตสถานะ
+  }
+  fmStepsRefresh();
+}
+function fmStepsRefresh(){
+  const wrap = document.getElementById('fmSteps'), m = document.getElementById('formModal');
+  if (!wrap || !m || !fmStepsBuilt) return;
+  const sc = m.querySelector('.form-main'), cards = fmCards(), top0 = sc.getBoundingClientRect().top;
+  let cur = 0;
+  cards.forEach((c, i) => { if (c && c.getBoundingClientRect().top - top0 <= 90) cur = i; });
+  if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4) cur = cards.length - 1;
+  const states = [];
+  wrap.querySelectorAll('.fm-st').forEach((b, i) => {
+    const c = cards[i]; let state = '';
+    if (c) {
+      const ctl = Array.from(c.querySelectorAll('.req')).map(r => { const f = r.closest('.field'); return f && f.querySelector('input:not([type=hidden]),select,textarea'); }).filter(Boolean);
+      if (ctl.length) state = ctl.some(x => !x.value) ? 'bad' : 'ok';
+    }
+    states.push(state);
+    b.className = 'fm-st ' + state + (i === cur ? ' on' : '');
+    b.querySelector('.d').textContent = state === 'ok' ? '✓' : (state === 'bad' ? '!' : (i + 1));
+  });
+  wrap.querySelectorAll('.fm-ln').forEach((l, i) => l.classList.toggle('ok', states[i] === 'ok'));
 }
 function clearForm(){
   closeFormModal();
@@ -5088,6 +5161,10 @@ async function init(){
   ['f_areaRai', 'f_areaNgan'].forEach(id => document.getElementById(id).addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); }));
   ['f_areaWa', 'f_rowDistance'].forEach(id => document.getElementById(id).addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9.]/g, ''); }));
   document.getElementById('btnClearForm').addEventListener('click', requestCloseForm);
+  const phTg = document.getElementById('photoToggle');
+  const phToggle = () => setPhotoOpen(document.getElementById('photoBody').style.display === 'none');
+  phTg.addEventListener('click', phToggle);
+  phTg.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); phToggle(); } });
   document.getElementById('formModalClose').addEventListener('click', () => {
     requestCloseForm();
   });
