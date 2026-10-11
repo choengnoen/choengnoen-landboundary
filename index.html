@@ -801,6 +801,15 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .c-sub{display:block;font-size:11.5px;color:var(--ink-mute);line-height:1.3;margin-top:1px}
 /* หน้าบันทึกรายการใหม่: ใช้ฟอนต์ Sarabun ทั้งหน้า ยกเว้นหัวเรื่อง 1-4 (.section-title) และแถบปุ่ม ล้างฟอร์ม/บันทึกข้อมูล (.form-savebar) ที่คงเดิม */
 #view-form :not(.section-title):not(.section-title *):not(.form-savebar):not(.form-savebar *){font-family:'Sarabun',sans-serif}
+#formModal :not(.section-title):not(.section-title *):not(.form-savebar):not(.form-savebar *):not(.fm-title){font-family:'Sarabun',sans-serif}
+/* ฟอร์มบันทึกเคสแบบหน้าต่างลอย (z-index ต่ำกว่า toast=50 ไม่ได้ จึงใช้ 40 เพื่อให้ข้อความแจ้งเตือนยังเห็นอยู่ด้านบน) */
+.fm-wrap{position:fixed;inset:0;z-index:40;background:rgba(7,27,48,.58);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);overflow-y:auto;padding:24px 16px}
+.fm-box{max-width:1100px;margin:0 auto;background:var(--paper);border-radius:18px;padding:0 18px 18px;box-shadow:0 26px 64px -18px rgba(7,27,48,.5);animation:modalPop .18s cubic-bezier(.22,.9,.32,1.2)}
+.fm-head{position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:10px;padding:14px 2px 12px;margin-bottom:12px;background:var(--paper);border-bottom:1px solid var(--line);border-radius:18px 18px 0 0}
+.fm-title{font-family:'Kanit',sans-serif;font-weight:700;font-size:18px;color:var(--navy-900)}
+.fm-close{margin-left:auto;width:34px;height:34px;border-radius:50%;border:0;background:var(--paper-2);color:var(--ink-soft);font-size:16px;cursor:pointer}
+.fm-close:hover{background:#dfe2dd}
+@media(max-width:640px){.fm-wrap{padding:0}.fm-box{border-radius:0;min-height:100%;padding:0 10px 12px}.fm-head{border-radius:0}}
 /* หน้าต่างรายละเอียดเคส: เนื้อหาภายใน (หัวข้อการ์ด ยอดรวมสุทธิ ฯลฯ) ใช้ Sarabun ทั้งหมด — หัวสีกรมท่าและปุ่มด้านล่างคงเดิม */
 .case-modal .modal-body,.case-modal .modal-body *{font-family:'Sarabun',sans-serif}
 /* ช่องเลือกแบบเดียวกันทั้งระบบ (แทน select ของเบราว์เซอร์) */
@@ -1132,6 +1141,15 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
   <div class="view" id="view-form">
    <div id="draftPanel" style="margin-bottom:14px"></div>
+  </div>
+
+  <!-- ฟอร์มบันทึกเคส: ซ่อนไว้ แสดงเป็นหน้าต่างลอยเมื่อกด "บันทึกเคส" ที่รายการร่าง (หรือกดแก้ไขจากหน้ารายการ) -->
+  <div class="fm-wrap" id="formModal" style="display:none">
+   <div class="fm-box">
+   <div class="fm-head">
+     <span class="fm-title" id="formModalTitle">บันทึกเรื่องชี้แนวเขต</span>
+     <button type="button" class="fm-close" id="formModalClose" title="ปิด">✕</button>
+   </div>
    <div class="form-layout">
     <div class="form-main">
     <div class="edit-mode-banner" id="editModeBanner">
@@ -1363,11 +1381,12 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
     <div class="form-savebar">
       <span class="hint" id="editingHint" style="margin-right:auto"></span>
-      <button class="btn btn-outline" id="btnClearForm" type="button">ล้างฟอร์ม</button>
+      <button class="btn btn-outline" id="btnClearForm" type="button">ยกเลิก</button>
       <button class="btn btn-primary" id="btnSave" type="button">บันทึกข้อมูล</button>
     </div>
     </div>
    </div>
+  </div>
   </div>
 
   <div class="view" id="view-list">
@@ -2937,14 +2956,30 @@ function openPhotoLightbox(url, title){
   document.body.appendChild(d);
 }
 
+/* ฟอร์มบันทึกเคสแบบหน้าต่างลอย — clearForm() ปิดหน้าต่างให้เสมอ (บันทึกเสร็จ/ยกเลิก) · ส่วนเปิดทำที่ prefillFormFromDraft() และ loadRecordIntoForm() */
+function openFormModal(){
+  const m = document.getElementById('formModal');
+  if (!m) return;
+  document.getElementById('formModalTitle').textContent = editingId ? 'แก้ไขเรื่องชี้แนวเขต' : 'บันทึกเรื่องชี้แนวเขต';
+  m.style.display = 'block';
+  m.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+}
+function closeFormModal(){
+  const m = document.getElementById('formModal');
+  if (m) m.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
 function clearForm(){
+  closeFormModal();
   editingId = null;
   if (window.DRAFTS) DRAFTS.clearPending();
   resetFormPhotos([]);
   document.getElementById('editingHint').textContent = '';
   document.getElementById('editModeBanner').style.display = 'none';
   document.querySelector('.tab-btn[data-view="form"]').textContent = '＋ รายการใหม่';
-  document.getElementById('btnClearForm').textContent = 'ล้างฟอร์ม';
+  document.getElementById('btnClearForm').textContent = 'ยกเลิก';
   populateFiscalYearSelect();
   document.getElementById('f_dateReceived').value = '';
   refreshHighwayOptions(); // ตัดตัวเลือกชั่วคราวของสายทางที่โอนแล้วออก (ถ้ามี)
@@ -2996,8 +3031,7 @@ function loadRecordIntoForm(rec){
   updateKmHint();
   updateCoordsHint();
   updateHighwayHint();
-  document.querySelector('.tab-btn[data-view="form"]').click();
-  window.scrollTo({top:0, behavior:'smooth'});
+  openFormModal();
 }
 
 async function saveForm(){
@@ -3262,8 +3296,7 @@ function prefillFormFromDraft(p){
   updateKmHint();
   updateHighwayHint();
   updateStepUi();
-  const sec = document.getElementById('fsec1');
-  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  openFormModal();
   showToast('ดึงข้อมูลจากรายการร่างแล้ว กรอกวันที่รับเรื่อง/เจ้าของที่ดินต่อและกดบันทึก');
 }
 
@@ -4988,6 +5021,10 @@ async function init(){
   ['f_areaRai', 'f_areaNgan'].forEach(id => document.getElementById(id).addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); }));
   ['f_areaWa', 'f_rowDistance'].forEach(id => document.getElementById(id).addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9.]/g, ''); }));
   document.getElementById('btnClearForm').addEventListener('click', clearForm);
+  document.getElementById('formModalClose').addEventListener('click', () => {
+    if (!confirm('ปิดหน้าต่างนี้? ข้อมูลที่กรอกไว้ยังไม่ถูกบันทึกจะหายไป')) return;
+    clearForm();
+  });
   document.getElementById('btnSave').addEventListener('click', saveForm);
   document.getElementById('btnChangeWho').addEventListener('click', () => {
     if (recorderName) { logoutRecorder(); } else { openRecorderModal(); }
