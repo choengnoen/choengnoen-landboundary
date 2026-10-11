@@ -283,6 +283,8 @@ h1,h2,h3,.display{font-family:'Kanit',sans-serif;font-weight:700}
 /* ตัวกรองแบบปุ่มเดียว เปิดแผงรวม (11 ต.ค. 69) */
 .filter-wrap{position:relative;flex:none}
 .filter-wrap .btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.filter-ico{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.filter-wrap.has-filter .filter-ico{stroke:var(--amber,#e0620f)}
 .filter-badge{display:none;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--amber,#e0620f);color:#fff;font-size:11.5px;line-height:18px;text-align:center}
 .filter-wrap.has-filter .filter-badge{display:inline-block}
 .filter-wrap.has-filter>.btn{border-color:var(--amber,#e0620f)}
@@ -1436,10 +1438,10 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <div class="table-toolbar">
         <div class="assets-search-wrap" id="searchWrap" style="min-width:220px;flex:1">
           <span class="assets-search-icon">🔍</span>
-          <input type="text" id="searchBox" name="list-filter" autocomplete="off" placeholder="ค้นหา เลขที่เรื่อง, ชื่อเจ้าของ, เลขโฉนด, กม., ตำบล">
+          <input type="text" id="searchBox" name="list-filter" autocomplete="off" placeholder="ค้นหา..." title="ค้นหาได้จาก: เลขที่เรื่อง, ชื่อเจ้าของ, เลขโฉนด, กม., ตำบล">
           <button type="button" class="assets-search-clear" id="searchClear" title="ล้างคำค้นหา">✕</button>
         </div>
-        <div class="filter-wrap" id="filterWrap"><button type="button" class="btn btn-outline" id="btnFilterToggle" aria-expanded="false" aria-controls="filterPop">⚙ ตัวกรอง <span class="filter-badge" id="filterBadge">0</span></button><div class="filter-pop" id="filterPop" hidden>
+        <div class="filter-wrap" id="filterWrap"><button type="button" class="btn btn-outline" id="btnFilterToggle" aria-expanded="false" aria-controls="filterPop"><svg class="filter-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg> ตัวกรอง <span class="filter-badge" id="filterBadge">0</span></button><div class="filter-pop" id="filterPop" hidden>
         <div class="field">
           <label style="text-align:center">ปีงบประมาณ</label>
           <select id="filterYear"><option value="">ทั้งหมด</option></select>
