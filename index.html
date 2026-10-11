@@ -149,20 +149,15 @@ h1,h2,h3,.display{font-family:'Kanit',sans-serif;font-weight:700}
 
  
 .edit-mode-banner{
-  display:none;align-items:center;gap:12px;
-  background:linear-gradient(135deg,#fff4e8,#ffe9d4);border:1.5px solid var(--amber-500);
-  border-radius:14px;padding:13px 16px;margin-bottom:14px;
+  display:none;align-items:center;gap:8px;
+  background:#FAEEDA;border-radius:8px;padding:6px 12px;margin-bottom:12px;
   animation:editBannerPop .25s cubic-bezier(.22,.9,.32,1.2);
 }
 @keyframes editBannerPop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-.edit-mode-banner .em-icon{
-  width:34px;height:34px;border-radius:50%;background:var(--amber-500);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
-}
+.edit-mode-banner .em-icon{font-size:14px;line-height:1;flex-shrink:0}
 .edit-mode-banner .em-text{flex:1;min-width:0}
-.edit-mode-banner .em-title{font-family:'Kanit',sans-serif;font-weight:700;font-size:14px;color:var(--navy-900)}
-.edit-mode-banner .em-sub{font-size:12.5px;color:var(--ink-soft);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-@media(max-width:560px){.edit-mode-banner{flex-wrap:wrap}}
+.edit-mode-banner .em-title{font-family:'Kanit',sans-serif;font-weight:500;font-size:13.5px;color:#633806}
+.edit-mode-banner .em-sub{display:none}
 
  
 .km-badge{
@@ -1092,13 +1087,18 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 @media(max-width:640px){.ph-grid{grid-template-columns:1fr}}
 .ph-slot{border:1px solid var(--line,#dfe2dd);border-radius:12px;padding:10px;background:var(--card,#fff)}
 .ph-title{font-weight:600;font-size:13px;margin-bottom:8px;color:var(--ink-soft,#4d5a66)}
-.ph-empty{display:flex;align-items:center;justify-content:center;width:100%;height:clamp(150px,calc(100vh - 600px),340px);border:2px dashed var(--line,#dfe2dd);border-radius:10px;background:var(--paper,#f5f6f4);color:var(--ink-soft,#4d5a66);font:inherit;font-size:14px}
+.ph-empty{display:flex;align-items:center;justify-content:center;width:100%;flex:1 1 auto;min-height:150px;border:2px dashed var(--line,#dfe2dd);border-radius:10px;background:var(--paper,#f5f6f4);color:var(--ink-soft,#4d5a66);font:inherit;font-size:14px}
 .ph-add{cursor:pointer}
 .ph-add:hover:not(:disabled){border-color:currentColor;color:var(--ink,#182430)}
 .ph-add:disabled{opacity:.55;cursor:not-allowed}
-.ph-img{width:100%;height:clamp(150px,calc(100vh - 600px),340px);border-radius:10px;background:var(--paper-2,#eceee9) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--ink-mute,#8792a0);font-size:13px}
+.ph-img{width:100%;flex:1 1 auto;min-height:150px;border-radius:10px;background:var(--paper-2,#eceee9) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--ink-mute,#8792a0);font-size:13px}
 .ph-bar{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
 .ph-bar span{margin-right:auto;font-size:12px;color:var(--ink-soft,#4d5a66)}
+#fsecPhoto{display:flex;flex-direction:column}
+#photoBody{flex:1 1 auto;display:flex;flex-direction:column;min-height:0}
+.ph-grid{flex:1 1 auto}
+.ph-slot{display:flex;flex-direction:column;min-width:0}
+.ph-slot .ph-bar,.ph-slot .ph-title{flex:none}
 .cd-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .cd-photo{aspect-ratio:4/3;border-radius:10px;border:1px solid var(--line,#dfe2dd);background:var(--paper-2,#eceee9) center/cover no-repeat;cursor:zoom-in;display:flex;align-items:center;justify-content:center;color:var(--ink-mute,#8792a0);font-size:12px}
 .ph-lightbox{position:fixed;inset:0;z-index:10001;background:rgba(7,27,48,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px}
@@ -3105,11 +3105,24 @@ function fmStepsInit(){
     m.querySelector('.form-main').addEventListener('scroll', fmStepsRefresh);
     m.addEventListener('input', fmStepsRefresh);
     m.addEventListener('change', fmStepsRefresh);
-    setInterval(() => { if (m.style.display !== 'none') fmStepsRefresh(); }, 800); // ช่องที่ระบบเติมให้เอง (ไม่มี event) ก็อัปเดตสถานะ
+    setInterval(() => { if (m.style.display !== 'none') { fmStepsRefresh(); fitPhotoCard(); } }, 800);
+    window.addEventListener('resize', fitPhotoCard); // ช่องที่ระบบเติมให้เอง (ไม่มี event) ก็อัปเดตสถานะ
   }
   fmStepsRefresh();
+  setTimeout(fitPhotoCard, 60); setTimeout(fitPhotoCard, 400);
 }
-function fmStepsRefresh(){
+/* การ์ด "รูปถ่ายประกอบ" (ข้อสุดท้าย) สูงเต็มกรอบเลื่อนของหน้าต่าง: เลื่อนสุดแล้วเห็นเฉพาะการ์ดนี้ ไม่มีการ์ดข้อก่อนหน้าโผล่ค้างด้านบน — ช่องรูปยืดตามความสูงที่เหลือ */
+function fitPhotoCard(){
+  const m = document.getElementById('formModal'), card = document.getElementById('fsecPhoto');
+  if (!m || !card || m.style.display === 'none') return;
+  const sc = m.querySelector('.form-main');
+  if (!sc || !sc.clientHeight) return;
+  const maxScroll = Math.max(0, sc.scrollHeight - sc.clientHeight);
+  const top = card.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - maxScroll; // ตำแหน่งบนของการ์ดเมื่อเลื่อนสุด
+  const need = Math.round(top - 8);
+  if (Math.abs(need) < 2) return;
+  card.style.minHeight = Math.max(0, card.offsetHeight + need) + 'px';
+}function fmStepsRefresh(){
   const wrap = document.getElementById('fmSteps'), m = document.getElementById('formModal');
   if (!wrap || !m || !fmStepsBuilt) return;
   const sc = m.querySelector('.form-main'), cards = fmCards(), top0 = sc.getBoundingClientRect().top;
