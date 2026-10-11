@@ -8,6 +8,10 @@
      - ร่างผูกกับเคสผ่าน caseId  เมื่อเคสมีวันส่งแขวง (หรือเรื่องจบ) ร่างปิดเองโดยไม่ต้องกรอกซ้ำ
      - เคสที่บันทึกตรงในฟอร์มโดยไม่มีร่าง ระบบสร้างร่างให้เอง (แจ้งเตือน LINE มาจากตารางร่างที่เดียว)
    ข้อมูลร่าง (คอลเลกชัน drafts): { id, startDate, highway, km, caseId, status:'open'|'cancelled', source, note, createdAt, createdBy }
+
+   หน้าตา (แบบ "จัดกลุ่มสามช่วง"): แบ่งเป็น เลยกำหนด/ครบวันนี้ · ใกล้ครบ (≤3 วันทำการ) · ยังมีเวลา แต่ละเรื่องบรรทัดเดียว
+     คลิกบรรทัด = เปิดฟอร์มบันทึกเคส · ปุ่ม "＋ เพิ่มร่าง" และไอคอนแก้ไข = หน้าต่างลอยกรอกข้อมูลร่าง
+   ระบบอุบัติเหตุ (sys:'accident') แสดงเฉพาะร่างที่ยังไม่บันทึกเคส · ระบบอื่นมีตัวเลือก "แสดงที่ปิดแล้ว"
    ========================================================================== */
 (function () {
   'use strict';
@@ -17,7 +21,7 @@
   var HOL_KEY = 'cn_draft_holidays_v1';
   // URL Web app (ลงท้าย /exec) ของ Apps Script "แจ้งเตือน LINE" — ใส่แล้วหน้าเว็บจะดึงรายการวันหยุดตัวเดียวกับที่ LINE ใช้ (ตาราง public_holidays ของระบบบริหารหมวด) ให้วันครบกำหนดตรงกัน · เว้นว่าง = ใช้รายการสำรองข้างบน
   var HOLIDAY_URL = '';
-  var CFG = null, drafts = [], holSet = null, started = false, pendingId = null, pendingExisting = '', editingDraftId = null, showClosed = false;
+  var CFG = null, drafts = [], holSet = null, started = false, pendingId = null, pendingExisting = '', editingDraftId = null, showClosed = false, ACC = false;
 
   /* ---------- วันที่ / วันทำการ ---------- */
   function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -85,24 +89,44 @@
     if (document.getElementById('draftCss')) return;
     var s = document.createElement('style'); s.id = 'draftCss';
     s.textContent =
-      '#draftCard .dr-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:10px}' +
-      '#draftCard .dr-sum{display:flex;flex-wrap:wrap;gap:6px;font-size:13px}' +
       '.dr-chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}' +
       '.dr-chip.g{background:#E1F5EE;color:#085041}.dr-chip.y{background:#FAEEDA;color:#633806}.dr-chip.r{background:#FCEBEB;color:#791F1F}.dr-chip.n{background:#EEE;color:#555}' +
-      '#draftCard .dr-add{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;padding:10px 12px;border:1px dashed #cfcfcf;border-radius:10px;margin-bottom:12px}' +
-      '#draftCard .dr-add .field{margin:0;min-width:130px}' +
-      '#draftCard .dr-add .field.grow{flex:1;min-width:150px}' +
-      '#draftCard table{width:100%;border-collapse:collapse;font-size:14px}' +
-      '#draftCard th{text-align:left;font-weight:600;color:#666;padding:6px 8px;border-bottom:1px solid #e3e3e3;white-space:nowrap}' +
-      '#draftCard td{padding:8px;border-bottom:1px solid #f0f0f0;vertical-align:middle}' +
-      '#draftCard tr.dr-row{cursor:pointer}#draftCard tr.dr-row:hover{background:#f7fafc}' +
-      '#draftCard tr.dr-row.r{background:#fff6f6}#draftCard tr.dr-row.y{background:#fffaf0}' +
-      '#draftCard .dr-btn{padding:4px 10px;border-radius:8px;border:1px solid #bbb;background:#fff;cursor:pointer;font:inherit;font-size:13px;white-space:nowrap}' +
-      '#draftCard .dr-btn.pri{background:#185FA5;border-color:#185FA5;color:#fff}' +
-      '#draftCard .dr-empty{padding:14px;color:#888;text-align:center}' +
+      '#draftCard .dr-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 8px;margin-bottom:14px}' +
+      '#draftCard .dr-top .sp{flex:1}' +
+      '#draftCard .dr-closed{font-size:13px;cursor:pointer;color:var(--ink-soft,#666);margin-right:6px}' +
+      '#draftCard .dr-gp{border:1px solid var(--line,#e3e3e3);border-radius:12px;overflow:hidden;margin-bottom:12px}' +
+      '#draftCard .dr-gh{display:flex;align-items:center;gap:9px;padding:9px 14px;font-family:Kanit,Sarabun,sans-serif;font-weight:600;font-size:14.5px}' +
+      '#draftCard .dr-gh i{width:9px;height:9px;border-radius:50%;flex:none}' +
+      '#draftCard .dr-gh .c{margin-left:auto;font-family:Sarabun,sans-serif;font-size:13px}' +
+      '#draftCard .dr-gh.r{background:#FCEBEB;color:#791F1F}#draftCard .dr-gh.r i{background:#d64545}' +
+      '#draftCard .dr-gh.y{background:#FAEEDA;color:#633806}#draftCard .dr-gh.y i{background:#e59a14}' +
+      '#draftCard .dr-gh.g{background:#E1F5EE;color:#085041}#draftCard .dr-gh.g i{background:#1f9d6b}' +
+      '#draftCard .dr-gh.n{background:#EEE;color:#555}#draftCard .dr-gh.n i{background:#aaa}' +
+      '#draftCard .dr-ln{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid #f0f0f0;background:#fff;cursor:pointer}' +
+      '#draftCard .dr-ln:hover{background:#f7fafc}#draftCard .dr-ln:focus-visible{outline:2px solid var(--amber-500,#f07a1f);outline-offset:-2px}' +
+      '#draftCard .dr-t{font-family:Kanit,Sarabun,sans-serif;font-weight:600;font-size:15px;min-width:150px;white-space:nowrap;color:var(--ink,#182430)}' +
+      '#draftCard .dr-n{flex:1;min-width:0;color:#777;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '#draftCard .dr-d{color:#555;font-size:13.5px;white-space:nowrap}' +
+      '#draftCard .dr-act{display:flex;gap:2px;margin-left:2px}' +
+      '#draftCard .dr-ib{border:none;background:transparent;width:30px;height:30px;border-radius:8px;cursor:pointer;color:#9aa0a8;font-size:14px;line-height:1}' +
+      '#draftCard .dr-ib:hover{background:#f1f1f1;color:#333}#draftCard .dr-ib.del:hover{background:var(--rust-bg,#fbeae7);color:var(--rust,#c1402f)}' +
+      '#draftCard .dr-empty{padding:18px;color:#888;text-align:center}' +
       '#draftCard .dr-warn{padding:10px 12px;border-radius:8px;background:#FAEEDA;color:#633806;margin-bottom:10px;font-size:14px}' +
       '#draftCard .dr-note{color:#777;font-size:12px}' +
-      '@media(max-width:700px){#draftCard th.hm,#draftCard td.hm{display:none}}';
+      '@media(max-width:700px){#draftCard .dr-ln{flex-wrap:wrap;gap:6px 10px}#draftCard .dr-t{min-width:0}#draftCard .dr-d{display:none}#draftCard .dr-n{order:9;flex-basis:100%}}' +
+      /* หน้าต่างลอยกรอกข้อมูลร่าง (z-index 45: ต่ำกว่า toast=50 เพื่อให้ข้อความแจ้งเตือนเห็นอยู่ด้านบน) */
+      '#drModal{position:fixed;inset:0;z-index:45;background:rgba(7,27,48,.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:18px}' +
+      '#drModal .dm{background:#fff;border-radius:16px;width:100%;max-width:480px;max-height:92vh;overflow:auto;box-shadow:var(--shadow-lg,0 16px 40px -14px rgba(7,27,48,.35))}' +
+      '#drModal .dm-h{display:flex;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line,#e3e3e3)}' +
+      '#drModal .dm-h b{font-family:Kanit,Sarabun,sans-serif;font-size:17px;flex:1;color:var(--navy-900,#0a2540)}' +
+      '#drModal .dm-x{border:none;background:var(--paper-2,#eee);width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;line-height:1}' +
+      '#drModal .dm-b{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}' +
+      '#drModal .dm-b .full{grid-column:1/-1}' +
+      '#drModal .dm-b input,#drModal .dm-b select{width:100%}' +
+      '#drModal .dm-due{grid-column:1/-1;background:var(--amber-glow,#fdf1de);color:var(--amber-deep,#a3660a);border-radius:10px;padding:8px 12px;font-size:13.5px}' +
+      '#drModal .dm-f{display:flex;gap:8px;align-items:center;padding:12px 20px;border-top:1px solid var(--line,#e3e3e3);background:#fafaf8;flex-wrap:wrap}' +
+      '#drModal .dm-f .sp{flex:1}#drModal .dm-del{color:var(--rust,#c1402f)}' +
+      '@media(max-width:560px){#drModal{align-items:flex-end;padding:0}#drModal .dm{max-width:none;border-radius:16px 16px 0 0}}';
     document.head.appendChild(s);
   }
 
@@ -124,20 +148,42 @@
     }).join('');
   }
 
+  // บรรทัดเดียวของหนึ่งร่าง
+  function rowHtml(r) {
+    var d = r.d, v = r.v, closed = r.closed;
+    var canEdit = !d.caseId && d.status !== 'cancelled';
+    var canCancel = ACC ? true : !closed;
+    return '<div class="dr-ln" role="button" tabindex="0" data-id="' + esc(d.id) + '">' +
+      '<span class="dr-t">ทล.' + esc(d.highway) + ' กม.' + esc(fmtKm(d.km)) + '</span>' +
+      '<span class="dr-n">' + esc(d.note || '') + '</span>' +
+      '<span class="dr-d">' + (v.due ? 'ครบ ' + esc(tdate(v.due)) : esc(tdate(v.start))) + '</span>' +
+      chip(v) + ((!ACC && d.caseId) ? '<span class="dr-chip g">บันทึกเคสแล้ว</span>' : '') +
+      '<span class="dr-act">' +
+        (canEdit ? '<button type="button" class="dr-ib" data-act="edit" title="แก้ไขร่าง" aria-label="แก้ไขร่าง">✎</button>' : '') +
+        (canCancel && d.status !== 'cancelled' ? '<button type="button" class="dr-ib del" data-act="cancel" title="' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '" aria-label="' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '">🗑</button>' : '') +
+      '</span></div>';
+  }
+
   function render() {
     var el = document.getElementById('draftPanel');
     if (!el || !CFG) return;
     injectCss();
-    // เก็บค่าที่กำลังพิมพ์ในช่องเพิ่มร่างไว้ (มีข้อมูลใหม่จากเครื่องอื่นเข้ามาแล้ววาดตารางใหม่ ค่าที่พิมพ์ค้างต้องไม่หาย)
-    var keep = null;
-    if (document.getElementById('drDate') && !editingDraftId) keep = { date: document.getElementById('drDate').value, hw: document.getElementById('drHw').value, km: document.getElementById('drKm').value, note: document.getElementById('drNote').value };
     var t = today();
     var rows = [], counts = { open: 0, warn: 0, over: 0 };
     drafts.forEach(function (d) {
+      if (ACC) {
+        // ตารางนี้แสดงเฉพาะร่างที่ "ยังไม่บันทึกเคส" — บันทึกเคสแล้ว (มี caseId) หรือถูกลบ ให้หายไป (เคสไปดูที่หน้ารายการอุบัติเหตุ)
+        if (d.status === 'cancelled' || d.caseId) return;
+        var va = viewOf(d, t); if (va.hide || va.state !== 'open') return;
+        counts.open++;
+        if (va.left <= 0) counts.over++; else if (va.left <= WARN_LEFT) counts.warn++;
+        rows.push({ d: d, v: va, closed: false });
+        return;
+      }
       var v = viewOf(d, t); if (v.hide) return;
       var isClosed = v.state !== 'open';
       if (isClosed) {
-        // แสดงเฉพาะเมื่อติ๊ก "แสดงที่ปิดแล้ว" (ส่งแล้ว/จบ/ยกเลิก) — จำกัด 30 วันล่าสุดจากวันเริ่มนับ
+        // แสดงเฉพาะเมื่อติ๊ก "แสดงที่ปิดแล้ว" (ส่งแล้ว/จบ/ยกเลิก) — จำกัดช่วงล่าสุดจากวันเริ่มนับ
         if (!showClosed) return;
         if (v.start && workLeft(t, v.start) < -60 && v.state !== 'cancelled') return;
       } else {
@@ -153,69 +199,93 @@
     });
 
     var failed = window.FBL && FBL.watchFailed && FBL.watchFailed.drafts;
-    var editing = editingDraftId ? byId(editingDraftId) : null;
-    var html = '<div class="card" id="draftCard"><div class="section-title"><span class="num">▤</span> รายการร่าง — ติดตามจนส่งเอกสารถึงแขวง</div>';
+    var html = '<div class="card" id="draftCard"><div class="section-title"><span class="num">▤</span> รายการร่าง' + (ACC ? '' : ' — ติดตามจนส่งเอกสารถึงแขวง') + '</div>';
     if (failed) html += '<div class="dr-warn">ยังอ่านรายการร่างไม่ได้ (' + esc(failed) + ') — ถ้าเพิ่งติดตั้งฟีเจอร์นี้ ให้วาง firestore.rules ใหม่ใน Firebase Console ก่อน</div>';
-    html += '<div class="dr-head"><div class="dr-sum">' +
+    html += '<div class="dr-top">' +
       '<span class="dr-chip n">ค้าง ' + counts.open + '</span>' +
       (counts.warn ? '<span class="dr-chip y">ใกล้ครบ ' + counts.warn + '</span>' : '') +
       (counts.over ? '<span class="dr-chip r">ครบ/เลยกำหนด ' + counts.over + '</span>' : '') +
-      '</div><label style="margin-left:auto;font-size:13px;cursor:pointer"><input type="checkbox" id="drShowClosed"' + (showClosed ? ' checked' : '') + '> แสดงที่ปิดแล้ว</label></div>';
-
-    html += '<div class="dr-add">' +
-      '<div class="field"><label>' + esc(CFG.startLabel) + ' <span class="req">*</span></label><input type="date" id="drDate" max="' + t + '" value="' + esc(editing ? editing.startDate : t) + '"></div>' +
-      '<div class="field"><label>ทล. <span class="req">*</span></label><select id="drHw">' + hwOptions(editing ? editing.highway : '') + '</select></div>' +
-      '<div class="field"><label>กม. <span class="req">*</span></label><input type="text" id="drKm" placeholder="เช่น 145+200" value="' + esc(editing ? fmtKm(editing.km) : '') + '" style="width:130px"></div>' +
-      '<div class="field grow"><label>หมายเหตุ</label><input type="text" id="drNote" value="' + esc(editing ? (editing.note || '') : '') + '"></div>' +
-      '<div><button type="button" class="btn btn-primary" id="drAdd">' + (editing ? 'บันทึกการแก้ไขร่าง' : '＋ เพิ่มร่าง') + '</button>' +
-      (editing ? ' <button type="button" class="btn btn-outline" id="drCancelEdit">ยกเลิก</button>' : '') + '</div></div>';
+      '<span class="sp"></span>' +
+      (ACC ? '' : '<label class="dr-closed"><input type="checkbox" id="drShowClosed"' + (showClosed ? ' checked' : '') + '> แสดงที่ปิดแล้ว</label>') +
+      '<button type="button" class="btn btn-primary" id="drAddBtn">＋ เพิ่มร่าง</button></div>';
 
     if (!rows.length) {
       html += '<div class="dr-empty">ยังไม่มีรายการร่างที่ค้างอยู่</div>';
     } else {
-      html += '<div style="overflow-x:auto"><table><thead><tr><th>' + esc(CFG.startLabel) + '</th><th>ทล. / กม.</th><th class="hm">ครบกำหนด</th><th>สถานะ</th><th>เคส</th><th></th></tr></thead><tbody>';
-      rows.forEach(function (r) {
-        var d = r.d, v = r.v, cls = r.closed ? '' : (v.left <= 0 ? 'r' : (v.left <= WARN_LEFT ? 'y' : ''));
-        html += '<tr class="dr-row ' + cls + '" data-id="' + esc(d.id) + '">' +
-          '<td>' + esc(tdate(v.start)) + '</td>' +
-          '<td>ทล.' + esc(d.highway) + ' กม.' + esc(fmtKm(d.km)) + (d.note ? '<div class="dr-note">' + esc(d.note) + '</div>' : '') + '</td>' +
-          '<td class="hm">' + (v.due ? esc(tdate(v.due)) : '-') + '</td>' +
-          '<td>' + chip(v) + '</td>' +
-          '<td>' + (d.caseId ? '<span class="dr-chip g">บันทึกเคสแล้ว</span>' : '<span class="dr-chip n">ยังไม่บันทึกเคส</span>') + '</td>' +
-          '<td style="white-space:nowrap">' +
-            (d.status === 'cancelled' ? '' :
-              (d.caseId ? '<button type="button" class="dr-btn pri" data-act="open">เปิดเคส</button>' : '<button type="button" class="dr-btn pri" data-act="make">บันทึกเคส</button> <button type="button" class="dr-btn" data-act="edit">แก้ไข</button>') +
-              (r.closed ? '' : ' <button type="button" class="dr-btn" data-act="cancel">ยกเลิกร่าง</button>')) +
-          '</td></tr>';
+      var groups = [
+        { k: 'r', title: 'เลยกำหนด / ครบกำหนดวันนี้', f: function (r) { return !r.closed && r.v.left <= 0; } },
+        { k: 'y', title: 'ใกล้ครบกำหนด · เหลือไม่เกิน ' + WARN_LEFT + ' วันทำการ', f: function (r) { return !r.closed && r.v.left > 0 && r.v.left <= WARN_LEFT; } },
+        { k: 'g', title: 'ยังมีเวลา', f: function (r) { return !r.closed && r.v.left > WARN_LEFT; } },
+        { k: 'n', title: 'ปิดแล้ว (ส่งแขวงแล้ว / เรื่องจบ / ยกเลิก)', f: function (r) { return r.closed; } }
+      ];
+      groups.forEach(function (g) {
+        var list = rows.filter(g.f); if (!list.length) return;
+        html += '<div class="dr-gp"><div class="dr-gh ' + g.k + '"><i></i>' + g.title + '<span class="c">' + list.length + ' เรื่อง</span></div>' + list.map(rowHtml).join('') + '</div>';
       });
-      html += '</tbody></table></div>';
     }
-    html += '<div class="dr-note" style="margin-top:8px">กำหนดส่ง = ' + esc(CFG.startLabel) + ' + ' + LIMIT_DAYS + ' วันทำการ · เมื่อกรอก "ส่งเอกสารถึงแขวง" ในเคส ร่างจะปิดเอง · แจ้งเตือน LINE: เหลือ ' + WARN_LEFT + ' วันทำการ และวันครบกำหนด</div></div>';
+    if (!ACC) html += '<div class="dr-note" style="margin-top:8px">กำหนดส่ง = ' + esc(CFG.startLabel) + ' + ' + LIMIT_DAYS + ' วันทำการ · เมื่อกรอก "ส่งเอกสารถึงแขวง" ในเคส ร่างจะปิดเอง · แจ้งเตือน LINE: เหลือ ' + WARN_LEFT + ' วันทำการ และวันครบกำหนด</div>';
+    html += '</div>';
     el.innerHTML = html;
-    if (keep) {
-      document.getElementById('drDate').value = keep.date || t; document.getElementById('drHw').value = keep.hw;
-      document.getElementById('drKm').value = keep.km; document.getElementById('drNote').value = keep.note;
-    }
     bind(el);
   }
 
   function bind(el) {
     var q = function (id) { return el.querySelector('#' + id); };
-    q('drShowClosed').onchange = function () { showClosed = this.checked; render(); };
-    q('drAdd').onclick = onAdd;
-    if (q('drCancelEdit')) q('drCancelEdit').onclick = function () { editingDraftId = null; render(); };
-    el.querySelectorAll('tr.dr-row').forEach(function (tr) {
-      var id = tr.getAttribute('data-id');
-      tr.onclick = function (ev) { if (ev.target.closest('button')) return; var d = byId(id); if (d && d.status !== 'cancelled') (d.caseId ? openCase(d) : makeCase(d)); };
-      tr.querySelectorAll('button[data-act]').forEach(function (b) {
+    q('drAddBtn').onclick = function () { openModal(null); };
+    if (q('drShowClosed')) q('drShowClosed').onchange = function () { showClosed = this.checked; render(); };
+    el.querySelectorAll('.dr-ln').forEach(function (row) {
+      var id = row.getAttribute('data-id');
+      function go() { var d = byId(id); if (!d || d.status === 'cancelled') return; if (!ACC && d.caseId) openCase(d); else makeCase(d); }
+      row.onclick = function (ev) { if (ev.target.closest('button')) return; go(); };
+      row.onkeydown = function (ev) { if (ev.target === row && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); go(); } };
+      row.querySelectorAll('button[data-act]').forEach(function (b) {
         b.onclick = function () {
           var d = byId(id); if (!d) return; var a = b.getAttribute('data-act');
-          if (a === 'make') makeCase(d); else if (a === 'open') openCase(d);
-          else if (a === 'edit') { editingDraftId = id; render(); var x = document.getElementById('drDate'); if (x) x.scrollIntoView({ block: 'center' }); }
-          else if (a === 'cancel') cancelDraft(d);
+          if (a === 'edit') openModal(id); else if (a === 'cancel') cancelDraft(d);
         };
       });
     });
+  }
+
+  /* ---------- หน้าต่างลอย เพิ่ม/แก้ไขร่าง ---------- */
+  function onKey(e) { if (e.key === 'Escape') closeModal(); }
+  function closeModal() {
+    var m = document.getElementById('drModal'); if (m) m.remove();
+    document.removeEventListener('keydown', onKey);
+    editingDraftId = null;
+  }
+  function openModal(id) {
+    closeModal(); injectCss();
+    editingDraftId = id || null;
+    var d = id ? byId(id) : null, t = today();
+    var m = document.createElement('div'); m.id = 'drModal';
+    m.innerHTML =
+      '<div class="dm" role="dialog" aria-modal="true"><div class="dm-h"><b>' + (d ? 'แก้ไขรายการร่าง' : 'เพิ่มรายการร่าง') + '</b><button type="button" class="dm-x" id="drClose" aria-label="ปิด">×</button></div>' +
+      '<div class="dm-b">' +
+        '<div class="field full"><label>' + esc(CFG.startLabel) + ' <span class="req">*</span></label><input type="date" id="drDate" max="' + t + '" value="' + esc(d ? d.startDate : t) + '"></div>' +
+        '<div class="dm-due" id="drDue"></div>' +
+        '<div class="field"><label>ทล. <span class="req">*</span></label><select id="drHw">' + hwOptions(d ? d.highway : '') + '</select></div>' +
+        '<div class="field"><label>กม. <span class="req">*</span></label><input type="text" id="drKm" placeholder="เช่น 145+200" value="' + esc(d ? fmtKm(d.km) : '') + '"></div>' +
+        '<div class="field full"><label>หมายเหตุ</label><input type="text" id="drNote" value="' + esc(d ? (d.note || '') : '') + '"></div>' +
+      '</div>' +
+      '<div class="dm-f">' + (d ? '<button type="button" class="btn btn-outline dm-del" id="drDel">🗑 ' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '</button>' : '') + '<span class="sp"></span>' +
+        '<button type="button" class="btn btn-outline" id="drCancelEdit">ยกเลิก</button>' +
+        '<button type="button" class="btn btn-primary" id="drAdd">' + (d ? 'บันทึกการแก้ไข' : '＋ เพิ่มร่าง') + '</button></div></div>';
+    document.body.appendChild(m);
+    var due = function () {
+      var v = document.getElementById('drDate').value, el = document.getElementById('drDue');
+      el.textContent = v ? 'ครบกำหนดส่งแขวง = ' + CFG.startLabel + ' + ' + LIMIT_DAYS + ' วันทำการ → ' + tdate(addWork(v, LIMIT_DAYS)) : 'ครบกำหนดส่งแขวง = ' + CFG.startLabel + ' + ' + LIMIT_DAYS + ' วันทำการ';
+    };
+    due();
+    document.getElementById('drDate').addEventListener('input', due);
+    m.addEventListener('mousedown', function (e) { if (e.target === m) closeModal(); });
+    document.getElementById('drClose').onclick = closeModal;
+    document.getElementById('drCancelEdit').onclick = closeModal;
+    document.getElementById('drAdd').onclick = onAdd;
+    if (d) document.getElementById('drDel').onclick = function () { cancelDraft(d).then(function (ok) { if (ok) closeModal(); }); };
+    m.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); onAdd(); } });
+    document.addEventListener('keydown', onKey);
+    var first = document.getElementById(d ? 'drDate' : 'drHw'); if (first) first.focus();
   }
 
   /* ---------- การกระทำ ---------- */
@@ -233,18 +303,21 @@
     if (km === null || km === undefined) return toast('กรุณากรอก กม. ให้ถูกรูปแบบ เช่น 145+200');
     if (editingDraftId) {
       var ok = await save({ id: editingDraftId, startDate: date, highway: String(hw), km: km, note: note });
-      if (ok) { editingDraftId = null; toast('แก้ไขร่างแล้ว'); }
+      if (ok) { toast('แก้ไขร่างแล้ว'); closeModal(); }
       return;
     }
     var dup = drafts.some(function (d) { return d.status !== 'cancelled' && d.startDate === date && String(d.highway) === String(hw) && Number(d.km) === km; }) ||
       caseDocs().some(function (c) { return !c.deletedAt && d10(CFG.startOf(c)) === date && String(c.highway) === String(hw) && Number(c.km) === km; });
     if (dup && !window.confirm('มีร่างหรือเคสวันที่ ทล. และ กม. เดียวกันอยู่แล้ว ต้องการเพิ่มซ้ำหรือไม่')) return;
     var rec = { id: newId(), startDate: date, highway: String(hw), km: km, caseId: '', status: 'open', source: 'web', note: note, createdAt: new Date().toISOString(), createdBy: who() };
-    if (await save(rec)) toast('เพิ่มร่างแล้ว ครบกำหนด ' + tdate(addWork(date, LIMIT_DAYS)));
+    if (await save(rec)) { toast('เพิ่มร่างแล้ว ครบกำหนด ' + tdate(addWork(date, LIMIT_DAYS))); closeModal(); }
   }
   async function cancelDraft(d) {
-    if (!window.confirm('ยกเลิกร่าง ทล.' + d.highway + ' กม.' + fmtKm(d.km) + ' ?\n(ร่างจะไม่ถูกติดตามและไม่แจ้งเตือนอีก)')) return;
-    if (await save({ id: d.id, status: 'cancelled', cancelledAt: new Date().toISOString(), cancelledBy: who() })) toast('ยกเลิกร่างแล้ว');
+    // ลบ/ยกเลิก = ตั้งสถานะ "cancelled" (สมาชิกทุกคนทำได้ · ไม่ต้องแก้ Rules · LINE เลิกติดตามร่างนี้) · คืนค่า true เมื่อทำสำเร็จ
+    var word = ACC ? 'ลบร่าง' : 'ยกเลิกร่าง';
+    if (!window.confirm(word + ' ทล.' + d.highway + ' กม.' + fmtKm(d.km) + ' ?\n(' + (ACC ? 'ร่างจะหายจากตารางและไม่แจ้งเตือนอีก' : 'ร่างจะไม่ถูกติดตามและไม่แจ้งเตือนอีก') + ')')) return false;
+    if (await save({ id: d.id, status: 'cancelled', cancelledAt: new Date().toISOString(), cancelledBy: who() })) { toast(word + 'แล้ว'); return true; }
+    return false;
   }
   function makeCase(d) {
     // openNew ล้างฟอร์มก่อน (ล้างค่าค้างด้วย) จึงตั้งค่าร่างที่รอผูกหลังเรียก · ถ้าหน้านั้นเลือกเปิดเรื่องเดิมแทน (ชี้แนวเขต) จะคืน { existingId }
@@ -293,7 +366,7 @@
   }
 
   window.DRAFTS = {
-    init: function (cfg) { CFG = cfg; loadHolidays(); },
+    init: function (cfg) { CFG = cfg; ACC = cfg && cfg.sys === 'accident'; loadHolidays(); },
     start: start,
     render: render,
     afterCaseSaved: afterCaseSaved,
