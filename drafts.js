@@ -272,7 +272,7 @@
     if (d) document.getElementById('drDel').onclick = function () { cancelDraft(d).then(function (ok) { if (ok) closeModal(); }); };
     m.addEventListener('keydown', function (e) { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); onAdd(); } });
     document.addEventListener('keydown', onKey);
-    var first = document.getElementById(d ? 'drDate' : 'drHw'); if (first) first.focus();
+    var first = document.getElementById(d ? 'drKm' : 'drHw'); if (first) first.focus(); // แก้ไขร่าง: ไม่โฟกัสช่องวันที่ (กันแถบน้ำเงินคลุมวัน)
   }
 
   /* ---------- การกระทำ ---------- */
