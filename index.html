@@ -877,7 +877,8 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .addr-preview{margin-top:8px;font-size:12.5px;color:var(--ink-soft)}
 /* ที่อยู่เจ้าของที่ดิน: บ้านเลขที่/หมู่/ซอย/ตำบล แถวเดียว · อำเภอ-จังหวัด-รหัส เติมให้เป็นป้ายเขียว (กด "แก้" เปิดช่องเอง) */
 .addr-grid .a-house{grid-column:span 2}.addr-grid .a-moo{grid-column:span 1}.addr-grid .a-street{grid-column:span 3}
-.addr-grid .a-tam{grid-column:span 2}.addr-grid .a-chip{grid-column:span 4}
+@media(min-width:721px){.addr-grid{grid-template-columns:repeat(12,minmax(0,1fr))}}
+.addr-grid .a-tam{grid-column:span 3}.addr-grid .a-chip{grid-column:span 3}
 .addr-grid.addr-manual{margin-top:10px}.addr-grid.addr-manual .a-prov,.addr-grid.addr-manual .a-amp,.addr-grid.addr-manual .a-zip{grid-column:span 4}
 .addr-chip{display:flex;align-items:center;gap:8px;height:39px;padding:0 10px;background:#fff;border:1px solid #cfe6d9;border-radius:8px;font-size:14.5px;white-space:nowrap}
 .addr-chip.empty{border:1px dashed #c9cec7;background:#fafbfa;color:var(--ink-mute);font-size:13px}
@@ -885,11 +886,13 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .addr-chip .ok{color:var(--green);font-weight:700}
 .addr-chip .chip-edit{margin-left:auto;flex:none;font-size:12.5px;font-weight:600;color:var(--amber);cursor:pointer}
 .party-block-title .seg{font-family:'Sarabun',sans-serif;font-weight:400}
+.dcombo input{padding-right:28px}
+.dcombo-caret{position:absolute;right:10px;top:50%;transform:translateY(-50%)}
 /* หน้าจอกว้าง: ปุ่มสลับมอบอำนาจกว้างคงที่ และช่องเลขที่หนังสือ แขวงฯ ชิดซ้ายให้ขอบขวาตรงกับขอบซ้ายของปุ่ม */
 #proxySeg{width:300px}#proxySeg button{flex:1}
 @media(min-width:900px){
-  #fsec1 > .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-  #fsec1 > .grid-4 > .field:nth-child(3){grid-column:3 / 5;margin-right:313px}
+  #fsec1 > .grid-4{grid-template-columns:130px 220px minmax(0,1fr)}
+  #fsec1 > .grid-4 > .field:nth-child(3){margin-right:313px}
 }
 @media(max-width:720px){.addr-grid .a-chip{grid-column:1/-1 !important}.addr-grid .a-tam{grid-column:span 1 !important}}
 .addr-preview:empty{display:none}
@@ -4873,9 +4876,59 @@ const ADDR_RAYONG = {
 };
 const ADDR_DEFAULT_PROV = 'ระยอง';
 function addrEl(id){ return document.getElementById('f_addr' + id); }
+const ADDR_LISTS = {};   // รายการตัวเลือกของช่องจังหวัด/อำเภอ/ตำบล (แสดงด้วยเมนูของระบบเอง ไม่ใช้กล่องดำของเบราว์เซอร์)
 function fillDatalist(id, items){
+  ADDR_LISTS[id] = items;
   const dl = document.getElementById(id);
   if (dl) dl.innerHTML = items.map(x => '<option value="' + escapeHtml(x) + '"></option>').join('');
+}
+// ช่องพิมพ์ + เมนูเลือกหน้าตาเดียวกับช่องปีงบประมาณ (เมนูขาว มีลูกศร ติ๊กถูก) · พิมพ์กรองรายการได้ พิมพ์ชื่ออื่นเองได้เสมอ
+function enhanceCombo(input, listId){
+  if (input._combo) return;
+  input._combo = true; input.removeAttribute('list');
+  const wrap = document.createElement('div'); wrap.className = 'dsel dcombo';
+  input.parentNode.insertBefore(wrap, input); wrap.appendChild(input);
+  const caret = document.createElement('span'); caret.className = 'dsel-caret dcombo-caret'; caret.setAttribute('aria-hidden', 'true'); caret.textContent = '▾';
+  const menu = document.createElement('div'); menu.className = 'dsel-menu'; menu.style.display = 'none'; menu.setAttribute('role', 'listbox');
+  wrap.appendChild(caret); wrap.appendChild(menu);
+  let active = -1, shown = [];
+  const isOpen = () => menu.style.display !== 'none';
+  const paint = () => {
+    [...menu.children].forEach((el, i) => el.classList.toggle('active', i === active));
+    const el = menu.children[active]; if (el) el.scrollIntoView({ block: 'nearest' });
+  };
+  const close = () => { menu.style.display = 'none'; active = -1; };
+  const open = (filter) => {
+    const all = ADDR_LISTS[listId] || [], q = input.value.trim();
+    shown = filter && q ? all.filter(x => x.indexOf(q) >= 0) : all;
+    if (!shown.length) { close(); return; }
+    closeAllDropdownMenus(menu);
+    menu.innerHTML = shown.map((x, i) => `<div class="it-dd-item dsel-item${x === q ? ' sel' : ''}" data-i="${i}" role="option">${escapeHtml(x)}${x === q ? '<span class="dsel-tick">✓</span>' : ''}</div>`).join('');
+    menu.style.display = '';
+    const r = wrap.getBoundingClientRect(), need = Math.min(menu.scrollHeight, 280) + 90;
+    wrap.classList.toggle('dsel-up', window.innerHeight - r.bottom < need && r.top > window.innerHeight - r.bottom);
+    active = shown.indexOf(q); paint();
+  };
+  const choose = (i) => {
+    if (i < 0 || i >= shown.length) return;
+    input.value = shown[i]; close();
+    input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  input.addEventListener('focus', () => open(false));
+  input.addEventListener('input', () => open(true));
+  input.addEventListener('blur', () => setTimeout(close, 120));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen()) { open(false); return; }
+      active = e.key === 'ArrowDown' ? Math.min(shown.length - 1, active + 1) : Math.max(0, active - 1); paint();
+    } else if (e.key === 'Enter' && isOpen() && active >= 0) { e.preventDefault(); choose(active); }
+    else if (e.key === 'Escape' || e.key === 'Tab') close();
+  });
+  menu.addEventListener('mousedown', (e) => { e.preventDefault(); });
+  menu.addEventListener('click', (e) => { e.stopPropagation(); const el = e.target.closest('.dsel-item'); if (el) choose(Number(el.dataset.i)); });
+  caret.style.pointerEvents = 'auto'; caret.style.cursor = 'pointer';
+  caret.addEventListener('mousedown', (e) => { e.preventDefault(); if (isOpen()) close(); else { input.focus(); open(false); } });
 }
 // ตำบล → อำเภอ (ระยอง) และรหัสไปรษณีย์ที่ยืนยันแล้ว: เลือกตำบลแล้วระบบเติมอำเภอ/จังหวัด/รหัสให้ (ตำบลที่ไม่มีรหัสในรายการ ให้กด "แก้" แล้วกรอกเอง)
 const ADDR_TAM_AMP = {};
@@ -4948,6 +5001,8 @@ function addrParse(text){
 }
 function initAddressFields(){
   fillDatalist('dlProv', ADDR_PROVINCES);
+  enhanceCombo(addrEl('Prov'), 'dlProv'); enhanceCombo(addrEl('Amp'), 'dlAmp'); enhanceCombo(addrEl('Tam'), 'dlTam');
+  addrRefreshLists();
   ['House','Moo','Street','Prov','Amp','Tam','Zip'].forEach(k => {
     addrEl(k).addEventListener('input', () => { addrRefreshLists(); addrSync(); });
   });
