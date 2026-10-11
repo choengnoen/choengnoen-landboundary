@@ -958,8 +958,27 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 @media(max-width:420px){.pin-seg{grid-template-columns:minmax(0,1fr) 62px minmax(0,1fr) 28px}}
 .pin-panel{margin-top:0}
 .draft-col{min-width:0}
-.draft-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-@media(max-width:560px){.draft-fields{grid-template-columns:1fr}}
+/* รายละเอียดใต้ผังหมุด: หน้าตาเหมือนข้อความในใบร่าง แต่ช่องว่าง "……" เป็นช่องกรอกได้ในบรรทัด */
+.draft-detail{padding:2px 6px 8px 7%;font-size:13px;line-height:1.5;color:#182430}
+.dd-title{font-weight:700;font-size:14px;margin:6px 0 4px}
+.dd-row{padding:2px 0}
+.dd-hint{padding:0 0 2px 10px}
+/* ระยะเขตทางต่อหมุด: ช่องอยู่ใต้หมุดแต่ละตัวของผัง (ตำแหน่งแนวนอนคำนวณจากรูปทรงผังเดียวกัน) */
+.pv-title{font-size:12px;font-weight:700;color:var(--navy-900);padding:0 6px;margin-top:-2px}
+.pin-vals{position:relative;height:92px;margin:2px 0 0}
+.pv-cell{position:absolute;top:0;transform:translateX(-50%);width:min(70px,calc(var(--sp) * 1% - 4px));min-width:44px;display:flex;flex-direction:column;gap:1px}
+.pv-cell label{font-size:10.5px;color:var(--ink-soft);font-weight:600;text-align:center;margin:2px 0 0}
+.pv-cell input{width:100%;height:28px;border:1.5px solid var(--line);border-radius:7px;padding:0 3px;text-align:center;font:600 12.5px 'Sarabun',sans-serif;background:#fff;color:var(--ink)}
+.pv-cell input:focus{outline:none;border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(224,98,15,.14)}
+.pv-cell input.pv-calc{background:#eef4fb;border-color:#c4d8ee}
+.pv-hint{padding:0 6px 4px}
+.pv-hint:has(#rowHint:empty){display:none}
+.dd-in{width:80px;height:26px;border:0 !important;border-bottom:1.5px dotted #8a949e !important;border-radius:0 !important;background:transparent !important;box-shadow:none !important;text-align:center;font:inherit;font-size:13.5px;padding:0 4px !important;vertical-align:baseline;color:#182430}
+.dd-row.dd-note{display:flex;align-items:baseline;gap:4px;padding-right:8px}
+.dd-in.dd-wide{width:auto;flex:1;min-width:0;text-align:left;padding:0 6px !important}
+.dd-in:hover{background:#fdf6ec !important}
+.dd-in:focus{outline:none;border-bottom:1.5px solid var(--amber-500) !important;background:#fff8ee !important}
+.dd-in.filled-auto{background:#eef4fb !important;border-radius:4px !important}
 .pin-head{display:grid;grid-template-columns:1fr;gap:10px}
 .pin-rows{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .pin-row{display:grid;grid-template-columns:26px minmax(0,1fr) auto 30px;gap:8px;align-items:end;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:10px}
@@ -1022,6 +1041,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .case-modal > .modal-body{background:var(--paper);padding:18px 20px 8px 26px;margin-right:0}
 .cd-foot{display:flex;gap:10px;align-items:center;padding:14px 24px;border-top:1px solid var(--line);background:#fff;flex:none}
 .cd-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.cd-tiles.one{grid-template-columns:1fr}
+.cd-tile .cd-sub{display:block;font-size:13px;color:var(--ink-soft);margin-top:2px;line-height:1.45}
 .cd-tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:10px;align-items:center}
 .cd-tile .cd-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:16px;flex:none}
 .cd-tile.warn .cd-ic{background:var(--spot2-bg)}.cd-tile.ok .cd-ic{background:var(--green-bg)}.cd-tile.bad .cd-ic{background:var(--rust-bg)}.cd-tile.n .cd-ic{background:var(--paper-2)}
@@ -1233,6 +1254,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .snap .snap-grid{display:grid;gap:10px}
 .snap .snap-col{display:flex;flex-direction:column;gap:10px;min-width:0}
 .snap .cd-tiles{grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:0}
+.snap .cd-tiles.one{grid-template-columns:1fr}
 .snap .cd-tile{padding:6px 10px}
 .snap .cd-card{padding:9px 12px;margin-bottom:0}
 .snap .cd-sec{font-size:14px;margin-bottom:6px}
@@ -1563,31 +1585,34 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <button type="button" class="pin-add" id="btnAddPin">＋ เพิ่มช่วง (หมุดถัดไป)</button>
         </div>
         <div class="draft-col">
-          <div class="draft-box" id="draftSvgWrap"></div>
-          <div class="draft-fields">
-            <div class="field">
-              <label>ระยะเขตทางตามบัญชี (ม. จากศูนย์กลาง)</label>
-              <input type="text" id="f_rowDistance" inputmode="decimal">
-              <span class="hint km-hint" id="rowHint"></span>
-            </div>
-            <div class="field">
-              <label>ระยะเขตทางกันแนวเขตหน้างาน (ม.)</label>
-              <input type="text" id="f_rowWork" inputmode="decimal">
+          <div class="draft-box">
+            <div id="draftSvgWrap"></div>
+            <!-- ระยะเขตทางแยกต่อหมุด: ช่อง "บัญชี" (ระบบเติมจากฐานข้อมูลกลางตาม กม. ของหมุดนั้น) และ "หน้างาน" อยู่ใต้หมุดแต่ละตัวของผัง (สร้างโดยสคริปต์ updatePinVals) -->
+            <div class="pv-title">ระยะเขตทาง (ม. จากศูนย์กลางทาง) แต่ละหมุด</div>
+            <div id="pinVals" class="pin-vals"></div>
+            <div class="pv-hint"><span class="hint km-hint" id="rowHint"></span></div>
+            <input type="hidden" id="f_rowDistance"><input type="hidden" id="f_rowWork">
+            <!-- รายละเอียดในใบร่าง -->
+            <div class="draft-detail">
+              <div class="dd-title">รายละเอียด</div>
+              <div class="dd-row">- แปลงที่ดินตั้งอยู่บริเวณ : <span id="ddLoc"></span></div>
+              <div class="dd-row" id="ddAreaRow" style="display:none">- เนื้อที่โฉนด : <span id="ddArea"></span></div>
+              <div class="dd-row" id="ddCoordsRow" style="display:none">- พิกัดแปลงที่ดิน : <span id="ddCoords"></span></div>
+              <div class="dd-row dd-note">- หมายเหตุ : <input type="text" class="dd-in dd-wide" id="f_note" autocomplete="off"></div>
             </div>
           </div>
-          <!-- เนื้อที่โฉนด: ไม่แสดงในฟอร์มแล้ว เก็บช่องซ่อนไว้เพื่อไม่ให้ข้อมูลเรื่องเก่าหาย -->
+          <!-- เนื้อที่โฉนด: ไม่แสดงช่องกรอกในฟอร์มแล้ว เก็บช่องซ่อนไว้เพื่อไม่ให้ข้อมูลเรื่องเก่าหาย -->
           <input type="hidden" id="f_areaRai"><input type="hidden" id="f_areaNgan"><input type="hidden" id="f_areaWa">
         </div>
       </div>
     </div>
 
     <div class="card" id="fsec4">
-      <div class="section-title"><span class="num">4</span> รับ - ชี้แนวเขต - ส่งแขวง <span class="sub">ต้องส่งแขวงภายใน 10 วันทำการ นับจากวันที่ชี้แนวเขต (กรอกภายหลังได้)</span></div>
+      <div class="section-title"><span class="num">4</span> ผลการส่งเอกสารไปแขวง</div>
       <div class="step-list" id="stepList"></div>
       <div class="deadline-box" id="deadlineBox"></div>
-      <input type="hidden" id="f_note">
       <div class="cancel-box">
-        <label class="chk"><input type="checkbox" id="f_cancelled"> ยกเลิก / ผู้ขอถอนเรื่อง (ไม่นับเป็นเรื่องค้าง)</label>
+        <label class="chk"><input type="checkbox" id="f_cancelled"> ยกเลิกการรังวัด / ผู้ขอถอนเรื่อง (ไม่นับเป็นเรื่องค้าง)</label>
         <div class="field" id="cancelReasonWrap" style="display:none;margin-top:8px">
           <label>เหตุผลที่ยกเลิก</label>
           <input type="text" id="f_cancelReason">
@@ -2216,7 +2241,122 @@ function updateKmHint(){
     hint.classList.remove('warn');
     kmEl.placeholder = rangeText ? ('ช่วง ' + rangeText) : kmEl.dataset.ph0;
   }
-  updateRowHint(hw, kmVal);
+}
+/* ระยะเขตทางตามบัญชี: เติมให้อัตโนมัติจากฐานข้อมูลกลาง (บัญชีเขตทาง) ตาม ทล. + กม. หมุดที่ 1 + ด้านของแปลง
+   - ด้านซ้ายทาง/ขวาทาง → ใช้ค่าด้านนั้น · ทั้งสองด้าน/ยังไม่เลือก → เติมให้เฉพาะเมื่อซ้ายกับขวาเท่ากัน (ถ้าต่างกัน ดูข้อความใต้ช่องแล้วกรอกเอง)
+   - ไม่ทับค่าที่เจ้าหน้าที่พิมพ์/เรื่องที่บันทึกไว้แล้ว (state: '' = ยังไม่แตะ, '1' = ระบบเติม, '0' = เจ้าหน้าที่แก้/ล้างเอง) */
+/* ระยะเขตทางแยกต่อหมุด: ใต้หมุดแต่ละตัวมี "บัญชี" (เติมจากฐานข้อมูลกลางตาม กม. ของหมุดนั้น) และ "หน้างาน"
+   สถานะต่อหมุด PV.st: '' = ยังไม่แตะ (ค่าที่โหลดมาจากเรื่องที่บันทึกไว้ไม่ถูกทับ) · '1' = ระบบเติม · '0' = เจ้าหน้าที่แก้/ล้างเอง */
+const PV = { acct: [], work: [], st: [] };
+function pvEnsure(n){ ['acct', 'work', 'st'].forEach(k => { while (PV[k].length < n) PV[k].push(''); PV[k].length = n; }); }
+function pvReset(){ PV.acct = []; PV.work = []; PV.st = []; }
+function pvLoad(rec){
+  const n = ((Array.isArray(rec.pinGaps) && rec.pinGaps.length) ? rec.pinGaps.length : 1) + 1;
+  const fill = (list, single) => Array.from({ length: n }, (_, i) => Array.isArray(list) ? (list[i] != null ? String(list[i]) : '') : String(single || ''));
+  PV.acct = fill(rec.rowAcctList, rec.rowDistance); PV.work = fill(rec.rowWorkList, rec.rowWork); PV.st = Array(n).fill('');
+}
+function pvMirror(){   // ช่องซ่อน rowDistance/rowWork = ค่าของหมุดที่ 1 (ให้เรื่อง/ส่งออก/หน้ารายละเอียดแบบเดิมอ่านได้)
+  const a = document.getElementById('f_rowDistance'), w = document.getElementById('f_rowWork');
+  if (a) a.value = PV.acct[0] || ''; if (w) w.value = PV.work[0] || '';
+}
+function pvResetStates(){   // เปลี่ยน ทล./กม./ด้าน → หมุดที่ถูกล้างว่างเองให้ระบบเติมใหม่ได้
+  let ch = false;
+  PV.st.forEach((s, i) => { if (s === '0' && !PV.acct[i]) { PV.st[i] = ''; ch = true; } });
+  return ch;
+}
+// ข้อความระยะเขตทางสำหรับหน้ารายละเอียด: เท่ากันทุกหมุด = ค่าเดียว · ต่างกัน = แยกเป็น "หมุด 1: 30 · หมุด 4: 35 ม."
+function rowListText(list, single, unit){
+  const arr = Array.isArray(list) ? list.map(v => (v == null ? '' : String(v))) : null;
+  if (!arr || !arr.some(v => v !== '') || new Set(arr).size <= 1) {
+    const v = arr && arr.some(x => x !== '') ? arr.find(x => x !== '') : (single || '');
+    return v ? escapeHtml(v) + unit : '-';
+  }
+  return arr.map((v, i) => 'หมุด ' + (i + 1) + ': ' + (v === '' ? '-' : escapeHtml(v))).join(' · ') + ' ม.';
+}
+/* ผลเขตทางสำหรับหน้ารายละเอียด: เทียบ "ระยะเขตทางตามบัญชี" กับ "ระยะเขตทางกันแนวเขตหน้างาน" ทีละหมุด
+   กันได้ตามบัญชี = หน้างาน ≥ บัญชี · ขาด = หน้างาน < บัญชี · ยังไม่บันทึกหน้างาน/บัญชี = แจ้งตามจริง */
+function rowResult(rec){
+  const n = (Array.isArray(rec.pinGaps) && rec.pinGaps.length ? rec.pinGaps.length : 0) + 1;
+  const arr = (list, single) => Array.from({ length: n }, (_, i) => String(Array.isArray(list) ? (list[i] != null ? list[i] : '') : (single || '')));
+  const A = arr(rec.rowAcctList, rec.rowDistance), W = arr(rec.rowWorkList, rec.rowWork);
+  const fmt = v => String(Number(v));
+  if (!A.some(v => v !== '') && !W.some(v => v !== '')) return { cls: 'n', icon: '📏', title: 'ยังไม่ได้บันทึกระยะเขตทาง', sub: '' };
+  const st = (a, w) => {
+    if (a === '' || w === '') return { k: 'miss' };
+    const d = Math.round((Number(w) - Number(a)) * 100) / 100;
+    return d < 0 ? { k: 'short', d: -d } : { k: 'ok', d };
+  };
+  // รวมหมุดติดกันที่ค่าเหมือนกันเป็นกลุ่มเดียว
+  const groups = [];
+  for (let i = 0; i < n; i++) {
+    const last = groups[groups.length - 1];
+    if (last && last.a === A[i] && last.w === W[i]) last.to = i + 1;
+    else groups.push({ from: i + 1, to: i + 1, a: A[i], w: W[i] });
+  }
+  groups.forEach(g => { g.s = st(g.a, g.w); });
+  const anyShort = groups.some(g => g.s.k === 'short'), anyMiss = groups.some(g => g.s.k === 'miss'), anyMore = groups.some(g => g.s.k === 'ok' && g.s.d > 0);
+  const lab = g => (groups.length > 1 ? (g.from === g.to ? 'หมุด ' + g.from : 'หมุด ' + g.from + '–' + g.to) + ' : ' : '');
+  const gtxt = g => lab(g) + 'บัญชี ' + (g.a === '' ? '-' : fmt(g.a)) + ' · หน้างาน ' + (g.w === '' ? '-' : fmt(g.w)) + ' ม.' +
+    (g.s.k === 'short' ? ' (ขาด ' + fmt(g.s.d) + ' ม.)' : (g.s.k === 'ok' && g.s.d > 0 ? ' (เกิน +' + fmt(g.s.d) + ' ม.)' : (g.s.k === 'ok' ? ' ✓' : '')));
+  const sub = groups.map(g => escapeHtml(gtxt(g))).join('<br>');
+  if (anyShort) return { cls: 'bad', icon: '⚠️', title: 'กันไม่ครบตามบัญชี', sub };
+  if (anyMiss) return { cls: 'n', icon: '📏', title: 'ยังบันทึกระยะเขตทางไม่ครบ (บัญชี/หน้างาน)', sub };
+  return { cls: 'ok', icon: '✅', title: 'กันได้ตามบัญชี' + (anyMore ? ' (เกินบางหมุด)' : ''), sub };
+}
+function updatePinVals(m){
+  const box = document.getElementById('pinVals');
+  if (!box) return;
+  const base = draftBase(m), kms = pinKms(base, m.pinGaps, m.pinDir), n = kms.length, dir = m.pinDir === 'down' ? 'down' : 'up';
+  pvEnsure(n);
+  const geo = draftGeom(n, dir), key = n + '|' + dir;
+  if (box.dataset.key !== key) {   // จำนวนหมุด/ทิศเปลี่ยน → วางช่องใหม่ให้ตรงใต้หมุด (ค่าอยู่ใน PV ไม่หาย)
+    box.dataset.key = key;
+    box.innerHTML = Array.from({ length: n }, (_, i) => `<div class="pv-cell" style="left:${(geo.xOf(i) / geo.W * 100).toFixed(3)}%;--sp:${(geo.step / geo.W * 100).toFixed(3)}">
+      <label>บัญชี</label><input type="text" class="pv-a" data-i="${i}" maxlength="6" inputmode="decimal" autocomplete="off">
+      <label>หน้างาน</label><input type="text" class="pv-w" data-i="${i}" maxlength="6" inputmode="decimal" autocomplete="off"></div>`).join('');
+  }
+  // เติม "บัญชี" ของแต่ละหมุดจากฐานข้อมูลกลาง
+  const hw = document.getElementById('f_highway').value, side = document.getElementById('f_side').value;
+  const master = !!(hw && window.CNMaster && CNMaster.findRightOfWay), rowsDb = master ? CNMaster.rightOfWay(hw) : [];
+  const found = kms.map(k => (master && k !== null) ? CNMaster.findRightOfWay(hw, k) : null);
+  found.forEach((r, i) => {
+    const st = PV.st[i];
+    if (st === '0' || (PV.acct[i] !== '' && st !== '1')) return;
+    let v = null;
+    if (r) {
+      if (side === 'ซ้ายทาง') v = r.left;
+      else if (side === 'ขวาทาง') v = r.right;
+      else if (r.left != null && Number(r.left) === Number(r.right)) v = r.left;
+    }
+    if (v !== null && v !== undefined && v !== '' && !isNaN(Number(v))) { PV.acct[i] = String(Number(v)); PV.st[i] = '1'; }
+    else if (st === '1') { PV.acct[i] = ''; PV.st[i] = ''; }
+  });
+  box.querySelectorAll('.pv-cell').forEach((cell, i) => {
+    const a = cell.querySelector('.pv-a'), w = cell.querySelector('.pv-w');
+    if (a.value !== (PV.acct[i] || '') && document.activeElement !== a) a.value = PV.acct[i] || '';
+    if (w.value !== (PV.work[i] || '') && document.activeElement !== w) w.value = PV.work[i] || '';
+    a.classList.toggle('pv-calc', PV.st[i] === '1');
+  });
+  pvMirror();
+  // ข้อความช่วยใต้ช่อง: ด้านยังไม่เลือก/ไม่พบในบัญชี/เขตทางเปลี่ยนระหว่างหมุด
+  const hint = document.getElementById('rowHint');
+  if (hint) {
+    const msgs = [], w2 = v => v == null ? '–' : Number(v).toFixed(2);
+    if (master) {
+      const missing = [];
+      found.forEach((r, i) => { if (kms[i] !== null && !r) missing.push(i + 1); });
+      if (missing.length) msgs.push('หมุด ' + missing.join(', ') + ' ไม่พบ กม. นี้ในบัญชีเขตทาง');
+      const fr = found.find(r => r && r.left != null && Number(r.left) !== Number(r.right));
+      if (!side && fr) msgs.push('เลือกด้านของแปลง (ซ้ายทาง/ขวาทาง) เพื่อเติมระยะเขตทางอัตโนมัติ — ซ้าย ' + w2(fr.left) + ' / ขวา ' + w2(fr.right) + ' ม.');
+      for (let i = 0; i < n - 1; i++) {
+        if (kms[i] === null || kms[i + 1] === null) continue;
+        const lo = Math.min(kms[i], kms[i + 1]), hi = Math.max(kms[i], kms[i + 1]);
+        const ch = rowsDb.filter(r => r.kmStart > lo && r.kmStart <= hi && r.kmStart < r.kmEnd);
+        if (ch.length) msgs.push('เขตทางเปลี่ยนที่ กม. ' + formatKm(ch[0].kmStart) + ' (ระหว่างหมุด ' + (i + 1) + '–' + (i + 2) + ')');
+      }
+    }
+    hint.textContent = msgs.join(' · ');
+  }
 }
 // ความกว้างเขตทางตามบัญชีเขตทาง (ฐานข้อมูลกลาง) ณ กม. ที่กรอก — ใช้ประกอบการชี้แนวเขต
 function updateRowHint(hw, kmVal){
@@ -2997,15 +3137,14 @@ const STEP_EXTRAS = {
 };
 function buildStepRows(){
   const box = document.getElementById('stepList');
-  // แสดงเฉพาะ "รับจากแขวงเมื่อ" และ "ส่งแขวงเมื่อ" — ขั้นอื่นซ่อนไว้ (ยังเก็บค่าเดิมของเรื่องเก่าไว้ ไม่ให้หาย)
-  const SHOW = { dateReceived: 'รับจากแขวงเมื่อ', pointedDate: 'ชี้แนวเขตเมื่อ', sentDate: 'ส่งแขวงเมื่อ' };
+  // แสดงเฉพาะ "วันที่ส่งเอกสารไปแขวง" — "รับจากแขวง" = วันที่หนังสือ (ส่วนที่ 1) และ "ชี้แนวเขต" = วันที่นัด (ส่วนที่ 2) ระบบดึงมาให้เอง
+  // ขั้นอื่นซ่อนไว้ (ยังเก็บค่าเดิมของเรื่องเก่าไว้ ไม่ให้หาย)
+  const SHOW = { sentDate: 'วันที่ส่งเอกสารไปแขวง' };
   box.innerHTML = STEPS.map((s, i) => SHOW[s.field] ? `
     <div class="step-row" data-step="${i}">
-      <span class="step-no">${({ dateReceived: '↓', pointedDate: '◎', sentDate: '↑' })[s.field]}</span>
+      <span class="step-no">↑</span>
       <div class="step-name">${SHOW[s.field]}</div>
-      ${s.field === 'dateReceived'
-        ? `<input type="date" id="f_step_${s.field}" disabled title="ตามวันที่หนังสือในส่วนที่ 1">`
-        : `<input type="date" id="f_step_${s.field}" title="วันที่ทำรายการนี้">`}
+      <input type="date" id="f_step_${s.field}" title="วันที่ส่งเอกสารถึงแขวง">
       <div style="display:none">${STEP_EXTRAS[s.field] || ''}</div>
     </div>` : `
     <div class="step-row" data-step="${i}" style="display:none">
@@ -3020,7 +3159,19 @@ function stepValue(field){
   const el = document.getElementById('f_step_' + field);
   return el ? el.value : '';
 }
+/* วันที่ชี้แนวเขต = "วันที่นัด" (ส่วนที่ 2) เมื่อถึงวันนัดแล้ว หรือกรอกผลการชี้แนวเขต (หมุด) แล้ว — ไม่ต้องกรอกซ้ำในส่วนที่ 4
+   - เรื่องเก่าที่ลงวันชี้แนวไว้ไม่ตรงกับวันนัด / เรื่องที่มาจากรายการร่าง = คงค่าเดิม (manual) ไม่ถูกทับ
+   - ไม่มีวันนัด = คงค่าเดิม */
+function syncPointed(){
+  const h = document.getElementById('f_step_pointedDate'), ap = document.getElementById('f_appointDate');
+  if (!h || !ap || h.dataset.manual === '1') return;
+  if (!ap.value) { if (h.dataset.auto === '1') { h.value = ''; h.dataset.auto = ''; } return; }
+  const hasResult = document.getElementById('f_pinKm0').value.trim() !== '' || [...document.querySelectorAll('#pinRows .pin-dist-in')].some(i => i.value.trim() !== '');
+  if (ap.value <= todayYmd() || hasResult) { h.value = ap.value; h.dataset.auto = '1'; }
+  else if (h.dataset.auto === '1' || h.value === '') { h.value = ''; h.dataset.auto = ''; }
+}
 function stepSnapshot(){
+  syncPointed();
   const r = { cancelled: document.getElementById('f_cancelled').checked };
   STEPS.forEach(s => { r[s.field] = stepValue(s.field); });
   return r;
@@ -3036,7 +3187,8 @@ function updateStepUi(){
   const box = document.getElementById('deadlineBox');
   const d = deadlineInfo(snap);
   if (!snap.pointedDate) {
-    box.innerHTML = `<span>⏱ กำหนดส่งแขวง: ภายใน ${REPORT_DAYS} วัน นับจากวันที่ชี้แนวเขต</span>`;
+    const ap = document.getElementById('f_appointDate').value;
+    box.innerHTML = `<span>⏱ ${ap ? 'นัดชี้แนวเขต ' + escapeHtml(formatThaiDate(ap)) + ' → ' : ''}ต้องส่งแขวงภายใน ${REPORT_DAYS} วันทำการ นับจากวันที่ชี้แนวเขต</span>`;
   } else {
     box.innerHTML = `<span>⏱ ชี้แนวเขต ${escapeHtml(formatThaiDate(snap.pointedDate))} → ต้องส่งแขวงภายใน <b>${escapeHtml(formatThaiDate(d.due))}</b></span><span class="dl-pill ${d.cls}">${escapeHtml(d.text)}</span>`;
   }
@@ -3277,7 +3429,7 @@ function requestCloseForm(){
   document.getElementById('fmLeaveStay').focus();
 }
 /* แถบเส้นเวลา (ขั้นตอนฟอร์ม) — กดเลื่อนไปส่วนนั้น ไฮไลต์ตามตำแหน่งที่เลื่อน และบอกสถานะช่องบังคับของแต่ละส่วน */
-const FM_STEPS = [['fsec1', 'ข้อมูลการชี้แนวเขต'], ['fsec2', 'ที่ดิน/ที่ตั้ง'], ['fsecDraft', 'ผลชี้แนวเขต'], ['fsec4', 'ขั้นตอน'], ['fsecPhoto', 'รูปถ่าย']];
+const FM_STEPS = [['fsec1', 'ข้อมูลการชี้แนวเขต'], ['fsec2', 'ที่ดิน/ที่ตั้ง'], ['fsecDraft', 'ผลชี้แนวเขต'], ['fsec4', 'ส่งแขวง'], ['fsecPhoto', 'รูปถ่าย']];
 let fmStepsBuilt = false;
 function fmCards(){ return FM_STEPS.map(s => document.getElementById(s[0])); }
 function fmStepGo(i){
@@ -3352,6 +3504,8 @@ function clearForm(){
   document.getElementById('f_deedType').value = 'โฉนดที่ดิน';
   document.getElementById('f_hasProxy').value = 'ไม่มี';
   STEPS.forEach(s => { const el = document.getElementById('f_step_' + s.field); if (el) el.value = ''; });
+  { const ph = document.getElementById('f_step_pointedDate'); ph.dataset.manual = ''; ph.dataset.auto = ''; }
+  pvReset();
   setReferenceNoField('');
   setIncomingNoField('');
   addrParse('');
@@ -3388,6 +3542,11 @@ function loadRecordIntoForm(rec){
   document.getElementById('f_deedType').value = rec.deedType || 'โฉนดที่ดิน';
   document.getElementById('f_hasProxy').value = rec.hasProxy === 'มี' ? 'มี' : 'ไม่มี';
   STEPS.forEach(s => { const el = document.getElementById('f_step_' + s.field); if (el) el.value = rec[s.field] || ''; });
+  { // วันชี้แนวเขตที่ลงไว้ตรงกับวันนัด = ให้ระบบตามวันนัดต่อไป · ไม่ตรง (ลงไว้เอง/มาจากร่าง) = คงค่าเดิม
+    const ph = document.getElementById('f_step_pointedDate'), same = !!rec.pointedDate && rec.pointedDate === rec.appointDate;
+    ph.dataset.manual = (rec.pointedDate && !same) ? '1' : ''; ph.dataset.auto = same ? '1' : '';
+  }
+  pvLoad(rec);   // ระยะเขตทางต่อหมุด (เรื่องเก่าที่มีค่าเดียว = ใช้ค่านั้นกับทุกหมุด)
   setReferenceNoField(rec.outgoingNo);
   setIncomingNoField(rec.incomingNo);
   addrParse(rec.ownerAddress);
@@ -3446,6 +3605,8 @@ async function saveForm(){
   TEXT_FIELDS.forEach(k => { rec[k] = document.getElementById('f_' + k).value.trim(); });
   rec.incomingNo = getIncomingNoField();
   rec.pinGaps = currentGaps();
+  { const n = rec.pinGaps.length + 1; pvEnsure(n); rec.rowAcctList = PV.acct.slice(0, n); rec.rowWorkList = PV.work.slice(0, n);
+    rec.rowDistance = rec.rowAcctList[0] || ''; rec.rowWork = rec.rowWorkList[0] || ''; }
   if (rec.pinDir !== 'down') rec.pinDir = 'up';
   if (rec.deedType !== 'อื่นๆ') rec.deedOther = '';
   STEPS.forEach(s => { rec[s.field] = snap[s.field] || ''; });
@@ -3659,6 +3820,7 @@ function prefillFormFromDraft(p){
     if (window.confirm('พบเรื่องเดิมที่ยังไม่มีวันชี้แนวเขต:\n' + who + '\n\nกด "ตกลง" = เปิดเรื่องเดิมแล้วเติมวันชี้แนวให้\nกด "ยกเลิก" = เปิดฟอร์มเรื่องใหม่')) {
       loadRecordIntoForm(r);
       document.getElementById('f_step_pointedDate').value = p.startDate || '';
+      document.getElementById('f_step_pointedDate').dataset.manual = '1';   // วันชี้แนวมาจากรายการร่าง — ไม่ให้ตามวันนัดทับ
       updateStepUi();
       showToast('เติมวันชี้แนวเขตลงเรื่องเดิมแล้ว ตรวจและกดบันทึก');
       return { existingId: r.id };
@@ -3666,6 +3828,7 @@ function prefillFormFromDraft(p){
   }
   clearForm();
   document.getElementById('f_step_pointedDate').value = p.startDate || '';
+  document.getElementById('f_step_pointedDate').dataset.manual = '1';
   ensureHighwayOption(p.highway);
   document.getElementById('f_highway').value = p.highway || '';
   document.getElementById('f_section').value = highwaySection(p.highway);
@@ -4029,12 +4192,10 @@ function openCaseDetailModal(id){
   const days = start ? Math.max(0, Math.floor((end - start) / 86400000)) : null;
 
   const tile = (cls, icon, label, value) => `<div class="cd-tile ${cls}"><div class="cd-ic">${icon}</div><div><span>${label}</span><b>${value}</b></div></div>`;
-  const tilesHtml = `<div class="cd-tiles">
-      ${tile(st.cls === 'done' ? 'ok' : st.cls === 'cancel' ? 'n' : 'warn', '📌', 'สถานะ', escapeHtml(st.text))}
-      ${tile('n', '📥', 'รับจากแขวงเมื่อ', escapeHtml(rec.dateReceived ? formatThaiDate(rec.dateReceived) : '-'))}
-      ${tile(rec.pointedDate ? 'ok' : 'n', '📍', 'ชี้แนวเขตเมื่อ', escapeHtml(rec.pointedDate ? formatThaiDate(rec.pointedDate) : 'ยังไม่ชี้แนวเขต'))}
-      ${tile(rec.sentDate ? 'ok' : 'n', '📤', 'ส่งแขวงเมื่อ', escapeHtml(rec.sentDate ? formatThaiDate(rec.sentDate) : 'ยังไม่ส่ง'))}
-      ${tile(dl.cls === 'ok' ? 'ok' : dl.cls === 'bad' ? 'bad' : dl.cls === 'near' ? 'warn' : 'n', '⏱', 'กำหนดส่งแขวง', escapeHtml(dl.due ? formatThaiDate(dl.due) + ' · ' + dl.text : dl.text))}
+  // กล่องผลเดียว: เขตทางกันได้ตามบัญชีหรือไม่ ระยะเท่าไร (แทนกล่องสถานะ/รับ/ส่ง/กำหนดส่งเดิม)
+  const rr = rowResult(rec);
+  const tilesHtml = `<div class="cd-tiles one">
+      <div class="cd-tile ${rr.cls}"><div class="cd-ic">${rr.icon}</div><div><span>เขตทางตามบัญชี</span><b>${rr.title}</b>${rr.sub ? '<span class="cd-sub">' + rr.sub + '</span>' : ''}</div></div>
     </div>`;
 
   const stepExtra = (s) => {
@@ -4061,7 +4222,7 @@ function openCaseDetailModal(id){
           <div class="cd-band">
             <img src="logo.png" alt="ตรากรมทางหลวง" data-cn-emblem class="cd-logo">
             <div class="cd-type">รายการชี้แนวเขต</div>
-            <div class="cd-pills"><span class="cd-pill">รับเรื่อง ${escapeHtml(formatThaiDate(rec.dateReceived))}</span></div>
+            <div class="cd-pills"><span class="cd-pill">${rec.pointedDate ? 'ชี้แนวเขต ' + escapeHtml(formatThaiDate(rec.pointedDate)) : (rec.appointDate ? 'นัดชี้แนวเขต ' + escapeHtml(formatThaiDate(rec.appointDate)) : 'ยังไม่ชี้แนวเขต')}</span></div>
             <div class="cd-hd-actions"><button class="cd-copy" id="caseDetailCopy" type="button" title="คัดลอกเป็นรูป" aria-label="คัดลอกเป็นรูป"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><button class="modal-close" id="caseDetailCloseX" type="button">×</button></div>
           </div>
           <div class="cd-cells">
@@ -4082,8 +4243,8 @@ function openCaseDetailModal(id){
                   <dt>ที่ตั้ง</dt><dd>${escapeHtml(placeText(rec)) || '-'}</dd>
                   <dt>เนื้อที่</dt><dd>${escapeHtml(areaText(rec)) || '-'}</dd>
                   <dt>บริเวณ</dt><dd>${escapeHtml(rec.location) || '-'}</dd>
-                  <dt>ระยะเขตทาง</dt><dd>${rec.rowDistance ? escapeHtml(rec.rowDistance) + ' ม. จากศูนย์กลาง' : '-'}</dd>
-                  <dt>ระยะเขตทางกันแนวเขต</dt><dd>${rec.rowWork ? escapeHtml(rec.rowWork) + ' ม.' : '-'}</dd>
+                  <dt>ระยะเขตทาง</dt><dd>${rowListText(rec.rowAcctList, rec.rowDistance, ' ม. จากศูนย์กลาง')}</dd>
+                  <dt>ระยะเขตทางกันแนวเขต</dt><dd>${rowListText(rec.rowWorkList, rec.rowWork, ' ม.')}</dd>
                   <dt>วันนัดชี้แนว</dt><dd>${rec.appointDate ? escapeHtml(formatThaiDate(rec.appointDate)) + (rec.appointTime ? ' เวลา ' + escapeHtml(rec.appointTime) + ' น.' : '') : '-'}</dd>
                   <dt>ช่างทางหลวง</dt><dd>${rec.repName ? escapeHtml(rec.repName) + (rec.repPosition ? '<br><small>' + escapeHtml(rec.repPosition) + '</small>' : '') + ([rec.repPhone, rec.repMobile].filter(Boolean).length ? '<br><small>' + escapeHtml([rec.repPhone ? 'โทร ' + rec.repPhone : '', rec.repMobile ? 'มือถือ ' + rec.repMobile : ''].filter(Boolean).join(' · ')) + '</small>' : '') : '-'}</dd>
                   <dt>ช่างรังวัด</dt><dd>${rec.surveyorName ? escapeHtml(rec.surveyorName) + (rec.surveyorPhone ? '<br><small>โทร ' + escapeHtml(rec.surveyorPhone) + '</small>' : '') : '-'}</dd>
@@ -4667,6 +4828,8 @@ function initLandBoxExtras(){
   ['f_deedType', 'f_deedNo'].forEach(id => { const el = document.getElementById(id); el.addEventListener('input', deedUi); el.addEventListener('change', deedUi); });
   document.getElementById('f_appointDate').addEventListener('change', appointDayHint);
   document.getElementById('f_appointDate').addEventListener('input', appointDayHint);
+  document.getElementById('f_appointDate').addEventListener('change', () => updateStepUi());
+  document.getElementById('f_appointDate').addEventListener('input', () => updateStepUi());
   ['f_repMobile', 'f_surveyorPhone'].forEach(id => {
     const el = document.getElementById(id);
     el.addEventListener('input', () => { el.value = formatPhone(el.value); el.classList.remove('filled-auto'); });
@@ -4831,7 +4994,8 @@ function draftModelFromForm(){
     pinKm0: g('f_pinKm0'), pinDir: pins.dir,
     pinGaps: pins.gaps,
     side: g('f_side'), location: g('f_location'), rowDistance: g('f_rowDistance'), rowWork: g('f_rowWork'),
-    areaRai: g('f_areaRai'), areaNgan: g('f_areaNgan'), areaWa: g('f_areaWa'), coords: g('f_coords')
+    rowAcctList: PV.acct.slice(0, pins.gaps.length + 1), rowWorkList: PV.work.slice(0, pins.gaps.length + 1),
+    areaRai: g('f_areaRai'), areaNgan: g('f_areaNgan'), areaWa: g('f_areaWa'), coords: g('f_coords'), note: g('f_note')
   };
 }
 function draftBase(m){
@@ -4839,13 +5003,22 @@ function draftBase(m){
   if (b !== null) return b;
   return (m.km === null || m.km === undefined || m.km === '') ? null : Number(m.km);
 }
-function draftSvg(m){
+// รูปทรงผังหมุด (ใช้ร่วมกันระหว่างผัง SVG กับช่องระยะเขตทางใต้หมุด เพื่อให้ช่องตรงใต้หมุดแต่ละตัว)
+function draftGeom(N, dir){
+  const padX = N > 2 ? 44 : 60, W = Math.max(780, 2 * padX + (N - 1) * 78), left = padX, right = W - padX, step = N > 1 ? (right - left) / (N - 1) : 0;
+  return { padX, W, left, right, step, xOf: i => dir === 'down' ? right - i * step : left + i * step };
+}
+function draftSvg(m, opts){
   const base = draftBase(m), gaps = Array.isArray(m.pinGaps) ? m.pinGaps : [];
   const dir = m.pinDir === 'down' ? 'down' : 'up';
   const kms = pinKms(base, gaps, dir), N = kms.length;
   // เส้นหมุดยืดเต็มความกว้างใบร่าง: หลายช่วง → ขอบซ้าย-ขวาแคบลง (เหลือเฉพาะที่พอวางป้าย กม.) และถ้าหมุดมากมาก ขยายความกว้างใบร่างให้ป้ายไม่ทับกัน
-  const padX = N > 2 ? 44 : 60, W = Math.max(780, 2 * padX + (N - 1) * 78), left = padX, right = W - padX, step = N > 1 ? (right - left) / (N - 1) : 0;
-  const xOf = i => dir === 'down' ? right - i * step : left + i * step;
+  const geo = draftGeom(N, dir), W = geo.W, left = geo.left, right = geo.right, xOf = geo.xOf;
+  // ระยะเขตทางแยกต่อหมุด (บัญชี / หน้างาน) — ถ้าไม่เท่ากันตลอดหมุด วาดใต้หมุดแต่ละตัว · เท่ากันหมด = แสดงเป็นบรรทัดเดียวในรายละเอียดเหมือนเดิม
+  const pvArr = (arr, single) => Array.from({ length: N }, (_, i) => String(Array.isArray(arr) ? (arr[i] != null ? arr[i] : '') : (single || '')));
+  const RA = pvArr(m.rowAcctList, m.rowDistance), RW = pvArr(m.rowWorkList, m.rowWork);
+  const pvDiffer = a => new Set(a).size > 1;
+  const perPin = pvDiffer(RA) || pvDiffer(RW);
   const valid = kms.filter(k => k !== null);
   const kmTop = valid.length ? Math.min.apply(null, valid) : null, kmEnd = valid.length ? Math.max.apply(null, valid) : null;
   const e = escapeHtml, dots = '……………';
@@ -4861,6 +5034,10 @@ function draftSvg(m){
     s += '<circle cx="' + x + '" cy="' + lineY + '" r="7" fill="currentColor"/>';
     s += T(x, 120, kms[i] !== null ? fmtKm2(kms[i]) : dots, { s: 15, c: kms[i] !== null ? null : '#8a949e' });
     s += T(x, 188, 'หมุด ' + (i + 1), { s: 13, c: '#6b7682' });
+    if (perPin && !(opts && opts.noDetails)) {
+      s += T(x, 208, 'บัญชี ' + (RA[i] || '…') + ' ม.', { s: 12, c: '#1d4e83' });
+      s += T(x, 224, 'หน้างาน ' + (RW[i] || '…') + ' ม.', { s: 12, c: '#a3660a' });
+    }
     if (i < N - 1) {
       const g = gaps[i], mx = (x + xOf(i + 1)) / 2;
       s += T(mx, lineY - 10, (g !== null && g !== undefined && g !== '') ? (Number(g) + ' ม.') : dots, { s: 14, c: '#a3660a' });
@@ -4870,16 +5047,19 @@ function draftSvg(m){
   const leftIdx = dir === 'down' ? N - 1 : 0, rightIdx = dir === 'down' ? 0 : N - 1;
   s += T(xOf(leftIdx), 94, 'กม.ต้น', { s: 16 });
   s += T(xOf(rightIdx), 94, 'กม.ปลาย', { s: 16 });
+  // ในฟอร์ม: วาดเฉพาะผังหมุด — ส่วน "รายละเอียด" เป็นช่องกรอกในตัว (HTML) ใต้ผัง · ใบร่างพิมพ์/หน้ารายละเอียดยังวาดครบเหมือนเดิม
+  if (opts && opts.noDetails) return '<svg viewBox="0 0 ' + W + ' 206" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ผังหมุดใบร่างงานชี้แนวเขต">' + s + '</svg>';
   // รายละเอียด
   const areaBits = [[m.areaRai, 'ไร่'], [m.areaNgan, 'งาน'], [m.areaWa, 'ตร.วา']].filter(p => p[0] !== '' && p[0] != null).map(p => p[0] + ' ' + p[1]).join(' ');
-  const rows = [
-    ['แปลงที่ดินตั้งอยู่บริเวณ : ', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots)],
-    ['ระยะเขตทางตามบัญชี : ', (m.rowDistance ? m.rowDistance : dots) + ' ม.'],
-    ['ระยะเขตทางกันแนวเขตหน้างาน : ', (m.rowWork ? m.rowWork : dots) + ' ม.']
-  ];
+  const rows = [['แปลงที่ดินตั้งอยู่บริเวณ : ', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots)]];
+  if (!perPin) {
+    rows.push(['ระยะเขตทางตามบัญชี : ', (RA[0] ? RA[0] : dots) + ' ม.']);
+    rows.push(['ระยะเขตทางกันแนวเขตหน้างาน : ', (RW[0] ? RW[0] : dots) + ' ม.']);
+  }
   if (areaBits) rows.push(['เนื้อที่โฉนด : ', areaBits]);
   if (m.coords) rows.push(['พิกัดแปลงที่ดิน : ', m.coords]);
-  let y = 244;
+  if (m.note) rows.push(['หมายเหตุ : ', m.note]);
+  let y = perPin ? 284 : 244;
   s += T(60, y, 'รายละเอียด', { s: 18, b: 1, a: 'start' });
   rows.forEach(r => { y += 28; s += '<text x="60" y="' + y + '" font-size="16" fill="currentColor">- ' + e(r[0] + r[1]) + '</text>'; });
   const H = y + 22;
@@ -4888,10 +5068,19 @@ function draftSvg(m){
 function updateDraftPreview(){
   const wrap = document.getElementById('draftSvgWrap');
   if (!wrap) return;
-  const m = draftModelFromForm();
-  wrap.innerHTML = draftSvg(m);
+  let m = draftModelFromForm();
+  try { updatePinVals(m); m = draftModelFromForm(); } catch (e) { console.error(e); }   // เติม "ระยะเขตทางตามบัญชี" ต่อหมุดจากฐานข้อมูลกลาง
+  wrap.innerHTML = draftSvg(m, { noDetails: true });
+  // ข้อความในส่วนรายละเอียดใต้ผัง (ช่องกรอก ระยะเขตทาง 2 ช่อง อยู่ในบรรทัดเองและไม่ถูกวาดใหม่ จึงพิมพ์ต่อเนื่องได้)
+  const dots = '……………', set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  set('ddLoc', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots));
+  const areaBits = [[m.areaRai, 'ไร่'], [m.areaNgan, 'งาน'], [m.areaWa, 'ตร.วา']].filter(p => p[0] !== '' && p[0] != null).map(p => p[0] + ' ' + p[1]).join(' ');
+  const ar = document.getElementById('ddAreaRow'), cr = document.getElementById('ddCoordsRow');
+  if (ar) { ar.style.display = areaBits ? '' : 'none'; set('ddArea', areaBits); }
+  if (cr) { cr.style.display = m.coords ? '' : 'none'; set('ddCoords', m.coords || ''); }
   const p0 = document.getElementById('f_pinKm0');
   if (p0) p0.placeholder = m.km !== null ? 'ว่าง = ใช้ กม. ' + formatKm(m.km) : '';
+  try { updateStepUi(); } catch (e) {}   // วันชี้แนวเขต/กำหนดส่งแขวง ตามวันนัด + ผลหมุด
 }
 /* หมุดโฉนด: กรอก "กม." ของแต่ละหมุดโดยตรง → ระบบคำนวณระยะห่างระหว่างหมุด และทิศทาง (กม.เพิ่ม/ลด) ให้เอง
    (เก็บลงเรื่องเป็น pinKm0 + pinGaps + pinDir เหมือนเดิม จึงอ่านเรื่องเก่าได้และใบร่าง/ส่งออกไม่ต้องเปลี่ยน) */
@@ -5015,6 +5204,7 @@ function initDraftCard(){
     if (!b) return;
     const s = pinSegStates(), idx = [...box.querySelectorAll('.pin-del')].indexOf(b);
     s.splice(idx, 1);
+    ['acct', 'work', 'st'].forEach(k => PV[k].splice(idx + 1, 1));   // ลบช่วง = ลบหมุดปลายของช่วงนั้น → ลบค่าเขตทางของหมุดนั้นด้วย
     renderPinSegs(s);
   });
   // เพิ่มช่วง: แถวใหม่ขึ้นทันที (กม. ต้นมาจากช่วงก่อนหน้าเอง) + ใบร่างวาดหมุดใหม่ทันที แล้วเลื่อนเคอร์เซอร์ไปช่องระยะ
@@ -5033,7 +5223,22 @@ function initDraftCard(){
     if (row === rows[rows.length - 1]) { if (t.value.trim() !== '' || row.querySelector('.pin-dist-in').value.trim() !== '') addPin(); }
     else rows[rows.indexOf(row) + 1].querySelector('.pin-dist-in').focus();
   });
-  ['f_pinKm0', 'f_side', 'f_location', 'f_rowDistance', 'f_rowWork', 'f_areaRai', 'f_areaNgan', 'f_areaWa', 'f_coords'].forEach(id => {
+  // ช่องระยะเขตทางใต้หมุด: เจ้าหน้าที่พิมพ์/ล้างเอง = หยุดเติมอัตโนมัติของหมุดนั้น (จนกว่าจะเปลี่ยน ทล./กม./ด้าน แล้วช่องยังว่าง)
+  const pvBox = document.getElementById('pinVals');
+  pvBox.addEventListener('input', e => {
+    const t = e.target, i = +t.dataset.i;
+    if (isNaN(i)) return;
+    t.value = t.value.replace(/[^0-9.]/g, '');
+    if (t.classList.contains('pv-a')) { PV.acct[i] = t.value; PV.st[i] = '0'; t.classList.remove('pv-calc'); }
+    else if (t.classList.contains('pv-w')) PV.work[i] = t.value;
+    pvMirror();
+  });
+  ['f_highway', 'f_pinKm0', 'f_side'].forEach(id => {
+    const el = document.getElementById(id);
+    const reset = () => { if (pvResetStates()) updateDraftPreview(); };
+    el.addEventListener('input', reset); el.addEventListener('change', reset);
+  });
+  ['f_pinKm0', 'f_side', 'f_location', 'f_areaRai', 'f_areaNgan', 'f_areaWa', 'f_coords'].forEach(id => {
     const el = document.getElementById(id);
     el.addEventListener('input', updateDraftPreview);
     el.addEventListener('change', updateDraftPreview);
@@ -5078,7 +5283,7 @@ function draftModelFromRec(r){
   return {
     highway: r.highway || '', section: r.section || '', km: r.km, pinKm0: r.pinKm0 || '', pinDir: r.pinDir || 'up',
     pinGaps: Array.isArray(r.pinGaps) ? r.pinGaps : [], side: r.side || '', location: r.location || '',
-    rowDistance: r.rowDistance || '', rowWork: r.rowWork || '', areaRai: r.areaRai, areaNgan: r.areaNgan, areaWa: r.areaWa, coords: r.coords || ''
+    rowDistance: r.rowDistance || '', rowWork: r.rowWork || '', rowAcctList: Array.isArray(r.rowAcctList) ? r.rowAcctList : undefined, rowWorkList: Array.isArray(r.rowWorkList) ? r.rowWorkList : undefined, areaRai: r.areaRai, areaNgan: r.areaNgan, areaWa: r.areaWa, coords: r.coords || '', note: r.note || ''
   };
 }
 function hasDraftData(r){ return !!(r.pinKm0 || (Array.isArray(r.pinGaps) && r.pinGaps.some(g => g !== null && g !== undefined && g !== ''))); }
