@@ -891,8 +891,7 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 /* หน้าจอกว้าง: ปุ่มสลับมอบอำนาจกว้างคงที่ และช่องเลขที่หนังสือ แขวงฯ ชิดซ้ายให้ขอบขวาตรงกับขอบซ้ายของปุ่ม */
 #proxySeg{width:300px}#proxySeg button{flex:1}
 @media(min-width:900px){
-  #fsec1 > .grid-4{grid-template-columns:130px 220px minmax(0,1fr)}
-  #fsec1 > .grid-4 > .field:nth-child(3){margin-right:313px}
+  #fsec1 > .grid-4{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,2fr)}
 }
 @media(max-width:720px){.addr-grid .a-chip{grid-column:1/-1 !important}.addr-grid .a-tam{grid-column:span 1 !important}}
 .addr-preview:empty{display:none}
@@ -908,12 +907,12 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 /* กล่อง "ที่ดินและที่ตั้ง": กล่องเทา 2 กล่อง · กลุ่มละคอลัมน์ · ช่องกว้างพอดีกับข้อมูล */
 .lbox{margin-top:0}
 .lbox+.lbox{margin-top:12px}
-.lcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.lcol{padding:0 20px;border-left:1px solid #d9dcd6;min-width:0}
+/* หัวข้อ + บรรทัดที่ 1 + บรรทัดที่ 2 ของทุกคอลัมน์ใช้แถวร่วมกัน (subgrid) → ป้ายชื่อและช่องกรอกตรงแนวกันทั้งแถว แม้บางคอลัมน์มีข้อความเตือนแทรก */
+.lcols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto auto auto}
+.lcol{padding:0 20px;border-left:1px solid #d9dcd6;min-width:0;display:grid;grid-row:span 3;grid-template-rows:subgrid;align-content:start}
 .lcol:first-child{padding-left:0;border-left:0}
 .lcol:last-child{padding-right:0}
 .lg-h{font-family:'Kanit',sans-serif;font-weight:700;font-size:13px;color:var(--navy-900);display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.lg-h::before{content:"";width:4px;height:15px;border-radius:2px;background:var(--amber-500)}
 .lln{display:flex;gap:10px}
 .lln+.lln{margin-top:8px}
 .lln .field{min-width:0}
@@ -924,7 +923,7 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .section-title .sec-note{margin-left:auto;font-weight:400;font-size:12px;color:var(--ink-soft)}
 .filled-auto{background:#e8f1fb !important;border-color:#bcd5f1 !important;animation:autoPop .6s}
 @keyframes autoPop{0%{box-shadow:0 0 0 5px #bcd5f1}100%{box-shadow:0 0 0 0 transparent}}
-@media(max-width:900px){.lcols{grid-template-columns:1fr}.lcol{padding:12px 0;border-left:0;border-top:1px solid #d9dcd6}.lcol:first-child{border-top:0;padding-top:0}.lln{flex-wrap:wrap}.lln .field{flex:1 1 140px !important;width:auto !important}.section-title .sec-note{display:none}}
+@media(max-width:900px){.lcols{grid-template-columns:1fr;grid-template-rows:none}.lcol{display:block;grid-row:auto;padding:12px 0;border-left:0;border-top:1px solid #d9dcd6}.lcol:first-child{border-top:0;padding-top:0}.lln{flex-wrap:wrap}.lln .field{flex:1 1 140px !important;width:auto !important}.section-title .sec-note{display:none}}
 #f_sectionView{background:var(--paper-2);color:var(--ink-soft)}
 .rep-info{margin-top:6px;font-size:13px;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;line-height:1.6}
 .rep-info b{color:var(--navy-900)}
@@ -4444,6 +4443,21 @@ let listWaitPointOnly = false;   // ตัวกรองชั่วครา�
    - ทุกช่องข้อความปิดการจำ/แนะนำค่าเดิมของเบราว์เซอร์ (กล่องดำที่เด้งใต้ช่องกรอก) */
 const DSEL_DESC = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
 const DSEL_IDX = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'selectedIndex');
+// วางเมนูเลือกให้อยู่ในกรอบที่มองเห็นจริง (ทั้งหน้าจอ และกรอบเลื่อน/กรอบตัดขอบของหน้าต่างที่ช่องนั้นอยู่) — เปิดลงถ้าที่พอ ไม่พอก็เปิดขึ้น และจำกัดความสูงเมนู (เลื่อนดูในเมนูได้) ไม่ให้ส่วนบน/ล่างถูกตัดขอบ
+function placeDropdown(wrap, menu){
+  const r = wrap.getBoundingClientRect();
+  let top = 0, bottom = window.innerHeight;
+  for (let p = wrap.parentElement; p && p !== document.body; p = p.parentElement) {
+    const oy = getComputedStyle(p).overflowY;
+    if (oy === 'auto' || oy === 'scroll' || oy === 'hidden') { const pr = p.getBoundingClientRect(); top = Math.max(top, pr.top); bottom = Math.min(bottom, pr.bottom); }
+  }
+  const pad = 8, below = bottom - r.bottom - pad, above = r.top - top - pad;
+  menu.style.maxHeight = '';
+  const want = Math.min(menu.scrollHeight, 280);
+  const up = below < want && above > below;
+  wrap.classList.toggle('dsel-up', up);
+  menu.style.maxHeight = Math.max(110, Math.min(280, (up ? above : below) - 4)) + 'px';
+}
 function closeAllDropdownMenus(except){
   document.querySelectorAll('.dsel-menu').forEach(m => { if (m !== except) m.style.display = 'none'; });
 }
@@ -4485,10 +4499,7 @@ function enhanceSelect(sel){
     closeAllDropdownMenus(menu);
     menu.innerHTML = [...sel.options].map((o, i) => `<div class="it-dd-item dsel-item${i === sel.selectedIndex ? ' sel' : ''}" data-i="${i}" role="option">${escapeHtml(o.textContent)}${i === sel.selectedIndex ? '<span class="dsel-tick">✓</span>' : ''}</div>`).join('');
     menu.style.display = '';
-    // ที่ว่างด้านล่างไม่พอ (เช่นชิดแถบบันทึกล่างจอ) ให้เปิดขึ้นด้านบน
-    const r = wrap.getBoundingClientRect();
-    const need = Math.min(menu.scrollHeight, 280) + 90;
-    wrap.classList.toggle('dsel-up', window.innerHeight - r.bottom < need && r.top > window.innerHeight - r.bottom);
+    placeDropdown(wrap, menu);   // เลือกเปิดขึ้น/ลง และจำกัดความสูงให้พอดีที่ว่างในกรอบเลื่อน (ไม่ให้เมนูถูกตัดขอบ)
     active = sel.selectedIndex;
     paint();
   };
@@ -5030,8 +5041,7 @@ function enhanceCombo(input, listId){
     closeAllDropdownMenus(menu);
     menu.innerHTML = shown.map((x, i) => `<div class="it-dd-item dsel-item${x === q ? ' sel' : ''}" data-i="${i}" role="option">${escapeHtml(x)}${x === q ? '<span class="dsel-tick">✓</span>' : ''}</div>`).join('');
     menu.style.display = '';
-    const r = wrap.getBoundingClientRect(), need = Math.min(menu.scrollHeight, 280) + 90;
-    wrap.classList.toggle('dsel-up', window.innerHeight - r.bottom < need && r.top > window.innerHeight - r.bottom);
+    placeDropdown(wrap, menu);
     active = shown.indexOf(q); paint();
   };
   const choose = (i) => {
