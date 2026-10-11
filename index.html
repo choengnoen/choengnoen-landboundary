@@ -1156,7 +1156,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <img src="logo.png" alt="ตรากรมทางหลวง" class="dept-logo">
       <div>
         <h1>งานระวังชี้แนวเขตที่ดิน หมวดทางหลวงเชิงเนิน</h1>
-        <p class="sub">สำนักงานทางหลวงที่ 14 (ชลบุรี) · แขวงทางหลวงระยอง</p>
+        <p class="sub">แขวงทางหลวงระยอง</p>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
@@ -1206,40 +1206,12 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <select id="f_fiscalYear"></select>
         </div>
         <div class="field">
-          <label>วันที่รับเรื่อง <span class="req">*</span></label>
+          <label>วันที่หนังสือ <span class="req">*</span></label>
           <input type="date" id="f_dateReceived">
         </div>
         <div class="field">
-          <label>รับเรื่องจาก</label>
-          <select id="f_receivedFrom">
-            <option value="">— เลือก —</option>
-            <option value="แขวงทางหลวงระยอง">แขวงทางหลวงระยอง</option>
-            <option value="สำนักงานบำรุงทาง">สำนักงานบำรุงทาง</option>
-            <option value="อื่นๆ">อื่นๆ</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>เลขที่หนังสือรับ</label>
-          <input type="text" id="f_incomingNo" placeholder="เลขที่ / ลงวันที่ ของหนังสือที่รับมา">
-        </div>
-      </div>
-      <div class="grid grid-2" style="margin-top:12px">
-        <div class="field">
-          <label>วัตถุประสงค์ของการขอชี้แนวเขต</label>
-          <select id="f_purpose">
-            <option value="">— เลือก —</option>
-            <option value="รังวัดแบ่งแยกที่ดิน">รังวัดแบ่งแยกที่ดิน</option>
-            <option value="รังวัดสอบเขตที่ดิน">รังวัดสอบเขตที่ดิน</option>
-            <option value="รังวัดออกโฉนดที่ดิน">รังวัดออกโฉนดที่ดิน</option>
-            <option value="รังวัดรวมโฉนด">รังวัดรวมโฉนด</option>
-            <option value="ขออนุญาตก่อสร้างอาคาร">ขออนุญาตก่อสร้างอาคาร</option>
-            <option value="ขออนุญาตเชื่อมทาง">ขออนุญาตเชื่อมทาง</option>
-            <option value="อื่นๆ">อื่นๆ</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>รายละเอียดเพิ่มเติม</label>
-          <input type="text" id="f_purposeNote" placeholder="เช่น ตามหนังสือสำนักงานที่ดินจังหวัดระยอง สาขา…">
+          <label>เลขที่หนังสือ</label>
+          <input type="text" id="f_incomingNo" placeholder="เลขที่หนังสือ">
         </div>
       </div>
     </div>
@@ -2797,7 +2769,7 @@ function buildStepRows(){
       <span class="step-no">${i + 1}</span>
       <div class="step-name">${escapeHtml(s.label)}<span class="step-who">${escapeHtml(s.who)}${s.desc ? ' · ' + escapeHtml(s.desc) : ''}</span></div>
       ${i === 0
-        ? `<input type="date" id="f_step_${s.field}" disabled title="ตามวันที่รับเรื่องในส่วนที่ 1">`
+        ? `<input type="date" id="f_step_${s.field}" disabled title="ตามวันที่หนังสือในส่วนที่ 1">`
         : `<input type="date" id="f_step_${s.field}" title="วันที่ทำขั้นนี้เสร็จ">`}
       ${STEP_EXTRAS[s.field] || ''}
     </div>`).join('');
@@ -2857,7 +2829,7 @@ function updateCancelUi(){
 }
 
 // ช่องข้อความทั่วไปของฟอร์ม (id = 'f_' + ชื่อฟิลด์)
-const TEXT_FIELDS = ['receivedFrom', 'incomingNo', 'purpose', 'purposeNote', 'side', 'location', 'deedNo', 'landNo', 'surveyPage',
+const TEXT_FIELDS = ['incomingNo', 'side', 'location', 'deedNo', 'landNo', 'surveyPage',
   'tambon', 'amphoe', 'province', 'areaRai', 'areaNgan', 'areaWa', 'rowDistance', 'ownerName', 'ownerPhone', 'ownerAddress',
   'proxyName', 'proxyPhone', 'proxyRelation', 'pointedBy', 'pointedWith', 'certNo', 'sentTo', 'archiveLocation', 'note', 'cancelReason', 'appointDate', 'coords'];
 const DEFAULT_PROVINCE = 'ระยอง';
@@ -3206,16 +3178,16 @@ async function saveForm(){
   const km = parseKm(document.getElementById('f_km').value);
   const ownerName = document.getElementById('f_ownerName').value.trim();
 
-  if (!dateReceived) { showToast('กรุณากรอกวันที่รับเรื่อง'); return; }
+  if (!dateReceived) { showToast('กรุณากรอกวันที่หนังสือ'); return; }
   if (!highway) { showToast('กรุณาเลือกทางหลวง (ทล.)'); return; }
   if (km === null) { showToast('กรุณากรอก กม. ให้ถูกรูปแบบ เช่น 230+500'); return; }
   if (!ownerName) { showToast('กรุณากรอกชื่อเจ้าของที่ดิน'); return; }
   // วันที่ของขั้นตอนต้องไม่ก่อนวันที่รับเรื่อง
   const snap = formSnapshot();
   const early = STEPS.slice(1).find(s => snap[s.field] && snap[s.field] < dateReceived);
-  if (early) { showToast('วันที่ขั้น "' + early.label + '" อยู่ก่อนวันที่รับเรื่อง — ตรวจสอบอีกครั้ง'); return; }
+  if (early) { showToast('วันที่ขั้น "' + early.label + '" อยู่ก่อนวันที่หนังสือ — ตรวจสอบอีกครั้ง'); return; }
   const apptRaw = document.getElementById('f_appointDate').value;
-  if (apptRaw && apptRaw < dateReceived) { showToast('วันนัดชี้แนวอยู่ก่อนวันที่รับเรื่อง — ตรวจสอบอีกครั้ง'); return; }
+  if (apptRaw && apptRaw < dateReceived) { showToast('วันนัดชี้แนวอยู่ก่อนวันที่หนังสือ — ตรวจสอบอีกครั้ง'); return; }
   const coordsRaw = document.getElementById('f_coords').value.trim();
   if (coordsRaw && !parseCoords(coordsRaw)) { showToast('พิกัดแปลงที่ดินไม่ถูกรูปแบบ — ใส่ ละติจูด, ลองจิจูด เช่น 12.7071, 101.1474'); return; }
   if (!recorderName) { openRecorderModal(); return; }
@@ -3464,7 +3436,7 @@ function prefillFormFromDraft(p){
   updateHighwayHint();
   updateStepUi();
   openFormModal();
-  showToast('ดึงข้อมูลจากรายการร่างแล้ว กรอกวันที่รับเรื่อง/เจ้าของที่ดินต่อและกดบันทึก');
+  showToast('ดึงข้อมูลจากรายการร่างแล้ว กรอกวันที่หนังสือ/เจ้าของที่ดินต่อและกดบันทึก');
 }
 
 async function startApp(){
@@ -3896,9 +3868,7 @@ function openCaseDetailModal(id){
               </div>
               <div class="cd-card"><div class="cd-sec">การรับเรื่องและอ้างอิง</div>
                 <dl class="cd-dl">
-                  <dt>รับเรื่องจาก</dt><dd>${escapeHtml(rec.receivedFrom) || '-'}</dd>
-                  <dt>หนังสือรับ</dt><dd style="font-size:13px">${escapeHtml(rec.incomingNo) || '-'}</dd>
-                  <dt>วัตถุประสงค์</dt><dd>${escapeHtml([rec.purpose, rec.purposeNote].filter(Boolean).join(' — ')) || '-'}</dd>
+                  <dt>เลขที่หนังสือ</dt><dd style="font-size:13px">${escapeHtml(rec.incomingNo) || '-'}</dd>
                   <dt>หมายเหตุ</dt><dd>${escapeHtml(rec.note) || '-'}</dd>
                   <dt>ผู้บันทึก</dt><dd>${escapeHtml(rec.recordedBy) || '-'}${rec.updatedBy && rec.updatedBy !== rec.recordedBy ? ' · แก้ไขล่าสุดโดย ' + escapeHtml(rec.updatedBy) : ''}</dd>
                 </dl></div>
@@ -4598,9 +4568,7 @@ function buildCasesSheet(wb, rows, seqMap){
   const C = [
     ['เลขที่เรื่อง', 0, 11, 'text', r => caseNoOf(r, seqMap)],
     ['ปีงบ', 0, 7, 'year', r => Number(r.fiscalYear) || null],
-    ['รับเรื่องจาก', 0, 18, 'text', r => r.receivedFrom || ''],
-    ['เลขที่หนังสือรับ', 0, 22, 'text', r => r.incomingNo || ''],
-    ['วัตถุประสงค์', 0, 22, 'text', r => [r.purpose, r.purposeNote].filter(Boolean).join(' — ')],
+    ['เลขที่หนังสือ', 0, 22, 'text', r => r.incomingNo || ''],
     ['ทล.', 1, 7, 'text', r => String(r.highway || '')],
     ['ตอน', 1, 22, 'text', r => r.section || ''],
     ['กม.', 1, 10, 'text', r => formatKm(r.km)],
