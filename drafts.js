@@ -107,8 +107,9 @@
       '#draftCard .dr-n{flex:1;min-width:0;color:#777;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '#draftCard .dr-d{color:#555;font-size:13.5px;white-space:nowrap}' +
       '#draftCard .dr-act{display:flex;gap:2px;margin-left:2px}' +
-      '#draftCard .dr-ib{border:none;background:transparent;width:30px;height:30px;border-radius:8px;cursor:pointer;color:#9aa0a8;font-size:14px;line-height:1}' +
-      '#draftCard .dr-ib:hover{background:#f1f1f1;color:#333}#draftCard .dr-ib.del:hover{background:var(--rust-bg,#fbeae7);color:var(--rust,#c1402f)}' +
+      '#draftCard .dr-ib{border:none;background:transparent;width:32px;height:32px;border-radius:8px;cursor:pointer;color:#8a929c;display:inline-grid;place-items:center;padding:0}' +
+      '#draftCard .dr-ib:hover{background:#eef1f4;color:var(--ink,#182430)}#draftCard .dr-ib.del:hover{background:var(--rust-bg,#fbeae7);color:var(--rust,#c1402f)}' +
+      '#draftCard .dr-ib:focus-visible{outline:2px solid var(--amber-500,#f07a1f);outline-offset:1px}' +
       '#draftCard .dr-empty{padding:18px;color:#888;text-align:center}' +
       '#draftCard .dr-warn{padding:10px 12px;border-radius:8px;background:#FAEEDA;color:#633806;margin-bottom:10px;font-size:14px}' +
       '#draftCard .dr-note{color:#777;font-size:12px}' +
@@ -147,6 +148,10 @@
     }).join('');
   }
 
+  // ไอคอนเส้นบาง (ดินสอ / ถังขยะ) สีตาม currentColor
+  var ICON_EDIT = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+  var ICON_DEL = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+
   // บรรทัดเดียวของหนึ่งร่าง
   function rowHtml(r) {
     var d = r.d, v = r.v, closed = r.closed;
@@ -158,8 +163,8 @@
       '<span class="dr-d">' + (v.due ? 'ครบ ' + esc(tdate(v.due)) : esc(tdate(v.start))) + '</span>' +
       chip(v) + ((!ACC && d.caseId) ? '<span class="dr-chip g">บันทึกเคสแล้ว</span>' : '') +
       '<span class="dr-act">' +
-        (canEdit ? '<button type="button" class="dr-ib" data-act="edit" title="แก้ไขร่าง" aria-label="แก้ไขร่าง">✎</button>' : '') +
-        (canCancel && d.status !== 'cancelled' ? '<button type="button" class="dr-ib del" data-act="cancel" title="' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '" aria-label="' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '">🗑</button>' : '') +
+        (canEdit ? '<button type="button" class="dr-ib" data-act="edit" title="แก้ไขร่าง" aria-label="แก้ไขร่าง">' + ICON_EDIT + '</button>' : '') +
+        (canCancel && d.status !== 'cancelled' ? '<button type="button" class="dr-ib del" data-act="cancel" title="' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '" aria-label="' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '">' + ICON_DEL + '</button>' : '') +
       '</span></div>';
   }
 
@@ -193,7 +198,7 @@
     });
 
     var failed = window.FBL && FBL.watchFailed && FBL.watchFailed.drafts;
-    var html = '<div class="card" id="draftCard"><div class="section-title"><span class="num">▤</span> รายการร่าง</div>';
+    var html = '<div class="card" id="draftCard"><div class="section-title">รายการร่าง</div>';
     if (failed) html += '<div class="dr-warn">ยังอ่านรายการร่างไม่ได้ (' + esc(failed) + ') — ถ้าเพิ่งติดตั้งฟีเจอร์นี้ ให้วาง firestore.rules ใหม่ใน Firebase Console ก่อน</div>';
     html += '<div class="dr-top">' +
       '<span class="dr-chip n">ค้าง ' + counts.open + '</span>' +
