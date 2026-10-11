@@ -885,6 +885,12 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .addr-chip .ok{color:var(--green);font-weight:700}
 .addr-chip .chip-edit{margin-left:auto;flex:none;font-size:12.5px;font-weight:600;color:var(--amber);cursor:pointer}
 .party-block-title .seg{font-family:'Sarabun',sans-serif;font-weight:400}
+/* หน้าจอกว้าง: ปุ่มสลับมอบอำนาจกว้างคงที่ และช่องเลขที่หนังสือ แขวงฯ ชิดซ้ายให้ขอบขวาตรงกับขอบซ้ายของปุ่ม */
+#proxySeg{width:300px}#proxySeg button{flex:1}
+@media(min-width:900px){
+  #fsec1 > .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #fsec1 > .grid-4 > .field:nth-child(3){grid-column:3 / 5;margin-right:313px}
+}
 @media(max-width:720px){.addr-grid .a-chip{grid-column:1/-1 !important}.addr-grid .a-tam{grid-column:span 1 !important}}
 .addr-preview:empty{display:none}
 .proxy-toggle{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
@@ -1255,7 +1261,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <div class="ref-field" id="inField"><span class="ref-prefix">ที่ คค 06087/12/70/ม.1/</span><input type="text" id="f_incomingNo"></div>
         </div>
       </div>
-      <div class="sec-sub">เจ้าของที่ดิน / ผู้รับมอบอำนาจ</div>
+      <div class="sec-sub" style="border-top:0;padding-top:0;margin-top:16px">เจ้าของที่ดิน / ผู้รับมอบอำนาจ</div>
       <div class="party-block">
         <div class="party-block-title"><span>เจ้าของที่ดิน</span>
           <div class="seg" id="proxySeg">
@@ -1269,29 +1275,29 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         </div>
         <div class="addr-grid">
           <div class="field a-name">
-            <label>ชื่อ-นามสกุล เจ้าของที่ดิน <span class="req">*</span></label>
+            <label>ชื่อ-นามสกุล <span class="req">*</span></label>
             <input type="text" id="f_ownerName">
           </div>
           <div class="field a-phone">
             <label>เบอร์โทร</label>
-            <input type="text" id="f_ownerPhone" inputmode="numeric" autocomplete="off" placeholder="พิมพ์เฉพาะตัวเลข เช่น 0816833603">
+            <input type="text" id="f_ownerPhone" inputmode="numeric" autocomplete="off">
             <span class="hint km-hint" id="ownerPhoneHint"></span>
           </div>
           <div class="field a-house">
             <label>บ้านเลขที่</label>
-            <input type="text" id="f_addrHouse" placeholder="12/3">
+            <input type="text" id="f_addrHouse">
           </div>
           <div class="field a-moo">
             <label>หมู่</label>
-            <input type="text" id="f_addrMoo" inputmode="numeric" placeholder="5">
+            <input type="text" id="f_addrMoo" inputmode="numeric">
           </div>
           <div class="field a-street">
             <label>ซอย / ถนน</label>
-            <input type="text" id="f_addrStreet" placeholder="เช่น ซ.สุขุมวิท 10">
+            <input type="text" id="f_addrStreet">
           </div>
           <div class="field a-tam">
             <label>ตำบล</label>
-            <input type="text" id="f_addrTam" list="dlTam" placeholder="เชิงเนิน" autocomplete="off">
+            <input type="text" id="f_addrTam" list="dlTam" autocomplete="off">
           </div>
           <div class="field a-chip">
             <label>อำเภอ · จังหวัด · รหัสไปรษณีย์</label>
@@ -1319,11 +1325,11 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <div class="party-block-title"><span>ผู้รับมอบอำนาจ</span></div>
         <div class="grid grid-2">
           <div class="field">
-            <label>ชื่อ-นามสกุล ผู้รับมอบอำนาจ</label>
+            <label>ชื่อ-นามสกุล</label>
             <input type="text" id="f_proxyName">
           </div>
           <div class="field">
-            <label>ความเกี่ยวข้องกับเจ้าของ</label>
+            <label>ความเกี่ยวข้อง</label>
             <input type="text" id="f_proxyRelation" placeholder="เช่น บุตร, ตัวแทนบริษัทรังวัด">
           </div>
         </div>
