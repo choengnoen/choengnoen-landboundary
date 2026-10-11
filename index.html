@@ -939,8 +939,11 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .rep-info{margin-top:6px;font-size:13px;color:var(--ink-soft);background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;line-height:1.6}
 .rep-info b{color:var(--navy-900)}
 /* หมุดโฉนด: ช่องกรอกอยู่ซ้าย ใบร่างอยู่ขวา (เห็นใบร่างเปลี่ยนทันทีที่เพิ่มหมุด/ใส่ระยะ) */
-.pin-layout{display:grid;grid-template-columns:minmax(330px,470px) minmax(0,1fr);gap:14px;align-items:start}
-.pin-seg{display:grid;grid-template-columns:minmax(0,1fr) 84px minmax(0,1fr) 30px;gap:8px;align-items:end;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.pin-layout{display:grid;grid-template-columns:346px minmax(0,1fr);gap:14px;align-items:start}
+/* ช่องแคบพอดีข้อมูล: กม. ไม่เกิน 000+000 · ระยะไม่เกิน 00.00 → ใบร่างด้านขวาได้พื้นที่มากขึ้น */
+.pin-seg{display:grid;grid-template-columns:92px 66px 92px 28px;gap:6px;align-items:end;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.pin-seg input{padding-left:8px;padding-right:6px}
+.pin-seg .pin-del{height:36px;padding:0}
 .pin-seg>.field{min-width:0}
 .pin-seg input{min-width:0;width:100%}
 .pin-seg .pin-from-in{background:var(--paper-2);color:var(--ink-soft)}
@@ -952,8 +955,11 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pin-seg .pin-del{border:1px solid var(--line);background:#fff;border-radius:8px;height:36px;cursor:pointer;color:var(--ink-soft)}
 .pin-seg .pin-del:hover{color:var(--rust);border-color:var(--rust)}
 .pin-seg.pin-new{animation:pinIn .45s ease}
-@media(max-width:560px){.pin-seg{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 30px}.pin-seg>.field:nth-child(3){grid-column:1/3}}
+@media(max-width:420px){.pin-seg{grid-template-columns:minmax(0,1fr) 62px minmax(0,1fr) 28px}}
 .pin-panel{margin-top:0}
+.draft-col{min-width:0}
+.draft-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+@media(max-width:560px){.draft-fields{grid-template-columns:1fr}}
 .pin-head{display:grid;grid-template-columns:1fr;gap:10px}
 .pin-rows{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .pin-row{display:grid;grid-template-columns:26px minmax(0,1fr) auto 30px;gap:8px;align-items:end;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:10px}
@@ -968,7 +974,7 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pin-add:hover{border-color:var(--amber-500);color:var(--amber)}
 @media(max-width:900px){.pin-layout{grid-template-columns:1fr}}
 .draft-box{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;margin-top:0;overflow-x:auto;color:#182430}
-.draft-box svg{width:100%;max-width:640px;height:auto;min-width:520px;display:block;margin:0 auto}
+.draft-box svg{width:100%;max-width:100%;height:auto;display:block;margin:0 auto}
 .draft-empty{font-size:13px;color:var(--ink-mute);padding:6px 0}
 .ref-field{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;transition:border-color .15s ease,box-shadow .15s ease}
 .ref-field:focus-within{border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(224,98,15,.14)}
@@ -1478,7 +1484,32 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       </div>
 
       <div class="party-block lbox">
-      <div class="lcols lcols2">
+      <div class="lcols">
+      <div class="lcol">
+        <div class="lg-h">ตำแหน่งแปลงที่ดิน</div>
+        <div class="lln">
+        <div class="field" style="flex:.8">
+          <label>ด้าน</label>
+          <select id="f_side">
+            <option value="">— เลือก —</option>
+            <option value="ซ้ายทาง">ซ้ายทาง</option>
+            <option value="ขวาทาง">ขวาทาง</option>
+            <option value="ทั้งสองด้าน">ทั้งสองด้าน</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1.2">
+          <label>บริเวณโดยสังเขป</label>
+          <input type="text" id="f_location">
+        </div>
+        </div>
+        <div class="lln">
+        <div class="field" style="flex:1">
+          <label>พิกัดแปลงที่ดิน (ละติจูด, ลองจิจูด)</label>
+          <input type="text" id="f_coords">
+          <span class="hint km-hint" id="coordsHint"></span>
+        </div>
+        </div>
+      </div>
       <div class="lcol">
         <div class="lg-h">ช่างทางหลวง</div>
         <div class="lln">
@@ -1523,53 +1554,29 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <!-- ช่อง กม. หมุดที่ 1 ถูกย้ายเข้าแถวแรกของรายการช่วงโดยสคริปต์ (renderPinSegs) · ทิศทาง กม.เพิ่ม/ลด ระบบคำนวณเอง เก็บเป็นค่าซ่อน -->
           <div id="pinKm0Holder" hidden>
             <div class="field" id="pinKm0Field">
-              <label>กม. หมุดที่ 1</label>
-              <input type="text" id="f_pinKm0">
+              <label>กม. หมุด 1</label>
+              <input type="text" id="f_pinKm0" maxlength="11">
               <input type="hidden" id="f_pinDir" value="up">
             </div>
           </div>
           <div class="pin-rows" id="pinRows"></div>
           <button type="button" class="pin-add" id="btnAddPin">＋ เพิ่มช่วง (หมุดถัดไป)</button>
         </div>
-        <div class="draft-box" id="draftSvgWrap"></div>
-      </div>
-
-      <div class="sec-sub">รายละเอียด</div>
-      <div class="land-grid">
-        <div class="field s4">
-          <label>ด้าน</label>
-          <select id="f_side">
-            <option value="">— เลือก —</option>
-            <option value="ซ้ายทาง">ซ้ายทาง</option>
-            <option value="ขวาทาง">ขวาทาง</option>
-            <option value="ทั้งสองด้าน">ทั้งสองด้าน</option>
-          </select>
-        </div>
-        <div class="field s8">
-          <label>บริเวณโดยสังเขป</label>
-          <input type="text" id="f_location" placeholder="เช่น ใกล้สี่แยก…, ตรงข้ามปั๊ม…">
-        </div>
-        <div class="field s6">
-          <label>ระยะเขตทางตามบัญชี (ม. จากศูนย์กลาง)</label>
-          <input type="text" id="f_rowDistance" inputmode="decimal" placeholder="เช่น 30">
-          <span class="hint km-hint" id="rowHint"></span>
-        </div>
-        <div class="field s6">
-          <label>ระยะเขตทางกันแนวเขตหน้างาน (ม.)</label>
-          <input type="text" id="f_rowWork" inputmode="decimal" placeholder="เช่น 30">
-        </div>
-        <div class="field s6">
-          <label>เนื้อที่โฉนด (ไร่ - งาน - ตร.วา)</label>
-          <div class="area-trio">
-            <input type="text" id="f_areaRai" inputmode="numeric" placeholder="ไร่">
-            <input type="text" id="f_areaNgan" inputmode="numeric" placeholder="งาน">
-            <input type="text" id="f_areaWa" inputmode="decimal" placeholder="ตร.วา">
+        <div class="draft-col">
+          <div class="draft-box" id="draftSvgWrap"></div>
+          <div class="draft-fields">
+            <div class="field">
+              <label>ระยะเขตทางตามบัญชี (ม. จากศูนย์กลาง)</label>
+              <input type="text" id="f_rowDistance" inputmode="decimal">
+              <span class="hint km-hint" id="rowHint"></span>
+            </div>
+            <div class="field">
+              <label>ระยะเขตทางกันแนวเขตหน้างาน (ม.)</label>
+              <input type="text" id="f_rowWork" inputmode="decimal">
+            </div>
           </div>
-        </div>
-        <div class="field s6">
-          <label>พิกัดแปลงที่ดิน (ละติจูด, ลองจิจูด)</label>
-          <input type="text" id="f_coords" placeholder="เช่น 12.7071, 101.1474">
-          <span class="hint km-hint" id="coordsHint">ตรวจจากเว็บกรมที่ดินแล้วนำพิกัดมาวาง</span>
+          <!-- เนื้อที่โฉนด: ไม่แสดงในฟอร์มแล้ว เก็บช่องซ่อนไว้เพื่อไม่ให้ข้อมูลเรื่องเก่าหาย -->
+          <input type="hidden" id="f_areaRai"><input type="hidden" id="f_areaNgan"><input type="hidden" id="f_areaWa">
         </div>
       </div>
     </div>
@@ -2186,7 +2193,7 @@ function updateCoordsHint(){
   const el = document.getElementById('coordsHint');
   if (!el) return;
   const raw = document.getElementById('f_coords').value.trim();
-  if (!raw) { el.textContent = 'ตรวจจากเว็บกรมที่ดินแล้วนำพิกัดมาวาง'; return; }
+  if (!raw) { el.textContent = ''; return; }
   const c = parseCoords(raw);
   el.innerHTML = c ? '✓ พิกัดถูกต้อง · <a href="' + coordsMapUrl(c) + '" target="_blank" rel="noopener">ดูแผนที่ ↗</a>' : '⚠ รูปแบบไม่ถูกต้อง — ใส่ ละติจูด, ลองจิจูด เช่น 12.7071, 101.1474';
 }
@@ -4940,7 +4947,10 @@ function derivePins(){
     dIn.classList.toggle('pin-calc', src === 'to' && dIn.value !== '');
     tIn.classList.toggle('pin-calc', src === 'dist' && tIn.value !== '');
     const arrow = row.querySelector('.pin-arrow');
-    if (arrow) arrow.textContent = warn ? '⚠ สวนทิศ' : (gap ? (rowDir === 'down' ? '▼ ลด' : '▲ เพิ่ม') : '');
+    if (arrow) {
+      arrow.textContent = warn ? '⚠' : (gap ? (rowDir === 'down' ? '▼' : '▲') : '');
+      arrow.title = warn ? 'สวนทิศกับช่วงก่อนหน้า — ตรวจสอบ กม.' : (gap ? (rowDir === 'down' ? 'กม. ลดลง' : 'กม. เพิ่มขึ้น') : '');
+    }
     row.classList.toggle('warn', warn);
     gaps.push(gap); info.push({ warn, gap });
     prev = next;
@@ -4959,9 +4969,9 @@ function renderPinSegs(states, newIdx){
   const list = (Array.isArray(states) && states.length) ? states : [{ d: '', t: '', src: '' }];
   box.innerHTML = list.map((s, i) => `
     <div class="pin-seg${i === newIdx ? ' pin-new' : ''}" data-src="${escapeHtml(s.src || '')}">
-      ${i === 0 ? '<span class="pin-from-slot"></span>' : '<div class="field"><label>กม. หมุดที่ ' + (i + 1) + '</label><input type="text" class="pin-from-in" readonly tabindex="-1"></div>'}
-      <div class="field"><label>ระยะ (ม.)</label><input type="text" class="pin-dist-in" inputmode="decimal" value="${escapeHtml(String(s.d || ''))}"></div>
-      <div class="field"><label>กม. หมุดที่ ${i + 2} <span class="pin-arrow"></span></label><input type="text" class="pin-to-in" value="${escapeHtml(String(s.t || ''))}"></div>
+      ${i === 0 ? '<span class="pin-from-slot"></span>' : '<div class="field"><label>กม. หมุด ' + (i + 1) + '</label><input type="text" class="pin-from-in" readonly tabindex="-1"></div>'}
+      <div class="field"><label>ระยะ ม. <span class="pin-arrow"></span></label><input type="text" class="pin-dist-in" inputmode="decimal" maxlength="7" value="${escapeHtml(String(s.d || ''))}"></div>
+      <div class="field"><label>กม. หมุด ${i + 2}</label><input type="text" class="pin-to-in" maxlength="11" value="${escapeHtml(String(s.t || ''))}"></div>
       <button type="button" class="pin-del" title="ลบช่วงนี้" ${list.length < 2 ? 'disabled style="visibility:hidden"' : ''}>✕</button>
     </div>`).join('');
   const slot = box.querySelector('.pin-from-slot');
