@@ -103,7 +103,7 @@
       '#draftCard .dr-gh.n{background:#EEE;color:#555}#draftCard .dr-gh.n i{background:#aaa}' +
       '#draftCard .dr-ln{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid #f0f0f0;background:#fff;cursor:pointer}' +
       '#draftCard .dr-ln:hover{background:#f7fafc}#draftCard .dr-ln:focus-visible{outline:2px solid var(--amber-500,#f07a1f);outline-offset:-2px}' +
-      '#draftCard .dr-t{font-family:Kanit,Sarabun,sans-serif;font-weight:600;font-size:15px;min-width:150px;white-space:nowrap;color:var(--ink,#182430)}' +
+      '#draftCard .dr-t{font-family:Kanit,Sarabun,sans-serif;font-weight:600;font-size:15px;min-width:150px;flex:0 1 auto;color:var(--ink,#182430)}' +
       '#draftCard .dr-n{flex:1;min-width:0;color:#777;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '#draftCard .dr-d{color:#555;font-size:13.5px;white-space:nowrap}' +
       '#draftCard .dr-act{display:flex;gap:2px;margin-left:2px}' +
@@ -123,7 +123,6 @@
       '#drModal .dm-b{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}' +
       '#drModal .dm-b .full{grid-column:1/-1}' +
       '#drModal .dm-b input,#drModal .dm-b select{width:100%}' +
-      '#drModal .dm-due{grid-column:1/-1;background:var(--amber-glow,#fdf1de);color:var(--amber-deep,#a3660a);border-radius:10px;padding:8px 12px;font-size:13.5px}' +
       '#drModal .dm-f{display:flex;gap:8px;align-items:center;padding:12px 20px;border-top:1px solid var(--line,#e3e3e3);background:#fafaf8;flex-wrap:wrap}' +
       '#drModal .dm-f .sp{flex:1}#drModal .dm-del{color:var(--rust,#c1402f)}' +
       '@media(max-width:560px){#drModal{align-items:flex-end;padding:0}#drModal .dm{max-width:none;border-radius:16px 16px 0 0}}';
@@ -152,16 +151,24 @@
   var ICON_EDIT = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
   var ICON_DEL = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
 
+  // " ตอน <ชื่อตอน>" ต่อท้าย ทล. (ดึงจากข้อมูลสายทางของแต่ละระบบผ่าน CFG.sectionOf · ไม่มีชื่อตอนก็ไม่แสดง)
+  function sectionText(hw) {
+    var s = '';
+    try { s = CFG.sectionOf ? String(CFG.sectionOf(hw) || '').trim() : ''; } catch (e) { s = ''; }
+    s = s.replace(/^ตอน\s*/, '');
+    return s ? ' ตอน ' + esc(s) : '';
+  }
+
   // บรรทัดเดียวของหนึ่งร่าง
   function rowHtml(r) {
     var d = r.d, v = r.v, closed = r.closed;
     var canEdit = !d.caseId && d.status !== 'cancelled';
     var canCancel = ACC ? true : !closed;
     return '<div class="dr-ln" role="button" tabindex="0" data-id="' + esc(d.id) + '">' +
-      '<span class="dr-t">ทล.' + esc(d.highway) + ' กม.' + esc(fmtKm(d.km)) + '</span>' +
+      '<span class="dr-t">ทล.' + esc(d.highway) + sectionText(d.highway) + ' กม.' + esc(fmtKm(d.km)) + '</span>' +
       '<span class="dr-n">' + esc(d.note || '') + '</span>' +
       '<span class="dr-d">' + (v.due ? 'ครบ ' + esc(tdate(v.due)) : esc(tdate(v.start))) + '</span>' +
-      chip(v) + ((!ACC && d.caseId) ? '<span class="dr-chip g">บันทึกเคสแล้ว</span>' : '') +
+      chip(v) + (d.caseId ? '<span class="dr-chip g">บันทึกเคสแล้ว</span>' : '') +
       '<span class="dr-act">' +
         (canEdit ? '<button type="button" class="dr-ib" data-act="edit" title="แก้ไขร่าง" aria-label="แก้ไขร่าง">' + ICON_EDIT + '</button>' : '') +
         (canCancel && d.status !== 'cancelled' ? '<button type="button" class="dr-ib del" data-act="cancel" title="' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '" aria-label="' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '">' + ICON_DEL + '</button>' : '') +
@@ -175,15 +182,6 @@
     var t = today();
     var rows = [], counts = { open: 0, warn: 0, over: 0 };
     drafts.forEach(function (d) {
-      if (ACC) {
-        // ตารางนี้แสดงเฉพาะร่างที่ "ยังไม่บันทึกเคส" — บันทึกเคสแล้ว (มี caseId) หรือถูกลบ ให้หายไป (เคสไปดูที่หน้ารายการอุบัติเหตุ)
-        if (d.status === 'cancelled' || d.caseId) return;
-        var va = viewOf(d, t); if (va.hide || va.state !== 'open') return;
-        counts.open++;
-        if (va.left <= 0) counts.over++; else if (va.left <= WARN_LEFT) counts.warn++;
-        rows.push({ d: d, v: va, closed: false });
-        return;
-      }
       var v = viewOf(d, t); if (v.hide) return;
       // ร่างที่ปิดแล้ว (ส่งแขวงแล้ว / เรื่องจบ / ยกเลิก) ไม่แสดงในตารางนี้ — เรื่องที่จบแล้วไปดูที่ตารางในหน้ารายการ
       if (v.state !== 'open') return;
@@ -214,7 +212,7 @@
       var groups = [
         { k: 'r', title: 'เลยกำหนด / ครบกำหนดวันนี้', f: function (r) { return !r.closed && r.v.left <= 0; } },
         { k: 'y', title: 'ใกล้ครบกำหนด · เหลือไม่เกิน ' + WARN_LEFT + ' วันทำการ', f: function (r) { return !r.closed && r.v.left > 0 && r.v.left <= WARN_LEFT; } },
-        { k: 'g', title: 'ยังมีเวลา', f: function (r) { return !r.closed && r.v.left > WARN_LEFT; } }
+        { k: 'g', title: 'อยู่ในกำหนด · เหลือมากกว่า ' + WARN_LEFT + ' วันทำการ', f: function (r) { return !r.closed && r.v.left > WARN_LEFT; } }
       ];
       groups.forEach(function (g) {
         var list = rows.filter(g.f); if (!list.length) return;
@@ -233,7 +231,7 @@
     q('drNewBtn').onclick = function () { if (CFG.openBlank) CFG.openBlank(); };
     el.querySelectorAll('.dr-ln').forEach(function (row) {
       var id = row.getAttribute('data-id');
-      function go() { var d = byId(id); if (!d || d.status === 'cancelled') return; if (!ACC && d.caseId) openCase(d); else makeCase(d); }
+      function go() { var d = byId(id); if (!d || d.status === 'cancelled') return; if (d.caseId) openCase(d); else makeCase(d); }
       row.onclick = function (ev) { if (ev.target.closest('button')) return; go(); };
       row.onkeydown = function (ev) { if (ev.target === row && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); go(); } };
       row.querySelectorAll('button[data-act]').forEach(function (b) {
@@ -261,7 +259,6 @@
       '<div class="dm" role="dialog" aria-modal="true"><div class="dm-h"><b>' + (d ? 'แก้ไขรายการร่าง' : 'เพิ่มรายการร่าง') + '</b><button type="button" class="dm-x" id="drClose" aria-label="ปิด">×</button></div>' +
       '<div class="dm-b">' +
         '<div class="field full"><label>' + esc(CFG.startLabel) + ' <span class="req">*</span></label><input type="date" id="drDate" max="' + t + '" value="' + esc(d ? d.startDate : t) + '"></div>' +
-        '<div class="dm-due" id="drDue"></div>' +
         '<div class="field"><label>ทล. <span class="req">*</span></label><select id="drHw">' + hwOptions(d ? d.highway : '') + '</select></div>' +
         '<div class="field"><label>กม. <span class="req">*</span></label><input type="text" id="drKm" placeholder="เช่น 145+200" value="' + esc(d ? fmtKm(d.km) : '') + '"></div>' +
         '<div class="field full"><label>หมายเหตุ</label><input type="text" id="drNote" value="' + esc(d ? (d.note || '') : '') + '"></div>' +
@@ -270,12 +267,6 @@
         '<button type="button" class="btn btn-outline" id="drCancelEdit">ยกเลิก</button>' +
         '<button type="button" class="btn btn-primary" id="drAdd">' + (d ? 'บันทึกการแก้ไข' : '＋ เพิ่มร่าง') + '</button></div></div>';
     document.body.appendChild(m);
-    var due = function () {
-      var v = document.getElementById('drDate').value, el = document.getElementById('drDue');
-      el.textContent = v ? 'ครบกำหนดส่งแขวง = ' + CFG.startLabel + ' + ' + LIMIT_DAYS + ' วันทำการ → ' + tdate(addWork(v, LIMIT_DAYS)) : 'ครบกำหนดส่งแขวง = ' + CFG.startLabel + ' + ' + LIMIT_DAYS + ' วันทำการ';
-    };
-    due();
-    document.getElementById('drDate').addEventListener('input', due);
     m.addEventListener('mousedown', function (e) { if (e.target === m) closeModal(); });
     document.getElementById('drClose').onclick = closeModal;
     document.getElementById('drCancelEdit').onclick = closeModal;
