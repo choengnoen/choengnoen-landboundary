@@ -1092,11 +1092,11 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 @media(max-width:640px){.ph-grid{grid-template-columns:1fr}}
 .ph-slot{border:1px solid var(--line,#dfe2dd);border-radius:12px;padding:10px;background:var(--card,#fff)}
 .ph-title{font-weight:600;font-size:13px;margin-bottom:8px;color:var(--ink-soft,#4d5a66)}
-.ph-empty{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:4/3;border:2px dashed var(--line,#dfe2dd);border-radius:10px;background:var(--paper,#f5f6f4);color:var(--ink-soft,#4d5a66);font:inherit;font-size:14px}
+.ph-empty{display:flex;align-items:center;justify-content:center;width:100%;height:clamp(150px,calc(100vh - 600px),340px);border:2px dashed var(--line,#dfe2dd);border-radius:10px;background:var(--paper,#f5f6f4);color:var(--ink-soft,#4d5a66);font:inherit;font-size:14px}
 .ph-add{cursor:pointer}
 .ph-add:hover:not(:disabled){border-color:currentColor;color:var(--ink,#182430)}
 .ph-add:disabled{opacity:.55;cursor:not-allowed}
-.ph-img{width:100%;aspect-ratio:4/3;border-radius:10px;background:var(--paper-2,#eceee9) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--ink-mute,#8792a0);font-size:13px}
+.ph-img{width:100%;height:clamp(150px,calc(100vh - 600px),340px);border-radius:10px;background:var(--paper-2,#eceee9) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--ink-mute,#8792a0);font-size:13px}
 .ph-bar{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
 .ph-bar span{margin-right:auto;font-size:12px;color:var(--ink-soft,#4d5a66)}
 .cd-photos{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -2004,14 +2004,18 @@ function updateKmHint(){
   const kmVal = parseKm(document.getElementById('f_km').value);
   const hint = document.getElementById('kmHint');
   const route = findRoute(hw);
-  if (!hw) { hint.textContent = ''; hint.classList.remove('warn'); return; }
+  const kmEl = document.getElementById('f_km');
+  if (kmEl.dataset.ph0 === undefined) kmEl.dataset.ph0 = kmEl.getAttribute('placeholder') || '';
+  if (!hw) { hint.textContent = ''; hint.classList.remove('warn'); kmEl.placeholder = kmEl.dataset.ph0; return; }
   const rangeText = kmRangesText(route);
   if (kmVal !== null && route && !kmInRange(route, kmVal)) {
     hint.textContent = 'กม.นี้อยู่นอกช่วงที่หมวดฯ ดูแล (' + rangeText + ') — ตรวจสอบอีกครั้ง';
     hint.classList.add('warn');
   } else {
-    hint.textContent = rangeText ? ('ช่วงที่หมวดฯ ดูแล: กม.' + rangeText) : '';
+    // ช่วงที่หมวดฯ ดูแลแสดงเป็นตัวอย่างในช่อง (placeholder) — ใต้ช่องแจ้งเฉพาะเมื่อ กม. อยู่นอกช่วง
+    hint.textContent = '';
     hint.classList.remove('warn');
+    kmEl.placeholder = rangeText ? ('ช่วง ' + rangeText) : kmEl.dataset.ph0;
   }
   updateRowHint(hw, kmVal);
 }
