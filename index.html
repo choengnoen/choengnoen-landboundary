@@ -812,7 +812,7 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .list-count-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 2px 8px}.list-count{font-size:12.5px;color:var(--ink-mute)}.link-clear{background:none;border:0;padding:2px 4px;font:inherit;font-size:12.5px;color:var(--navy-700,#1c4b73);text-decoration:underline;cursor:pointer;white-space:nowrap}.link-clear:hover{color:var(--amber,#e0620f)}
 /* ตารางรายการ 7 คอลัมน์: ช่องหลักบรรทัดบน + ข้อมูลรองบรรทัดล่างสีเทา */
 #dataTable th,#dataTable td{text-align:left}
-#dataTable td.case-cell b{font-weight:600}
+#dataTable td.case-cell b{font-weight:700;color:var(--ink,#1a1a1a);font-size:14px}
 .c-sub{display:block;font-size:11.5px;color:var(--ink-mute);line-height:1.3;margin-top:1px}
 /* หน้าบันทึกรายการใหม่: ใช้ฟอนต์ Sarabun ทั้งหน้า ยกเว้นหัวเรื่อง 1-4 (.section-title) และแถบปุ่ม ล้างฟอร์ม/บันทึกข้อมูล (.form-savebar) ที่คงเดิม */
 #view-form :not(.section-title):not(.section-title *):not(.form-savebar):not(.form-savebar *){font-family:'Sarabun',sans-serif}
@@ -1466,7 +1466,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <table class="data" id="dataTable">
           <thead>
             <tr>
-              <th style="width:11%">เลขที่เรื่อง</th><th style="width:17%">สายทาง / กม.</th><th style="width:20%">เจ้าของที่ดิน</th>
+              <th style="width:11%">ลำดับที่</th><th style="width:17%">สายทาง / กม.</th><th style="width:20%">เจ้าของที่ดิน</th>
               <th style="width:18%">เอกสารสิทธิ์ / ที่ตั้ง</th><th style="width:16%">ขั้นตอน</th><th style="width:18%">กำหนดส่งรายงาน</th>
             </tr>
           </thead>
@@ -3537,7 +3537,7 @@ function renderTable(){
     tr.style.cursor = 'pointer';
     const dl = deadlineInfo(r);
     tr.innerHTML = `
-      <td class="case-cell nowrap-cell"><b>${escapeHtml(caseNoOf(r, seqMap))}</b><span class="c-sub">รับ ${formatThaiDate(r.dateReceived)}</span></td>
+      <td class="case-cell nowrap-cell"><b>${formatThaiDate(r.dateReceived)}</b><span class="c-sub">${escapeHtml(caseNoOf(r, seqMap))}</span></td>
       <td class="hw-cell nowrap-cell">ทล.${escapeHtml(r.highway)} · กม.${escapeHtml(formatKm(r.km))}<span class="c-sub">${escapeHtml([r.side, r.section].filter(Boolean).join(' · '))}</span></td>
       <td>${escapeHtml(r.ownerName || '-')}${r.hasProxy === 'มี' && r.proxyName ? `<span class="c-sub">มอบอำนาจ: ${escapeHtml(r.proxyName)}</span>` : ''}</td>
       <td>${escapeHtml(deedText(r))}<span class="c-sub">${escapeHtml(placeText(r))}</span></td>
