@@ -104,7 +104,7 @@
       '#draftCard .dr-ln{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid #f0f0f0;background:#fff;cursor:pointer}' +
       '#draftCard .dr-ln:hover{background:#f7fafc}#draftCard .dr-ln:focus-visible{outline:2px solid var(--amber-500,#f07a1f);outline-offset:-2px}' +
       '#draftCard .dr-t{font-family:Kanit,Sarabun,sans-serif;font-weight:600;font-size:15px;min-width:150px;flex:0 1 auto;color:var(--ink,#182430)}' +
-      '#draftCard .dr-n{flex:1;min-width:0;color:#777;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '#draftCard .dr-s,#draftCard .dr-k{margin-left:14px}#draftCard .dr-n{margin-left:6px;flex:1;min-width:0;color:#777;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
       '#draftCard .dr-d{color:#555;font-size:13.5px;white-space:nowrap}' +
       '#draftCard .dr-act{display:flex;gap:2px;margin-left:2px}' +
       '#draftCard .dr-ib{border:none;background:transparent;width:32px;height:32px;border-radius:8px;cursor:pointer;color:#8a929c;display:inline-grid;place-items:center;padding:0}' +
@@ -156,7 +156,7 @@
     var s = '';
     try { s = CFG.sectionOf ? String(CFG.sectionOf(hw) || '').trim() : ''; } catch (e) { s = ''; }
     s = s.replace(/^ตอน\s*/, '');
-    return s ? ' ตอน ' + esc(s) : '';
+    return s ? '<span class="dr-s">ตอน ' + esc(s) + '</span>' : '';
   }
 
   // บรรทัดเดียวของหนึ่งร่าง
@@ -165,7 +165,7 @@
     var canEdit = !d.caseId && d.status !== 'cancelled';
     var canCancel = ACC ? true : !closed;
     return '<div class="dr-ln" role="button" tabindex="0" data-id="' + esc(d.id) + '">' +
-      '<span class="dr-t">ทล.' + esc(d.highway) + sectionText(d.highway) + ' กม.' + esc(fmtKm(d.km)) + '</span>' +
+      '<span class="dr-t">ทล.' + esc(d.highway) + sectionText(d.highway) + '<span class="dr-k">กม.' + esc(fmtKm(d.km)) + '</span></span>' +
       '<span class="dr-n">' + esc(d.note || '') + '</span>' +
       '<span class="dr-d">' + (v.due ? 'ครบ ' + esc(tdate(v.due)) : esc(tdate(v.start))) + '</span>' +
       chip(v) + (d.caseId ? '<span class="dr-chip g">บันทึกเคสแล้ว</span>' : '') +
