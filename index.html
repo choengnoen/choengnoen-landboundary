@@ -810,6 +810,14 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .fm-close{margin-left:auto;width:34px;height:34px;border-radius:50%;border:0;background:var(--paper-2);color:var(--ink-soft);font-size:16px;cursor:pointer}
 .fm-close:hover{background:#dfe2dd}
 @media(max-width:640px){.fm-wrap{padding:0}.fm-box{border-radius:0;min-height:100%;padding:0 10px 12px}.fm-head{border-radius:0}}
+/* หน้าต่างฟอร์ม: หัวกับแถบปุ่มล่างตรึงอยู่กับที่ เลื่อนเฉพาะเนื้อหาตรงกลาง (เนื้อหาไม่โผล่เหนือหัว/ใต้ปุ่มอีก) */
+.fm-wrap{overflow:hidden}
+.fm-box{display:flex;flex-direction:column;max-height:100%;padding:0;overflow:hidden}
+.fm-head{flex:none;position:relative;margin-bottom:0;padding:14px 18px 12px}
+.form-layout{flex:1;min-height:0;display:flex;flex-direction:column}
+.form-main{flex:1;min-height:0;overflow-y:auto;padding:12px 18px 0}
+.fm-box .form-savebar{margin:14px -18px 0;padding:12px 18px;border-width:1px 0 0;border-radius:0 0 18px 18px;box-shadow:none}
+@media(max-width:640px){.fm-box{max-height:none;height:100%}.fm-head{padding:12px 10px}.form-main{padding:10px 10px 0}.fm-box .form-savebar{margin:12px -10px 0;padding:12px 10px;border-radius:0}}
 /* หน้าต่างรายละเอียดเคส: เนื้อหาภายใน (หัวข้อการ์ด ยอดรวมสุทธิ ฯลฯ) ใช้ Sarabun ทั้งหมด — หัวสีกรมท่าและปุ่มด้านล่างคงเดิม */
 .case-modal .modal-body,.case-modal .modal-body *{font-family:'Sarabun',sans-serif}
 /* ช่องเลือกแบบเดียวกันทั้งระบบ (แทน select ของเบราว์เซอร์) */
@@ -2962,7 +2970,7 @@ function openFormModal(){
   if (!m) return;
   document.getElementById('formModalTitle').textContent = editingId ? 'แก้ไขเรื่องชี้แนวเขต' : 'บันทึกเรื่องชี้แนวเขต';
   m.style.display = 'block';
-  m.scrollTop = 0;
+  m.scrollTop = 0; var fmMain = m.querySelector('.form-main'); if (fmMain) fmMain.scrollTop = 0; fmMarkOpened();
   document.body.style.overflow = 'hidden';
 }
 function closeFormModal(){
@@ -2971,6 +2979,63 @@ function closeFormModal(){
   document.body.style.overflow = '';
 }
 
+/* ปิดฟอร์มบันทึกเคส (ปุ่ม ✕ / ปุ่ม ยกเลิก): ถามยืนยันเฉพาะเมื่อผู้ใช้กรอกหรือแก้ข้อมูลจริง — ฟอร์มว่าง/ไม่ได้แก้อะไรปิดได้ทันที
+   กล่องยืนยันเป็นของระบบเอง (ไม่ใช้ confirm() ของเบราว์เซอร์) กด Esc หรือคลิกฉากหลัง = กลับไปกรอกต่อ */
+let fmBase = '', fmEdited = false, fmFileEdited = false, fmWatching = false;
+function formSnapshot(){
+  const m = document.getElementById('formModal');
+  if (!m) return '';
+  return Array.from(m.querySelectorAll('input,select,textarea')).map(e => {
+    if (e.type === 'file') return '';
+    if (e.type === 'checkbox' || e.type === 'radio') return e.checked ? '1' : '0';
+    return e.value;
+  }).join('\u0001');
+}
+function fmMarkOpened(){
+  const m = document.getElementById('formModal');
+  if (!m) return;
+  fmEdited = false; fmFileEdited = false;
+  fmBase = formSnapshot();
+  setTimeout(() => { if (!fmEdited) fmBase = formSnapshot(); }, 400); // ให้ช่องที่เติมอัตโนมัติหลังเปิดเสร็จก่อนจึงนับเป็นค่าตั้งต้น
+  if (fmWatching) return;
+  fmWatching = true;
+  const mark = e => {
+    if (!e.isTrusted) return;
+    fmEdited = true;
+    if (e.target && e.target.type === 'file') fmFileEdited = true;
+  };
+  m.addEventListener('input', mark, true);
+  m.addEventListener('change', mark, true);
+}
+function isFormDirty(){
+  return fmFileEdited || (fmEdited && formSnapshot() !== fmBase);
+}
+function requestCloseForm(){
+  if (!isFormDirty()) { clearForm(); return; }
+  if (document.getElementById('fmLeaveDlg')) return;
+  const dlg = document.createElement('div');
+  dlg.className = 'modal-backdrop';
+  dlg.id = 'fmLeaveDlg';
+  dlg.innerHTML = `
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="fmLeaveTitle" style="max-width:420px">
+      <div class="modal-head"><h3 id="fmLeaveTitle">ออกจากฟอร์มนี้?</h3></div>
+      <div class="modal-body">
+        <p>ข้อมูลที่กรอกไว้ยังไม่ถูกบันทึกจะหายไป</p>
+        <div class="actions">
+          <button class="btn btn-danger" id="fmLeaveOk" type="button">ออกโดยไม่บันทึก</button>
+          <button class="btn btn-primary" id="fmLeaveStay" type="button">กลับไปกรอกต่อ</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(dlg);
+  const stay = () => { document.removeEventListener('keydown', onKey, true); dlg.remove(); };
+  const onKey = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); stay(); } };
+  document.addEventListener('keydown', onKey, true);
+  dlg.addEventListener('mousedown', e => { if (e.target === dlg) stay(); });
+  document.getElementById('fmLeaveStay').onclick = stay;
+  document.getElementById('fmLeaveOk').onclick = () => { stay(); clearForm(); };
+  document.getElementById('fmLeaveStay').focus();
+}
 function clearForm(){
   closeFormModal();
   editingId = null;
@@ -5022,10 +5087,9 @@ async function init(){
   document.getElementById('f_cancelled').addEventListener('change', updateCancelUi);
   ['f_areaRai', 'f_areaNgan'].forEach(id => document.getElementById(id).addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9]/g, ''); }));
   ['f_areaWa', 'f_rowDistance'].forEach(id => document.getElementById(id).addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9.]/g, ''); }));
-  document.getElementById('btnClearForm').addEventListener('click', clearForm);
+  document.getElementById('btnClearForm').addEventListener('click', requestCloseForm);
   document.getElementById('formModalClose').addEventListener('click', () => {
-    if (!confirm('ปิดหน้าต่างนี้? ข้อมูลที่กรอกไว้ยังไม่ถูกบันทึกจะหายไป')) return;
-    clearForm();
+    requestCloseForm();
   });
   document.getElementById('btnSave').addEventListener('click', saveForm);
   document.getElementById('btnChangeWho').addEventListener('click', () => {

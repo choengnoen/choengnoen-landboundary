@@ -199,9 +199,7 @@
     var html = '<div class="card" id="draftCard"><div class="section-title">รายการร่าง</div>';
     if (failed) html += '<div class="dr-warn">ยังอ่านรายการร่างไม่ได้ (' + esc(failed) + ') — ถ้าเพิ่งติดตั้งฟีเจอร์นี้ ให้วาง firestore.rules ใหม่ใน Firebase Console ก่อน</div>';
     html += '<div class="dr-top">' +
-      '<span class="dr-chip n">ค้าง ' + counts.open + '</span>' +
-      (counts.warn ? '<span class="dr-chip y">ใกล้ครบ ' + counts.warn + '</span>' : '') +
-      (counts.over ? '<span class="dr-chip r">ครบ/เลยกำหนด ' + counts.over + '</span>' : '') +
+      '<span class="dr-chip n">รอดำเนินการ ' + counts.open + ' เรื่อง</span>' +
       '<span class="sp"></span>' +
       '<button type="button" class="btn btn-outline" id="drAddBtn">ร่างรายการ</button>' +
       '<button type="button" class="btn btn-primary" id="drNewBtn">＋ รายการใหม่</button></div>';
