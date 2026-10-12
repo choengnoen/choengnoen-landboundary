@@ -992,6 +992,48 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pin-add{margin-top:10px;width:100%;height:38px;border:1.5px dashed #b9c0b8;border-radius:10px;background:transparent;color:var(--navy-700);font:600 13.5px 'Sarabun',sans-serif;cursor:pointer}
 .pin-add:hover{border-color:var(--amber-500);color:var(--amber)}
 @media(max-width:900px){.pin-layout{grid-template-columns:1fr}}
+/* ผลการชี้แนวเขต (ตารางสลับแกน): หมุด 1 หมุดต่อ 1 คอลัมน์ · สลับโหมด กรอกข้อมูล / ดูใบร่าง */
+.pin-tog{display:inline-flex;background:var(--paper-2);border-radius:12px;padding:4px;gap:4px;margin-bottom:12px}
+.pin-tog button{border:0;background:transparent;padding:8px 18px;border-radius:9px;font:600 14px 'Sarabun',sans-serif;color:var(--ink-soft);cursor:pointer}
+.pin-tog button.on{background:#fff;color:var(--navy-900);box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.pin-info{margin-bottom:12px}
+.pin-info-grid{display:grid;grid-template-columns:180px minmax(120px,.8fr) 150px minmax(200px,1.4fr);gap:12px;align-items:end}
+.pin-info-grid .field{margin:0;min-width:0}
+.pin-info-grid input[readonly]{background:var(--paper-2);color:var(--ink-soft)}
+@media(max-width:900px){.pin-info-grid{grid-template-columns:1fr 1fr}}
+.pin-tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+.pn{border-collapse:collapse;width:100%;table-layout:fixed}
+.pn th,.pn td{padding:6px 4px;border-bottom:1px solid #eef0eb;text-align:center;vertical-align:middle}
+.pn tbody tr:last-child th,.pn tbody tr:last-child td{border-bottom:0}
+.pn tbody th{position:sticky;left:0;z-index:1;background:#f6f7f4;text-align:left;padding-left:12px;font-size:13px;color:#3d4b59;font-weight:600;border-right:1px solid var(--line)}
+.pn thead th{background:#f6f7f4;padding:0}
+.pn thead th.pn-corner{position:sticky;left:0;z-index:1;text-align:left;padding:0 0 10px 12px;font-size:13px;color:#3d4b59;border-right:1px solid var(--line);vertical-align:bottom}
+.pn tr.pn-sep th,.pn tr.pn-sep td{background:#fff3e6}
+.pn tr.pn-sep th{color:#8a4a10}
+.pn input[type=text]{width:100%;max-width:100px;height:38px;margin:0 auto;display:block;text-align:center;padding:0 6px}
+.pn .pn-km0 .field{margin:0}
+.pn .pn-km0 label{display:none}
+.pn .pn-km0 input{max-width:100px}
+.pn .pin-to-in{background:#f4f6f2;border-style:dashed;font-weight:600;color:var(--navy-900);pointer-events:none}
+.pn .pv-a{background:#e4e7e1;border-color:#d3d8cf;font-weight:700;color:#3d4b59;cursor:not-allowed;pointer-events:none}
+.pn .pv-a::placeholder{font-weight:400;color:#a7afa2}
+.pn-unit{position:relative;max-width:104px;margin:0 auto}
+.pn-unit input[type=text]{padding-right:28px}
+.pn-unit>span{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--ink-soft);pointer-events:none}
+.pn td.warn .pin-dist-in{border-color:var(--rust)}
+.pn .pin-arrow{display:block;font-size:11px;font-weight:600;color:var(--navy-700);min-height:14px;line-height:14px}
+.pn td.warn .pin-arrow{color:var(--rust)}
+.pn-dash{color:#b5bcb0}
+.pn-diff{font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:#e4e8e0;color:var(--ink-soft);white-space:nowrap;display:inline-block}
+.pn-diff.ok{background:#e6f5ec;color:#1f8a4c}.pn-diff.warn{background:#fff1e6;color:#c2410c}
+.pn-hdi{border-top:4px solid var(--navy-900);padding:8px 0;display:flex;flex-direction:column;align-items:center;gap:1px;position:relative}
+.pn-hdi.end{border-top-color:#d9610a}
+.pn-hdi small{font-size:11px;font-weight:700;color:#d9610a;height:14px;line-height:14px}
+.pn-hdi b{font-size:14px;color:var(--ink)}
+.pn-hdi .pin-del{position:absolute;top:8px;right:6px;width:24px;height:24px;border:0;background:transparent;color:#9aa39a;border-radius:7px;cursor:pointer;font-size:15px;line-height:1;padding:0}
+.pn-hdi .pin-del:hover{background:#fdecea;color:#c0392b}
+.pn .pn-addth{vertical-align:middle}
+.pn .pin-add{margin:0;width:auto;height:34px;padding:0 12px;white-space:nowrap}
 .draft-box{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;margin-top:0;overflow-x:auto;color:#182430}
 .draft-box svg{width:100%;max-width:100%;height:auto;display:block;margin:0 auto}
 .draft-empty{font-size:13px;color:var(--ink-mute);padding:6px 0}
@@ -1570,42 +1612,33 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
     <div class="card" id="fsecDraft">
       <div class="section-title"><span class="num">3</span> ผลการชี้แนวเขต</div>
-      <div class="pin-layout">
-        <div class="party-block pin-panel">
-          <div class="lg-h">หมุดโฉนด</div>
-          <!-- ช่อง กม. หมุดที่ 1 ถูกย้ายเข้าแถวแรกของรายการช่วงโดยสคริปต์ (renderPinSegs) · ทิศทาง กม.เพิ่ม/ลด ระบบคำนวณเอง เก็บเป็นค่าซ่อน -->
-          <div id="pinKm0Holder" hidden>
-            <div class="field" id="pinKm0Field">
-              <label>กม. หมุด 1</label>
-              <input type="text" id="f_pinKm0" maxlength="11">
-              <input type="hidden" id="f_pinDir" value="up">
-            </div>
+      <div class="pin-tog" id="pinModeTog"><button type="button" class="on" data-mode="form">กรอกข้อมูล</button><button type="button" data-mode="draft">ดูใบร่าง</button></div>
+      <div id="pinFormView">
+        <div class="party-block pin-info">
+          <div class="lg-h">ข้อมูลทางหลวง <span class="hint">(ทางหลวง/ตอน เลือกที่ส่วนที่ 2)</span></div>
+          <div class="pin-info-grid">
+            <div class="field"><label>ทางหลวงหมายเลข</label><input type="text" id="pi_highway" readonly tabindex="-1"></div>
+            <div class="field"><label>ตอน</label><input type="text" id="pi_section" readonly tabindex="-1"></div>
+            <div class="field"><label>ด้าน</label><select id="pi_side"></select></div>
+            <div class="field"><label>หมายเหตุ</label><input type="text" id="f_note" autocomplete="off"></div>
           </div>
-          <div class="pin-rows" id="pinRows"></div>
-          <button type="button" class="pin-add" id="btnAddPin">＋ เพิ่มช่วง (หมุดถัดไป)</button>
         </div>
-        <div class="draft-col">
-          <div class="draft-box">
-            <div id="draftSvgWrap"></div>
-            <!-- ระยะเขตทางแยกต่อหมุด: ช่อง "บัญชี" (ระบบเติมจากฐานข้อมูลกลางตาม กม. ของหมุดนั้น) และ "หน้างาน" อยู่ใต้หมุดแต่ละตัวของผัง (สร้างโดยสคริปต์ updatePinVals) -->
-            <div class="pv-title">ระยะเขตทาง (ม. จากศูนย์กลางทาง) แต่ละหมุด</div>
-            <div id="pinVals" class="pin-vals"></div>
-            <div class="pv-hint"><span class="hint km-hint" id="rowHint"></span></div>
-            <input type="hidden" id="f_rowDistance"><input type="hidden" id="f_rowWork">
-            <!-- รายละเอียดในใบร่าง -->
-            <div class="draft-detail">
-              <div class="dd-title">รายละเอียด</div>
-              <div class="dd-row">- แปลงที่ดินตั้งอยู่บริเวณ : <span id="ddLoc"></span></div>
-              <div class="dd-row" id="ddAreaRow" style="display:none">- เนื้อที่โฉนด : <span id="ddArea"></span></div>
-              <div class="dd-row" id="ddCoordsRow" style="display:none">- พิกัดแปลงที่ดิน : <span id="ddCoords"></span></div>
-              <div class="dd-row dd-note">- หมายเหตุ : <input type="text" class="dd-in dd-wide" id="f_note" autocomplete="off"></div>
-            </div>
+        <!-- ช่อง กม. หมุดที่ 1 ถูกย้ายเข้าตารางโดยสคริปต์ (renderPinSegs) · ทิศทาง กม.เพิ่ม/ลด ระบบคำนวณเอง เก็บเป็นค่าซ่อน -->
+        <div id="pinKm0Holder" hidden>
+          <div class="field" id="pinKm0Field">
+            <label>กม. หมุด 1</label>
+            <input type="text" id="f_pinKm0" maxlength="11">
+            <input type="hidden" id="f_pinDir" value="up">
           </div>
-          <!-- เนื้อที่โฉนด: ไม่แสดงช่องกรอกในฟอร์มแล้ว เก็บช่องซ่อนไว้เพื่อไม่ให้ข้อมูลเรื่องเก่าหาย -->
-          <input type="hidden" id="f_areaRai"><input type="hidden" id="f_areaNgan"><input type="hidden" id="f_areaWa">
         </div>
+        <div class="pin-tablewrap" id="pinRows"></div>
+        <!-- ระยะเขตทาง "บัญชี" ระบบเติมจากฐานข้อมูลกลางตาม กม. ของหมุดนั้น · "หน้างาน" กรอกเอง (สร้างโดย renderPinSegs/updatePinVals) -->
+        <div class="pv-hint"><span class="hint km-hint" id="rowHint"></span></div>
       </div>
-    </div>
+      <div id="pinDraftView" hidden><div class="draft-box"><div id="draftSvgWrap"></div></div></div>
+      <input type="hidden" id="f_rowDistance"><input type="hidden" id="f_rowWork">
+      <!-- เนื้อที่โฉนด: ไม่แสดงช่องกรอกในฟอร์มแล้ว เก็บช่องซ่อนไว้เพื่อไม่ให้ข้อมูลเรื่องเก่าหาย -->
+      <input type="hidden" id="f_areaRai"><input type="hidden" id="f_areaNgan"><input type="hidden" id="f_areaWa">    </div>
 
     <div class="card" id="fsec4">
       <div class="section-title"><span class="num">4</span> ผลการส่งเอกสารไปแขวง</div>
@@ -2304,17 +2337,10 @@ function rowResult(rec){
   return { cls: 'ok', icon: '✅', title: 'กันได้ตามบัญชี' + (anyMore ? ' (เกินบางหมุด)' : ''), sub };
 }
 function updatePinVals(m){
-  const box = document.getElementById('pinVals');
+  const box = document.getElementById('pinRows');
   if (!box) return;
   const base = draftBase(m), kms = pinKms(base, m.pinGaps, m.pinDir), n = kms.length, dir = m.pinDir === 'down' ? 'down' : 'up';
   pvEnsure(n);
-  const geo = draftGeom(n, dir), key = n + '|' + dir;
-  if (box.dataset.key !== key) {   // จำนวนหมุด/ทิศเปลี่ยน → วางช่องใหม่ให้ตรงใต้หมุด (ค่าอยู่ใน PV ไม่หาย)
-    box.dataset.key = key;
-    box.innerHTML = Array.from({ length: n }, (_, i) => `<div class="pv-cell" style="left:${(geo.xOf(i) / geo.W * 100).toFixed(3)}%;--sp:${(geo.step / geo.W * 100).toFixed(3)}">
-      <label>บัญชี</label><input type="text" class="pv-a" data-i="${i}" maxlength="6" inputmode="decimal" autocomplete="off">
-      <label>หน้างาน</label><input type="text" class="pv-w" data-i="${i}" maxlength="6" inputmode="decimal" autocomplete="off"></div>`).join('');
-  }
   // เติม "บัญชี" ของแต่ละหมุดจากฐานข้อมูลกลาง
   const hw = document.getElementById('f_highway').value, side = document.getElementById('f_side').value;
   const master = !!(hw && window.CNMaster && CNMaster.findRightOfWay), rowsDb = master ? CNMaster.rightOfWay(hw) : [];
@@ -2331,12 +2357,9 @@ function updatePinVals(m){
     if (v !== null && v !== undefined && v !== '' && !isNaN(Number(v))) { PV.acct[i] = String(Number(v)); PV.st[i] = '1'; }
     else if (st === '1') { PV.acct[i] = ''; PV.st[i] = ''; }
   });
-  box.querySelectorAll('.pv-cell').forEach((cell, i) => {
-    const a = cell.querySelector('.pv-a'), w = cell.querySelector('.pv-w');
-    if (a.value !== (PV.acct[i] || '') && document.activeElement !== a) a.value = PV.acct[i] || '';
-    if (w.value !== (PV.work[i] || '') && document.activeElement !== w) w.value = PV.work[i] || '';
-    a.classList.toggle('pv-calc', PV.st[i] === '1');
-  });
+  box.querySelectorAll('.pv-a').forEach((a, i) => { const v = PV.acct[i] || ''; if (a.value !== v) a.value = v; a.classList.toggle('pv-calc', PV.st[i] === '1'); });
+  box.querySelectorAll('.pv-w').forEach((w, i) => { const v = PV.work[i] || ''; if (w.value !== v && document.activeElement !== w) w.value = v; });
+  updatePtDiff();
   pvMirror();
   // ข้อความช่วยใต้ช่อง: ด้านยังไม่เลือก/ไม่พบในบัญชี/เขตทางเปลี่ยนระหว่างหมุด
   const hint = document.getElementById('rowHint');
@@ -4226,13 +4249,12 @@ function openCaseDetailModal(id){
             <div class="cd-hd-actions"><button class="cd-copy" id="caseDetailCopy" type="button" title="คัดลอกเป็นรูป" aria-label="คัดลอกเป็นรูป"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><button class="modal-close" id="caseDetailCloseX" type="button">×</button></div>
           </div>
           <div class="cd-cells">
-            <div class="cd-cell"><span class="cd-k">ทางหลวง</span><span class="cd-v">ทล.${escapeHtml(rec.highway)}</span></div>
+            <div class="cd-cell"><span class="cd-k">ทางหลวงหมายเลข</span><span class="cd-v">ทล.${escapeHtml(rec.highway)}</span></div>
             <div class="cd-cell cd-grow"><span class="cd-k">ตอน</span><span class="cd-v">${escapeHtml(rec.section)}</span></div>
-            <div class="cd-cell"><span class="cd-k">กิโลเมตร</span><span class="cd-v">${formatKm(rec.km) ? 'กม.' + escapeHtml(formatKm(rec.km)) : 'ยังไม่ระบุ'}</span></div>${rec.side ? '<div class="cd-cell"><span class="cd-k">ฝั่ง</span><span class="cd-v">' + escapeHtml(rec.side) + '</span></div>' : ''}
+            <div class="cd-cell"><span class="cd-k">กิโลเมตร</span><span class="cd-v">${formatKm(rec.km) ? 'กม.' + escapeHtml(formatKm(rec.km)) : 'ยังไม่ระบุ'}</span></div>${rec.side ? '<div class="cd-cell"><span class="cd-k">ด้าน</span><span class="cd-v">' + escapeHtml(rec.side) + '</span></div>' : ''}
           </div>
         </div>
         <div class="modal-body">
-          ${tilesHtml}
           ${rec.cancelled ? `<div class="cd-card" style="border-color:var(--line);background:var(--paper-2)"><b>ยกเลิก / ถอนเรื่อง</b>${rec.cancelReason ? ' — ' + escapeHtml(rec.cancelReason) : ''}</div>` : ''}
           <div class="cd-cols">
             <div>
@@ -4271,8 +4293,8 @@ function openCaseDetailModal(id){
                 </dl></div>
             </div>
             <div>
-              ${casePhotosCardHtml(rec)}
               ${hasDraftData(rec) ? '<div class="cd-card"><div class="cd-sec">ใบร่างผลการชี้แนวเขต <button type="button" class="btn btn-outline btn-sm" id="btnPrintDraft" style="margin-left:auto">พิมพ์ใบร่าง</button></div><div class="draft-box" style="margin-top:6px">' + draftSvg(draftModelFromRec(rec)) + '</div></div>' : ''}
+              ${casePhotosCardHtml(rec)}
             </div>
           </div>
         </div>
@@ -5018,7 +5040,7 @@ function draftSvg(m, opts){
   const pvArr = (arr, single) => Array.from({ length: N }, (_, i) => String(Array.isArray(arr) ? (arr[i] != null ? arr[i] : '') : (single || '')));
   const RA = pvArr(m.rowAcctList, m.rowDistance), RW = pvArr(m.rowWorkList, m.rowWork);
   const pvDiffer = a => new Set(a).size > 1;
-  const perPin = pvDiffer(RA) || pvDiffer(RW);
+  const perPin = !!(opts && opts.perPin) || pvDiffer(RA) || pvDiffer(RW);
   const valid = kms.filter(k => k !== null);
   const kmTop = valid.length ? Math.min.apply(null, valid) : null, kmEnd = valid.length ? Math.max.apply(null, valid) : null;
   const e = escapeHtml, dots = '……………';
@@ -5031,7 +5053,7 @@ function draftSvg(m, opts){
   s += '<line x1="' + left + '" y1="' + lineY + '" x2="' + right + '" y2="' + lineY + '" stroke="currentColor" stroke-width="3"/>';
   for (let i = 0; i < N; i++) {
     const x = xOf(i);
-    s += '<circle cx="' + x + '" cy="' + lineY + '" r="7" fill="currentColor"/>';
+    s += '<circle cx="' + x + '" cy="' + lineY + '" r="7" fill="' + ((i === 0 || i === N - 1) ? '#d9610a' : 'currentColor') + '"/>';
     s += T(x, 120, kms[i] !== null ? fmtKm2(kms[i]) : dots, { s: 15, c: kms[i] !== null ? null : '#8a949e' });
     s += T(x, 188, 'หมุด ' + (i + 1), { s: 13, c: '#6b7682' });
     if (perPin && !(opts && opts.noDetails)) {
@@ -5040,13 +5062,13 @@ function draftSvg(m, opts){
     }
     if (i < N - 1) {
       const g = gaps[i], mx = (x + xOf(i + 1)) / 2;
-      s += T(mx, lineY - 10, (g !== null && g !== undefined && g !== '') ? (Number(g) + ' ม.') : dots, { s: 14, c: '#a3660a' });
+      s += T(mx, lineY - 10, (g !== null && g !== undefined && g !== '') ? (Number(g) + ' ม.') : dots, { s: 15, b: 1, c: '#0369a1' });
     }
   }
   // กม.ต้น / กม.ปลาย (ปลายทางซ้าย-ขวาของเส้น: ซ้าย = กม.น้อย)
   const leftIdx = dir === 'down' ? N - 1 : 0, rightIdx = dir === 'down' ? 0 : N - 1;
-  s += T(xOf(leftIdx), 94, 'กม.ต้น', { s: 16 });
-  s += T(xOf(rightIdx), 94, 'กม.ปลาย', { s: 16 });
+  s += T(xOf(leftIdx), 94, 'กม.ต้น', { s: 16, b: 1, c: '#d9610a' });
+  s += T(xOf(rightIdx), 94, 'กม.ปลาย', { s: 16, b: 1, c: '#d9610a' });
   // ในฟอร์ม: วาดเฉพาะผังหมุด — ส่วน "รายละเอียด" เป็นช่องกรอกในตัว (HTML) ใต้ผัง · ใบร่างพิมพ์/หน้ารายละเอียดยังวาดครบเหมือนเดิม
   if (opts && opts.noDetails) return '<svg viewBox="0 0 ' + W + ' 206" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ผังหมุดใบร่างงานชี้แนวเขต">' + s + '</svg>';
   // รายละเอียด
@@ -5061,16 +5083,34 @@ function draftSvg(m, opts){
   if (m.note) rows.push(['หมายเหตุ : ', m.note]);
   let y = perPin ? 284 : 244;
   s += T(60, y, 'รายละเอียด', { s: 18, b: 1, a: 'start' });
-  rows.forEach(r => { y += 28; s += '<text x="60" y="' + y + '" font-size="16" fill="currentColor">- ' + e(r[0] + r[1]) + '</text>'; });
+  rows.forEach(r => { y += 28; s += '<text x="60" y="' + y + '" font-size="16" fill="currentColor">- ' + e(r[0]) + '<tspan font-weight="700">' + e(r[1]) + '</tspan></text>'; });
   const H = y + 22;
   return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ใบร่างงานชี้แนวเขต">' + s + '</svg>';
+}
+/* กล่อง "ข้อมูลทางหลวง" ในส่วนที่ 3: ทล./ตอน อ่านจากส่วนที่ 2 (แสดงอย่างเดียว) · ด้าน = ช่องเลือกคู่กับ f_side (แก้ที่ไหนก็ตรงกัน) */
+function syncPinInfo(){
+  const g = id => document.getElementById(id), hw = g('f_highway'), fs = g('f_side'), ps = g('pi_side');
+  const setv = (id, v) => { const el = g(id); if (el && el.value !== v) el.value = v; };
+  setv('pi_highway', hw && hw.value ? ((hw.selectedOptions && hw.selectedOptions[0]) ? hw.selectedOptions[0].textContent.trim() : hw.value) : '');
+  setv('pi_section', g('f_section') ? g('f_section').value : '');
+  if (ps && fs) { if (ps.options.length !== fs.options.length) ps.innerHTML = fs.innerHTML; if (ps.value !== fs.value) ps.value = fs.value; }
+}
+function updatePtDiff(){   // ส่วนต่าง = หน้างาน − บัญชี (ติดลบ = กันไม่ครบตามบัญชี)
+  document.querySelectorAll('#pinRows .pn-diff').forEach(el => {
+    const i = +el.dataset.i, a = parseFloat(PV.acct[i]), w = parseFloat(PV.work[i]);
+    if (isNaN(a) || isNaN(w)) { el.textContent = '–'; el.className = 'pn-diff'; return; }
+    const df = Math.round((w - a) * 100) / 100;
+    el.textContent = (df > 0 ? '+' : '') + df.toFixed(2) + ' ม.';
+    el.className = 'pn-diff ' + (df >= 0 ? 'ok' : 'warn');
+  });
 }
 function updateDraftPreview(){
   const wrap = document.getElementById('draftSvgWrap');
   if (!wrap) return;
+  syncPinInfo();
   let m = draftModelFromForm();
   try { updatePinVals(m); m = draftModelFromForm(); } catch (e) { console.error(e); }   // เติม "ระยะเขตทางตามบัญชี" ต่อหมุดจากฐานข้อมูลกลาง
-  wrap.innerHTML = draftSvg(m, { noDetails: true });
+  wrap.innerHTML = draftSvg(m, { perPin: true });
   // ข้อความในส่วนรายละเอียดใต้ผัง (ช่องกรอก ระยะเขตทาง 2 ช่อง อยู่ในบรรทัดเองและไม่ถูกวาดใหม่ จึงพิมพ์ต่อเนื่องได้)
   const dots = '……………', set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
   set('ddLoc', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots));
@@ -5101,46 +5141,25 @@ function parseDist(t){
 }
 function derivePins(){
   const base = pinBase(), dirEl = document.getElementById('f_pinDir');
-  const rows = [...document.querySelectorAll('#pinRows .pin-seg')];
+  const dIns = [...document.querySelectorAll('#pinRows .pin-dist-in')], tIns = [...document.querySelectorAll('#pinRows .pin-to-in')];
   let prev = base, dirKnown = null;
   const gaps = [], info = [];
-  rows.forEach(row => {
-    const fromIn = row.querySelector('.pin-from-in'), dIn = row.querySelector('.pin-dist-in'), tIn = row.querySelector('.pin-to-in');
-    if (fromIn) fromIn.value = prev !== null ? fmtKm2(prev) : '';
-    const dTxt = dIn.value.trim(), tTxt = tIn.value.trim();
-    let src = row.dataset.src || '';
-    if (!src) src = (dTxt && !tTxt) ? 'dist' : (tTxt ? 'to' : '');
+  dIns.forEach((dIn, i) => {
+    const tIn = tIns[i], cell = dIn.closest('td'), d = parseDist(dIn.value);
     let gap = null, warn = false, rowDir = null, next = null;
-    if (src === 'to') {
-      const tk = parseKm(tTxt);
-      if (tk !== null) {
-        if (prev !== null) {
-          const diff = r2(tk - prev);
-          gap = Math.abs(diff); rowDir = diff > 0 ? 'up' : (diff < 0 ? 'down' : null);
-          if (rowDir && dirKnown === null) dirKnown = rowDir;
-          warn = !!(rowDir && dirKnown && rowDir !== dirKnown);
-          dIn.value = (rowDir === 'down' ? '-' : '') + gap;
-        }
-        next = tk;
-      } else if (!dTxt || row.dataset.src) dIn.value = '';
-    } else if (src === 'dist') {
-      const d = parseDist(dTxt);
-      if (d) {
-        gap = d.abs;
-        rowDir = d.neg ? 'down' : (dirKnown || (dirEl.value === 'down' ? 'down' : 'up'));
-        warn = !!(d.neg && d.abs !== 0 && dirKnown === 'up');
-        if (d.neg && d.abs !== 0 && dirKnown === null) dirKnown = 'down';
-        if (prev !== null) { next = r2(prev + (rowDir === 'down' ? -1 : 1) * gap); tIn.value = fmtKm2(next); } else tIn.value = '';
-      } else tIn.value = '';
-    }
-    dIn.classList.toggle('pin-calc', src === 'to' && dIn.value !== '');
-    tIn.classList.toggle('pin-calc', src === 'dist' && tIn.value !== '');
-    const arrow = row.querySelector('.pin-arrow');
+    if (d) {
+      gap = d.abs;
+      rowDir = d.neg ? 'down' : (dirKnown || (dirEl.value === 'down' ? 'down' : 'up'));
+      warn = !!(d.neg && d.abs !== 0 && dirKnown === 'up');
+      if (d.neg && d.abs !== 0 && dirKnown === null) dirKnown = 'down';
+      if (prev !== null) { next = r2(prev + (rowDir === 'down' ? -1 : 1) * gap); if (tIn) tIn.value = fmtKm2(next); } else if (tIn) tIn.value = '';
+    } else if (tIn) tIn.value = '';
+    const arrow = cell && cell.querySelector('.pin-arrow');
     if (arrow) {
       arrow.textContent = warn ? '⚠' : (gap ? (rowDir === 'down' ? '▼' : '▲') : '');
       arrow.title = warn ? 'สวนทิศกับช่วงก่อนหน้า — ตรวจสอบ กม.' : (gap ? (rowDir === 'down' ? 'กม. ลดลง' : 'กม. เพิ่มขึ้น') : '');
     }
-    row.classList.toggle('warn', warn);
+    if (cell) cell.classList.toggle('warn', warn);
     gaps.push(gap); info.push({ warn, gap });
     prev = next;
   });
@@ -5149,91 +5168,106 @@ function derivePins(){
   return { base, gaps, dir: out, info };
 }
 function pinSegStates(){
-  return [...document.querySelectorAll('#pinRows .pin-seg')].map(r => ({ d: r.querySelector('.pin-dist-in').value, t: r.querySelector('.pin-to-in').value, src: r.dataset.src || '' }));
+  return [...document.querySelectorAll('#pinRows .pin-dist-in')].map(r => ({ d: r.value }));
 }
-function renderPinSegs(states, newIdx){
+/* ตารางสลับแกน: 1 คอลัมน์ = 1 หมุด · แถว กม. / ระยะถึงหมุดถัดไป / ระยะเขตทางบัญชี / หน้างาน / ส่วนต่าง
+   - กรอก "กม. หมุด 1" + ระยะถึงหมุดถัดไป → กม. หมุด 2 เป็นต้นไป ระบบคำนวณให้ (ช่องแก้ไม่ได้) · ใส่เครื่องหมาย - หน้าระยะ = กม.ลดลง
+   - ระยะบัญชีเติมจากฐานข้อมูลกลาง (แก้ไม่ได้) */
+function renderPinSegs(states){
   const box = document.getElementById('pinRows'), holder = document.getElementById('pinKm0Holder'), f0 = document.getElementById('pinKm0Field');
   if (!box) return;
-  if (f0 && holder) holder.appendChild(f0);   // เก็บช่อง กม. หมุดที่ 1 ไว้ก่อนวาดแถวใหม่ (ไม่ให้ค่าหาย)
-  const list = (Array.isArray(states) && states.length) ? states : [{ d: '', t: '', src: '' }];
-  box.innerHTML = list.map((s, i) => `
-    <div class="pin-seg${i === newIdx ? ' pin-new' : ''}" data-src="${escapeHtml(s.src || '')}">
-      ${i === 0 ? '<span class="pin-from-slot"></span>' : '<div class="field"><label>กม. หมุด ' + (i + 1) + '</label><input type="text" class="pin-from-in" readonly tabindex="-1"></div>'}
-      <div class="field"><label>ระยะ ม. <span class="pin-arrow"></span></label><input type="text" class="pin-dist-in" inputmode="decimal" maxlength="7" value="${escapeHtml(String(s.d || ''))}"></div>
-      <div class="field"><label>กม. หมุด ${i + 2}</label><input type="text" class="pin-to-in" maxlength="11" value="${escapeHtml(String(s.t || ''))}"></div>
-      <button type="button" class="pin-del" title="ลบช่วงนี้" ${list.length < 2 ? 'disabled style="visibility:hidden"' : ''}>✕</button>
-    </div>`).join('');
-  const slot = box.querySelector('.pin-from-slot');
-  if (slot && f0) slot.replaceWith(f0);
+  if (f0 && holder) holder.appendChild(f0);   // เก็บช่อง กม. หมุดที่ 1 ไว้ก่อนวาดตารางใหม่ (ไม่ให้ค่าหาย)
+  const list = (Array.isArray(states) && states.length) ? states : [{ d: '' }];
+  const n = list.length + 1, A = k => Array.from({ length: n }, (_, i) => k(i)).join('');
+  pvEnsure(n);
+  const head = A(i => {
+    const end = i === 0 || i === n - 1;
+    return `<th><div class="pn-hdi${end ? ' end' : ''}"><small>${i === 0 ? 'กม.ต้น' : (i === n - 1 ? 'กม.ปลาย' : '')}</small><b>หมุด ${i + 1}</b>${n > 2 ? `<button type="button" class="pin-del" data-i="${i}" title="ลบหมุดนี้">×</button>` : ''}</div></th>`;
+  });
+  const unit = inner => `<div class="pn-unit">${inner}<span>ม.</span></div>`;
+  box.innerHTML = `<table class="pn"><colgroup><col style="width:180px">${A(() => '<col style="width:128px">')}<col style="width:120px"><col></colgroup>
+    <thead><tr><th class="pn-corner">หมุดโฉนด</th>${head}<th class="pn-addth"><button type="button" class="pin-add">+ เพิ่มหมุด</button></th><th></th></tr></thead>
+    <tbody>
+      <tr><th>กม.</th>${A(i => i === 0 ? '<td class="pn-km0"></td>' : '<td><input type="text" class="pin-to-in" readonly tabindex="-1"></td>')}<td></td><td></td></tr>
+      <tr class="pn-sep"><th>ระยะถึงหมุดถัดไป (ม.)</th>${A(i => i < n - 1 ? `<td>${unit(`<input type="text" class="pin-dist-in" inputmode="decimal" maxlength="7" value="${escapeHtml(String(list[i].d || ''))}">`)}<span class="pin-arrow"></span></td>` : '<td class="pn-dash">—</td>')}<td></td><td></td></tr>
+      <tr><th>ระยะบัญชี (ม.)</th>${A(i => `<td>${unit(`<input type="text" class="pv-a" data-i="${i}" maxlength="6" readonly tabindex="-1" placeholder="จากบัญชี">`)}</td>`)}<td></td><td></td></tr>
+      <tr><th>ระยะหน้างาน (ม.)</th>${A(i => `<td>${unit(`<input type="text" class="pv-w" data-i="${i}" maxlength="6" inputmode="decimal" autocomplete="off" placeholder="0.00">`)}</td>`)}<td></td><td></td></tr>
+      <tr><th>ส่วนต่าง (หน้างาน − บัญชี)</th>${A(i => `<td><span class="pn-diff" data-i="${i}">–</span></td>`)}<td></td><td></td></tr>
+    </tbody></table>`;
+  const slot = box.querySelector('.pn-km0');
+  if (slot && f0) slot.appendChild(f0);
   updateDraftPreview();
 }
-// โหลดเรื่องที่บันทึกไว้ (เก็บเป็นระยะห่าง + ทิศทาง) → แปลงกลับเป็นช่อง กม. ปลายของแต่ละช่วง
-function renderPinRows(gaps, newIdx){
+// โหลดเรื่องที่บันทึกไว้ (เก็บเป็นระยะห่าง + ทิศทาง) → ใส่ช่อง "ระยะถึงหมุดถัดไป" ของแต่ละช่วง
+function renderPinRows(gaps){
   const list = (Array.isArray(gaps) && gaps.length) ? gaps : [null];
   const dir = document.getElementById('f_pinDir').value === 'down' ? 'down' : 'up';
-  const kms = pinKms(pinBase(), list, dir).slice(1);
-  renderPinSegs(list.map((g, i) => {
-    if (kms[i] !== null && kms[i] !== undefined) return { d: '', t: fmtKm2(kms[i]), src: 'to' };
-    if (g !== null && g !== undefined && g !== '') return { d: (dir === 'down' ? '-' : '') + g, t: '', src: 'dist' };
-    return { d: '', t: '', src: '' };
-  }), newIdx);
+  renderPinSegs(list.map(g => ({ d: (g !== null && g !== undefined && g !== '') ? ((dir === 'down' ? '-' : '') + g) : '' })));
 }
 function currentGaps(){ return derivePins().gaps; }
 function initDraftCard(){
   const box = document.getElementById('pinRows');
   box.addEventListener('input', e => {
-    const t = e.target, row = t.closest('.pin-seg');
-    if (!row) return;
+    const t = e.target;
     if (t.classList.contains('pin-dist-in')) {
       t.value = t.value.replace(/[^0-9.\-]/g, '').replace(/(?!^)-/g, '');
-      row.dataset.src = t.value ? 'dist' : '';
-      if (!t.value) row.querySelector('.pin-to-in').value = '';
-    } else if (t.classList.contains('pin-to-in')) {
-      t.value = t.value.replace(/[^0-9+.]/g, '');
-      row.dataset.src = t.value ? 'to' : '';
-      if (!t.value) row.querySelector('.pin-dist-in').value = '';
+      updateDraftPreview();
+    } else if (t.classList.contains('pv-w')) {   // หน้างาน: เจ้าหน้าที่กรอกเอง
+      t.value = t.value.replace(/[^0-9.]/g, '');
+      PV.work[+t.dataset.i] = t.value;
+      pvMirror(); updatePtDiff();
     }
-    updateDraftPreview();
   });
   // ออกจากช่อง: จัดรูปแบบ กม. ให้เป็นมาตรฐาน (พิมพ์ 1025.5 → 1+025.5)
   const normKm = el => { const k = parseKm(el.value.trim()); if (k !== null) el.value = fmtKm2(k); };
-  box.addEventListener('focusout', e => { if (e.target.classList.contains('pin-to-in')) { normKm(e.target); updateDraftPreview(); } });
-  document.getElementById('f_pinKm0').addEventListener('blur', e => { normKm(e.target); updateDraftPreview(); });
-  box.addEventListener('click', e => {
-    const b = e.target.closest('.pin-del');
-    if (!b) return;
-    const s = pinSegStates(), idx = [...box.querySelectorAll('.pin-del')].indexOf(b);
-    s.splice(idx, 1);
-    ['acct', 'work', 'st'].forEach(k => PV[k].splice(idx + 1, 1));   // ลบช่วง = ลบหมุดปลายของช่วงนั้น → ลบค่าเขตทางของหมุดนั้นด้วย
+  const km0 = document.getElementById('f_pinKm0');
+  km0.addEventListener('blur', e => { normKm(e.target); updateDraftPreview(); });
+  km0.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); normKm(km0); updateDraftPreview(); const f = box.querySelector('.pin-dist-in'); if (f) f.focus(); } });
+  // ลบหมุด: หมุดแรก = ใช้ กม. หมุดถัดไปเป็นหมุดแรกแทน · หมุดกลาง = รวมระยะสองช่วงเข้าด้วยกัน · หมุดสุดท้าย = ตัดช่วงสุดท้ายออก
+  const delPin = i => {
+    const s = pinSegStates(), n = s.length + 1;
+    if (n <= 2) return;
+    if (i === 0) { const t0 = box.querySelector('.pin-to-in'); if (t0 && t0.value) km0.value = t0.value; s.splice(0, 1); }
+    else if (i === n - 1) s.splice(n - 2, 1);
+    else {
+      const a = parseDist(s[i - 1].d), b = parseDist(s[i].d);
+      s[i - 1].d = (a && b) ? String(r2((a.neg ? -a.abs : a.abs) + (b.neg ? -b.abs : b.abs))) : '';
+      s.splice(i, 1);
+    }
+    ['acct', 'work', 'st'].forEach(k => PV[k].splice(i, 1));   // ลบหมุด = ลบค่าเขตทางของหมุดนั้นด้วย
     renderPinSegs(s);
+  };
+  // เพิ่มหมุด: คอลัมน์ใหม่ขึ้นทันที (กม. คำนวณจากหมุดก่อนหน้า) + ใบร่างวาดหมุดใหม่ แล้วเลื่อนเคอร์เซอร์ไปช่องระยะ
+  const addPin = () => {
+    const s = pinSegStates(); s.push({ d: '' }); renderPinSegs(s);
+    const last = [...box.querySelectorAll('.pin-dist-in')].pop();
+    if (last) { last.focus(); last.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+  };
+  box.addEventListener('click', e => {
+    if (e.target.closest('.pin-add')) { addPin(); return; }
+    const b = e.target.closest('.pin-del');
+    if (b) delPin(+b.dataset.i);
   });
-  // เพิ่มช่วง: แถวใหม่ขึ้นทันที (กม. ต้นมาจากช่วงก่อนหน้าเอง) + ใบร่างวาดหมุดใหม่ทันที แล้วเลื่อนเคอร์เซอร์ไปช่องระยะ
-  const addPin = () => { const s = pinSegStates(); s.push({ d: '', t: '', src: '' }); renderPinSegs(s, s.length - 1); const last = box.querySelector('.pin-seg:last-child .pin-dist-in'); if (last) { last.focus(); last.scrollIntoView({ block: 'nearest' }); } };
-  document.getElementById('btnAddPin').addEventListener('click', addPin);
-  // Enter: ช่องระยะ → ไปช่อง กม. ปลาย · ช่อง กม. ปลายของช่วงล่าสุด (มีค่าแล้ว) → เพิ่มช่วงถัดไป
+  // Enter: ระยะ → ระยะของหมุดถัดไป · ระยะช่องสุดท้าย (มีค่า) → เพิ่มหมุด · (ว่าง) → ไปช่องหน้างาน · หน้างาน → หน้างานหมุดถัดไป
   box.addEventListener('keydown', e => {
     if (e.key !== 'Enter') return;
-    const t = e.target, row = t.closest && t.closest('.pin-seg');
-    if (!row) return;
+    const t = e.target, isD = t.classList.contains('pin-dist-in'), isW = t.classList.contains('pv-w');
+    if (!isD && !isW) return;
     e.preventDefault();
-    if (t.classList.contains('pin-dist-in')) { row.querySelector('.pin-to-in').focus(); return; }
-    if (!t.classList.contains('pin-to-in')) return;
-    normKm(t);
-    const rows = [...box.querySelectorAll('.pin-seg')];
-    if (row === rows[rows.length - 1]) { if (t.value.trim() !== '' || row.querySelector('.pin-dist-in').value.trim() !== '') addPin(); }
-    else rows[rows.indexOf(row) + 1].querySelector('.pin-dist-in').focus();
+    const all = [...box.querySelectorAll(isD ? '.pin-dist-in' : '.pv-w')], i = all.indexOf(t);
+    if (i < all.length - 1) { all[i + 1].focus(); return; }
+    if (isD) { if (t.value.trim() !== '') addPin(); else { const w = box.querySelector('.pv-w'); if (w) w.focus(); } }
   });
-  // ช่องระยะเขตทางใต้หมุด: เจ้าหน้าที่พิมพ์/ล้างเอง = หยุดเติมอัตโนมัติของหมุดนั้น (จนกว่าจะเปลี่ยน ทล./กม./ด้าน แล้วช่องยังว่าง)
-  const pvBox = document.getElementById('pinVals');
-  pvBox.addEventListener('input', e => {
-    const t = e.target, i = +t.dataset.i;
-    if (isNaN(i)) return;
-    t.value = t.value.replace(/[^0-9.]/g, '');
-    if (t.classList.contains('pv-a')) { PV.acct[i] = t.value; PV.st[i] = '0'; t.classList.remove('pv-calc'); }
-    else if (t.classList.contains('pv-w')) PV.work[i] = t.value;
-    pvMirror();
+  // สลับโหมด กรอกข้อมูล / ดูใบร่าง
+  document.getElementById('pinModeTog').addEventListener('click', e => {
+    const b = e.target.closest('[data-mode]');
+    if (b) setPinMode(b.dataset.mode);
   });
-  ['f_highway', 'f_pinKm0', 'f_side'].forEach(id => {
+  // ด้าน (กล่องข้อมูลทางหลวง) = ช่องเลือกคู่กับ f_side ในส่วนที่ 2
+  const ps = document.getElementById('pi_side'), fs = document.getElementById('f_side');
+  ps.innerHTML = fs.innerHTML; ps.value = fs.value;
+  ps.addEventListener('change', () => { fs.value = ps.value; fs.dispatchEvent(new Event('input', { bubbles: true })); fs.dispatchEvent(new Event('change', { bubbles: true })); });
+  document.getElementById('f_note').addEventListener('input', updateDraftPreview);  ['f_highway', 'f_pinKm0', 'f_side'].forEach(id => {
     const el = document.getElementById(id);
     const reset = () => { if (pvResetStates()) updateDraftPreview(); };
     el.addEventListener('input', reset); el.addEventListener('change', reset);
@@ -5253,6 +5287,13 @@ function initDraftCard(){
   document.getElementById('btnAddStaff').addEventListener('click', () => openStaffModal(''));
   refreshRepOptions('');
 }
+function setPinMode(mode){
+  const dr = mode === 'draft';
+  document.getElementById('pinFormView').hidden = dr;
+  document.getElementById('pinDraftView').hidden = !dr;
+  document.querySelectorAll('#pinModeTog [data-mode]').forEach(b => b.classList.toggle('on', (b.dataset.mode === 'draft') === dr));
+  if (dr) updateDraftPreview();
+}
 // เติมช่องเฉพาะส่วนใหม่หลังโหลด/ล้างฟอร์ม
 function afterFormFill(rec){
   rec = rec || {};
@@ -5268,6 +5309,7 @@ function afterFormFill(rec){
   if (dir.value !== 'down') dir.value = 'up';
   syncSectionView();
   refreshRepOptions(rec.repId || '');
+  setPinMode('form');
   renderPinRows(Array.isArray(rec.pinGaps) ? rec.pinGaps : []);
 }
 function printDraft(m){
