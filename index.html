@@ -5168,7 +5168,8 @@ function draftSvg(m, opts){
   if (opts && opts.noDetails) return '<svg viewBox="0 0 ' + W + ' ' + (206 + (RN.some(Boolean) ? 28 : 0)) + '" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ผังหมุดใบร่างงานชี้แนวเขต">' + s + '</svg>';
   // รายละเอียด
   const areaBits = [[m.areaRai, 'ไร่'], [m.areaNgan, 'งาน'], [m.areaWa, 'ตร.วา']].filter(p => p[0] !== '' && p[0] != null).map(p => p[0] + ' ' + p[1]).join(' ');
-  const rows = [['แปลงที่ดินตั้งอยู่บริเวณ : ', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots), m.note ? 'หมายเหตุ : ' + m.note : '']];   // หมายเหตุต่อท้ายบรรทัดนี้
+  const rows = [['แปลงที่ดินตั้งอยู่บริเวณ : ', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots)]];
+  rows.push(['หมายเหตุ : ', m.note || dots]);   // บรรทัดถัดจากที่ตั้ง · ว่าง = จุดไข่ปลา (รูปแบบเดียวกับบรรทัดบน)
   if (!perPin) {
     rows.push(['ระยะเขตทางตามบัญชี : ', (RA[0] ? RA[0] : dots) + ' ม.']);
     rows.push(['ระยะเขตทางกันแนวเขตหน้างาน : ', (RW[0] ? RW[0] : dots) + ' ม.']);
