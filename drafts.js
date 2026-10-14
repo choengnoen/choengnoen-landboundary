@@ -162,10 +162,10 @@
   // บรรทัดเดียวของหนึ่งร่าง
   function rowHtml(r) {
     var d = r.d, v = r.v, closed = r.closed;
-    var canEdit = !d.caseId && d.status !== 'cancelled';
+    var canEdit = !d.caseId && d.status !== 'cancelled' && !(d.km == null && d.parcel);   // ร่างจาก LINE ที่ใช้พิกัดแปลงแทน กม. แก้ในฟอร์มนี้ไม่ได้ (ฟอร์มบังคับ กม.)
     var canCancel = ACC ? true : !closed;
     return '<div class="dr-ln" role="button" tabindex="0" data-id="' + esc(d.id) + '">' +
-      '<span class="dr-t">ทล.' + esc(d.highway) + sectionText(d.highway) + '<span class="dr-k">กม.' + esc(fmtKm(d.km)) + '</span></span>' +
+      '<span class="dr-t">ทล.' + esc(d.highway) + sectionText(d.highway) + '<span class="dr-k">' + (d.km == null && d.parcel ? 'พิกัดแปลง ' + esc(d.parcel) : 'กม.' + esc(fmtKm(d.km))) + '</span></span>' +
       '<span class="dr-n">' + esc(d.note || '') + '</span>' +
       '<span class="dr-d">' + (v.due ? 'ครบ ' + esc(tdate(v.due)) : esc(tdate(v.start))) + '</span>' +
       chip(v) + (d.caseId ? '<span class="dr-chip g">บันทึกเคสแล้ว</span>' : '') +
@@ -368,7 +368,7 @@
     FBL.watch('drafts', function (col, docs) { drafts = docs.map(norm); render(); }).then(function (docs) { drafts = docs.map(norm); render(); });
   }
   function norm(d) {
-    return { id: d.id || d.__id, startDate: d10(d.startDate), highway: String(d.highway == null ? '' : d.highway), km: (d.km == null || d.km === '') ? null : Number(d.km),
+    return { id: d.id || d.__id, startDate: d10(d.startDate), highway: String(d.highway == null ? '' : d.highway), km: (d.km == null || d.km === '') ? null : Number(d.km), parcel: d.parcel ? String(d.parcel) : '',
       caseId: d.caseId || '', status: d.status === 'cancelled' ? 'cancelled' : 'open', source: d.source || '', note: d.note || '', createdAt: d.createdAt || '', createdBy: d.createdBy || '' };
   }
 
