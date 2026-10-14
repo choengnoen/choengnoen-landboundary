@@ -1796,6 +1796,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <div class="section-title">รายปีงบประมาณ</div>
         <div style="position:relative;height:260px" id="trendChartWrap"><canvas id="trendChart"></canvas></div>
         <p class="hint" id="trendChartEmpty" style="display:none">ไม่มีข้อมูล</p>
+        <div id="trendOlder"></div>
       </div>
     </div>
   </div>
@@ -1979,6 +1980,7 @@ let dashYear = 'ทั้งหมด';
 let teamConfig = { ownerName: '', members: [] };
 let barChartInstance = null;
 let trendChartInstance = null;
+let trendOlderOpen = false; // กราฟรายปีงบ: แสดง 10 ปีล่าสุด ปีเก่ากว่านั้นซ่อนเป็นตาราง กดปุ่มเพื่อเปิดดู
  
 
 
@@ -2077,12 +2079,36 @@ function renderHighwayBarChart(hwRoutesSorted, byHw){
 }
 
 
-function renderTrendChart(years, totalByYear){
+function renderTrendOlder(olderYears, totalByYear){
+  const box = document.getElementById('trendOlder');
+  if (!box) return;
+  if (!olderYears.length) { box.innerHTML = ''; return; }
+  const list = olderYears.slice().sort((a,b) => b - a); // ใหม่→เก่า
+  const maxCount = Math.max(...list.map(y => totalByYear[y] || 0), 1);
+  box.innerHTML = `
+    <div style="text-align:center;margin-top:8px"><a class="link-btn" id="trendOlderLink">${trendOlderOpen ? '▲ ซ่อนปีก่อนหน้า' : '▼ ดูปีก่อนหน้า ' + list.length + ' ปี'}</a></div>
+    ${trendOlderOpen ? `
+      <table class="spot-table">
+        <thead><tr><th>ปีงบประมาณ</th><th style="width:45%"></th><th style="text-align:right">เรื่อง</th></tr></thead>
+        <tbody>${list.map(y => `
+          <tr><td>ปีงบ ${escapeHtml(String(y))}</td>
+          <td><div class="mini-track"><i style="width:${Math.round((totalByYear[y] || 0) / maxCount * 100)}%;background:linear-gradient(90deg,#5cbfb1,#1f7a70)"></i></div></td>
+          <td class="mono" style="text-align:right"><b>${totalByYear[y] || 0}</b></td></tr>`).join('')}
+        </tbody>
+      </table>` : ''}`;
+  const link = document.getElementById('trendOlderLink');
+  if (link) link.onclick = () => { trendOlderOpen = !trendOlderOpen; renderTrendOlder(olderYears, totalByYear); };
+}
+
+function renderTrendChart(allYears, totalByYear){
   const canvas = document.getElementById('trendChart');
   const wrap = document.getElementById('trendChartWrap');
   const emptyHint = document.getElementById('trendChartEmpty');
   if (!canvas || !window.Chart) return;
   if (trendChartInstance) { trendChartInstance.destroy(); trendChartInstance = null; }
+  // กราฟแสดง 10 ปีงบล่าสุด (ปีล่าสุดอยู่บนสุด) ปีที่เก่ากว่านั้นไปอยู่ในตารางที่กดดูได้
+  const years = allYears.slice(-10).reverse();
+  renderTrendOlder(allYears.slice(0, Math.max(0, allYears.length - 10)), totalByYear);
   if (!years.length) {
     canvas.style.display = 'none';
     if (emptyHint) emptyHint.style.display = '';
