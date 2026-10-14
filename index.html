@@ -1023,8 +1023,7 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pn-unit input[type=text]{padding-right:28px}
 .pn-unit>span{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--ink-soft);pointer-events:none}
 .pn td.warn .pin-dist-in{border-color:var(--rust)}
-.pn .pin-arrow{display:block;font-size:11px;font-weight:600;color:var(--navy-700);min-height:14px;line-height:14px}
-.pn td.warn .pin-arrow{color:var(--rust)}
+.pn .pin-arrow{display:block;font-size:10px;font-weight:600;color:var(--navy-700);height:0;line-height:10px;position:relative;top:1px;overflow:visible;white-space:nowrap}.pn td.warn .pin-arrow{color:var(--rust)}
 .pn-dash{color:#b5bcb0}
 .pn-diff{font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;background:#e4e8e0;color:var(--ink-soft);white-space:nowrap;display:inline-block}
 .pn-diff.ok{background:#e6f5ec;color:#1f8a4c}.pn-diff.warn{background:#fff1e6;color:#c2410c}
@@ -1037,8 +1036,20 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pn .pn-addth{vertical-align:middle}
 .pn .pin-add{margin:0;width:auto;height:36px;padding:0 16px;white-space:nowrap;background:#fff;border:1px solid var(--line);border-radius:10px;color:var(--navy-900);box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .pn .pin-add:hover{border-color:var(--amber-500);color:var(--amber)}
+/* ทุกแถว (รวมหัวตาราง) สูงเท่ากัน = 40px → ตารางทั้งก้อนสูง 7×40 = 280px ไม่ล้นหน้าต่างโมดัล */
+.pn th,.pn td{height:40px;box-sizing:border-box;padding-top:0;padding-bottom:0}
+.pn tr.pn-sep .pn-unit{margin-top:-5px}
+.pn-hdi{box-sizing:border-box;height:40px;padding:0;justify-content:center}
+.pn-hdi small{height:12px;line-height:12px;font-size:10px}
+.pn-hdi b{line-height:16px}
+.pn-hdi .pin-del{top:8px}
+.pn .pin-add{height:30px}
+.pn input[type=text]{height:28px}
 .draft-box{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;margin-top:0;overflow-x:auto;color:#182430}
 .draft-box svg{width:100%;max-width:100%;height:auto;display:block;margin:0 auto}
+/* ใบร่างในโมดัล: ย่อสเกลให้พอดีความสูงหน้าต่าง เห็นครบทั้งผังหมุด + รายละเอียด โดยไม่ต้องเลื่อน (ตัวอักษรไม่ถูกขยายเกินจริง) */
+#pinDraftView .draft-box{padding:6px 10px;overflow:hidden}
+#pinDraftView .draft-box svg{max-height:calc(100vh - 380px);min-height:240px}
 .draft-empty{font-size:13px;color:var(--ink-mute);padding:6px 0}
 .ref-field{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;transition:border-color .15s ease,box-shadow .15s ease}
 .ref-field:focus-within{border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(224,98,15,.14)}
