@@ -993,7 +993,7 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pin-add:hover{border-color:var(--amber-500);color:var(--amber)}
 @media(max-width:900px){.pin-layout{grid-template-columns:1fr}}
 /* ผลการชี้แนวเขต (ตารางสลับแกน): หมุด 1 หมุดต่อ 1 คอลัมน์ · สลับโหมด กรอกข้อมูล / ดูใบร่าง */
-.pin-tog{display:inline-flex;background:var(--paper-2);border-radius:12px;padding:4px;gap:4px;margin-bottom:12px}
+.pin-tog{display:inline-flex;background:var(--paper-2);border-radius:12px;padding:4px;gap:4px;margin:-6px 0 -6px auto;font-family:'Sarabun',sans-serif;font-weight:400}
 .pin-tog button{border:0;background:transparent;padding:8px 18px;border-radius:9px;font:600 14px 'Sarabun',sans-serif;color:var(--ink-soft);cursor:pointer}
 .pin-tog button.on{background:#fff;color:var(--navy-900);box-shadow:0 1px 4px rgba(0,0,0,.18)}
 .pin-info{margin-bottom:12px}
@@ -1003,14 +1003,16 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 @media(max-width:900px){.pin-info-grid{grid-template-columns:1fr 1fr}}
 .pin-tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
 .pn{border-collapse:collapse;width:100%;table-layout:fixed}
-.pn th,.pn td{padding:6px 4px;border-bottom:1px solid #eef0eb;text-align:center;vertical-align:middle}
+.pn th,.pn td{padding:3px 4px;border-bottom:1px solid #eef0eb;text-align:center;vertical-align:middle}
 .pn tbody tr:last-child th,.pn tbody tr:last-child td{border-bottom:0}
 .pn tbody th{position:sticky;left:0;z-index:1;background:#f6f7f4;text-align:left;padding-left:12px;font-size:13px;color:#3d4b59;font-weight:600;border-right:1px solid var(--line)}
 .pn thead th{background:#f6f7f4;padding:0}
 .pn thead th.pn-corner{position:sticky;left:0;z-index:1;text-align:left;padding:0 0 10px 12px;font-size:13px;color:#3d4b59;border-right:1px solid var(--line);vertical-align:bottom}
 .pn tr.pn-sep th,.pn tr.pn-sep td{background:#fff3e6}
 .pn tr.pn-sep th{color:#8a4a10}
-.pn input[type=text]{width:100%;max-width:100px;height:38px;margin:0 auto;display:block;text-align:center;padding:0 6px}
+.pn input[type=text]{width:100%;max-width:100px;height:30px;font-size:14px;margin:0 auto;display:block;text-align:center;padding:0 6px}
+.pn :where(input[type=text]){font-family:'Sarabun',sans-serif;font-size:15px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);transition:border-color .15s ease,box-shadow .15s ease}
+.pn :where(input[type=text]):focus{outline:none;border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(224,98,15,.14)}
 .pn .pn-km0 .field{margin:0}
 .pn .pn-km0 label{display:none}
 .pn .pn-km0 input{max-width:100px}
@@ -1033,7 +1035,7 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pn-hdi .pin-del{position:absolute;top:8px;right:6px;width:24px;height:24px;border:0;background:transparent;color:#9aa39a;border-radius:7px;cursor:pointer;font-size:15px;line-height:1;padding:0}
 .pn-hdi .pin-del:hover{background:#fdecea;color:#c0392b}
 .pn .pn-addth{vertical-align:middle}
-.pn .pin-add{margin:0;width:auto;height:44px;padding:0 16px;white-space:nowrap;background:#fff;border:1px solid var(--line);border-radius:10px;color:var(--navy-900);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.pn .pin-add{margin:0;width:auto;height:36px;padding:0 16px;white-space:nowrap;background:#fff;border:1px solid var(--line);border-radius:10px;color:var(--navy-900);box-shadow:0 1px 2px rgba(0,0,0,.06)}
 .pn .pin-add:hover{border-color:var(--amber-500);color:var(--amber)}
 .draft-box{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;margin-top:0;overflow-x:auto;color:#182430}
 .draft-box svg{width:100%;max-width:100%;height:auto;display:block;margin:0 auto}
@@ -1612,8 +1614,9 @@ tr.route-editable:hover td{background:var(--amber-glow)}
     </div>
 
     <div class="card" id="fsecDraft">
-      <div class="section-title"><span class="num">3</span> ผลการชี้แนวเขต</div>
-      <div class="pin-tog" id="pinModeTog"><button type="button" class="on" data-mode="form">กรอกข้อมูล</button><button type="button" data-mode="draft">ดูใบร่าง</button></div>
+      <div class="section-title"><span class="num">3</span> ผลการชี้แนวเขต
+        <div class="pin-tog" id="pinModeTog"><button type="button" class="on" data-mode="form">กรอกข้อมูล</button><button type="button" data-mode="draft">ดูใบร่าง</button></div>
+      </div>
       <div id="pinFormView">
         <input type="hidden" id="f_note">
         <!-- ช่อง กม. หมุดที่ 1 ถูกย้ายเข้าตารางโดยสคริปต์ (renderPinSegs) · ทิศทาง กม.เพิ่ม/ลด ระบบคำนวณเอง เก็บเป็นค่าซ่อน -->
@@ -5043,8 +5046,8 @@ function draftSvg(m, opts){
   const T = (x, y, txt, o) => { o = o || {}; return '<text x="' + x + '" y="' + y + '" text-anchor="' + (o.a || 'middle') + '" font-size="' + (o.s || 16) + '"' + (o.b ? ' font-weight="700"' : '') + (o.u ? ' text-decoration="underline"' : '') + (o.c ? ' fill="' + o.c + '"' : ' fill="currentColor"') + '>' + e(txt) + '</text>'; };
   const lineY = 160;
   let s = '';
-  s += T(W / 2, 30, 'ใบร่าง งานชี้แนวเขต', { s: 22, b: 1, u: 1 });
-  s += T(W / 2, 62, 'ทางหลวงหมายเลข ' + (m.highway || dots) + (m.section ? '  ตอน ' + m.section : ''), { s: 17 });
+  s += T(W / 2, 28, 'ใบร่าง งานชี้แนวเขต', { s: 17, b: 1, u: 1 });
+  s += T(W / 2, 54, 'ทางหลวงหมายเลข ' + (m.highway || dots) + (m.section ? '  ตอน ' + m.section : ''), { s: 14 });
   // เส้นและหมุด
   s += '<line x1="' + left + '" y1="' + lineY + '" x2="' + right + '" y2="' + lineY + '" stroke="currentColor" stroke-width="3"/>';
   for (let i = 0; i < N; i++) {
