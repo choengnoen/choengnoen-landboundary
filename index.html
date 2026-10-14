@@ -1048,7 +1048,9 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .draft-box{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;margin-top:0;overflow-x:auto;color:#182430}
 .draft-box svg{width:100%;max-width:100%;height:auto;display:block;margin:0 auto}
 /* ใบร่างในโมดัล: ย่อสเกลให้พอดีความสูงหน้าต่าง เห็นครบทั้งผังหมุด + รายละเอียด โดยไม่ต้องเลื่อน (ตัวอักษรไม่ถูกขยายเกินจริง) */
-#pinDraftView .draft-box{padding:6px 10px;overflow:hidden}
+#pinDraftView .draft-box{padding:6px 10px;overflow:hidden;position:relative}
+.draft-copy{position:absolute;top:8px;right:8px;width:34px;height:34px;z-index:2}
+.draft-copy svg{width:18px;height:18px}
 #pinDraftView .draft-box svg{max-height:calc(100vh - 380px);min-height:240px}
 .draft-empty{font-size:13px;color:var(--ink-mute);padding:6px 0}
 .ref-field{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;transition:border-color .15s ease,box-shadow .15s ease}
@@ -1642,7 +1644,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <!-- ระยะเขตทาง "บัญชี" ระบบเติมจากฐานข้อมูลกลางตาม กม. ของหมุดนั้น · "หน้างาน" กรอกเอง (สร้างโดย renderPinSegs/updatePinVals) -->
         <div class="pv-hint"><span class="hint km-hint" id="rowHint"></span></div>
       </div>
-      <div id="pinDraftView" hidden><div class="draft-box"><div id="draftSvgWrap"></div></div></div>
+      <div id="pinDraftView" hidden><div class="draft-box" id="draftBox"><button class="cd-copy draft-copy" id="btnCopyDraft" type="button" title="คัดลอกใบร่างเป็นรูป" aria-label="คัดลอกใบร่างเป็นรูป"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><div id="draftSvgWrap"></div></div></div>
       <input type="hidden" id="f_rowDistance"><input type="hidden" id="f_rowWork">
       <!-- เนื้อที่โฉนด: ไม่แสดงช่องกรอกในฟอร์มแล้ว เก็บช่องซ่อนไว้เพื่อไม่ให้ข้อมูลเรื่องเก่าหาย -->
       <input type="hidden" id="f_areaRai"><input type="hidden" id="f_areaNgan"><input type="hidden" id="f_areaWa">    </div>
@@ -4207,6 +4209,42 @@ async function copyCaseDetailAsImage(rec, btn){
     setTimeout(() => { btn.disabled = false; btn.classList.remove('ok'); btn.innerHTML = SNAP_ICON.copy; btn.title = 'คัดลอกเป็นรูป'; }, 2500);
   }
 }
+
+// คัดลอกใบร่างในฟอร์ม (แท็บ "ดูใบร่าง") เป็นรูป — วิธีเดียวกับคัดลอกรายละเอียดเรื่อง
+async function buildDraftImage(){
+  const box = document.getElementById('draftBox');
+  if (!box) throw new Error('ไม่พบใบร่าง');
+  await loadScriptOnce(HTML2CANVAS_URL);
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
+  const canvas = await window.html2canvas(box, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, ignoreElements: el => el.id === 'btnCopyDraft' });
+  return await new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('สร้างรูปไม่สำเร็จ')), 'image/png'));
+}
+async function copyDraftAsImage(btn){
+  btn.disabled = true; btn.innerHTML = SNAP_ICON.spin; btn.title = 'กำลังสร้างรูป…';
+  try {
+    const blobPromise = buildDraftImage();
+    let copied = false;
+    if (navigator.clipboard && window.ClipboardItem) {
+      try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]); copied = true; } catch (e) { copied = false; }
+    }
+    const blob = await blobPromise;
+    btn.classList.add('ok'); btn.innerHTML = SNAP_ICON.check;
+    if (copied) showToast('คัดลอกใบร่างแล้ว — กด Ctrl+V เพื่อวาง');
+    else {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'ใบร่างชี้แนวเขต.png';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+      showToast('คัดลอกอัตโนมัติไม่ได้ จึงบันทึกเป็นไฟล์รูปให้แทน');
+    }
+  } catch (e) {
+    console.error('copy draft failed', e);
+    showToast('สร้างรูปไม่สำเร็จ: ' + (e && e.message ? e.message : e));
+  } finally {
+    setTimeout(() => { btn.disabled = false; btn.classList.remove('ok'); btn.innerHTML = SNAP_ICON.copy; btn.title = 'คัดลอกใบร่างเป็นรูป'; }, 2500);
+  }
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#btnCopyDraft'); if (b) copyDraftAsImage(b); });
 
 function openCaseDetailModal(id){
   const rec = records.find(r => r.id === id);
