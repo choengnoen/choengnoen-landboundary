@@ -4554,13 +4554,13 @@ function renderWeekCalendar(){
   try {
     (window.DRAFTS && DRAFTS.openItems ? DRAFTS.openItems() : []).forEach(x => {
       if (!x.due) return;
-      if (x.d.startDate) put(x.d.startDate, 'ap', 'ชี้แนวเขต (ร่าง)', { draft: x.d });   // วันชี้แนวเขตของร่าง
+      if (x.d.startDate) put(x.d.startDate, 'ap', 'ชี้แนวเขต', { draft: x.d });   // วันชี้แนวเขตของร่าง
       const over = x.due < todayStr;
-      put(over ? todayStr : x.due, over ? 'ov' : 'rp', (over ? 'ร่างเลยกำหนดส่งแขวง' : 'ร่างครบกำหนดส่งแขวง'), { draft: x.d });
+      put(over ? todayStr : x.due, over ? 'ov' : 'rp', (over ? 'ส่งแขวงเลยกำหนด' : 'ครบกำหนดส่งแขวง'), { draft: x.d });
     });
   } catch (e) { console.error('draft calendar failed', e); }
   const placeOf = r => r.draft
-    ? 'ทล.' + String(r.draft.highway) + ' ' + (r.draft.km == null && r.draft.parcel ? 'พิกัด ' + r.draft.parcel : 'กม.' + formatKm(r.draft.km)) + (r.draft.note ? ' · ' + r.draft.note : '')
+    ? 'ทล.' + String(r.draft.highway) + (r.draft.km == null ? '' : ' กม.' + formatKm(r.draft.km)) + (r.draft.note ? ' · ' + r.draft.note : '')   // ไม่แสดงพิกัดแปลง · แสดง กม. เมื่อมีข้อมูล
     : 'ทล.' + String(r.highway) + ' กม.' + formatKm(r.km) + ' · ' + (r.ownerName || '-');
   const dayHtml = (d, i) => {
     const key = ymd(d), list = items[key] || [], isToday = key === todayStr;
