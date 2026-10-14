@@ -1189,7 +1189,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .send-hero.na{background:linear-gradient(135deg,#8792a0,#5d6875)}
 .send-right{display:flex;flex-direction:column;gap:12px;justify-content:center;min-width:0}
 .send-right .step-list{border:0;border-radius:0;overflow:visible}
-.send-right .step-row{grid-template-columns:minmax(0,1fr) 180px;padding:0;border:0;background:transparent}
+.send-right .step-row{grid-template-columns:minmax(0,1fr) 180px;padding:0 56px 0 0;border:0;background:transparent}
 .send-right .step-name{font-size:15px;font-weight:700}
 .send-right .step-sub{display:block;font-size:13px;font-weight:400;color:var(--ink-soft);margin-top:2px}
 .send-right .cancel-box{margin:0;padding:0;border:0}
@@ -1199,7 +1199,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .cancel-box .sw::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s}
 .cancel-box label.cx input:checked+.sw{background:var(--rust)}
 .cancel-box label.cx input:checked+.sw::after{left:19px}
-@media(max-width:720px){.send-a{grid-template-columns:1fr}.send-right .step-row{grid-template-columns:1fr}}
+@media(max-width:720px){.send-a{grid-template-columns:1fr}.send-right .step-row{grid-template-columns:1fr;padding-right:0}}
 /* หน้าต่างรายละเอียด: เส้นเวลา 7 ขั้นตอน */
 .tl{list-style:none;margin:0;padding:0}
 .tl li{position:relative;padding:0 0 14px 34px}
@@ -1687,7 +1687,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
     </div>
 
     <div class="card" id="fsec4">
-      <div class="section-title"><span class="num">5</span> ผลการส่งเอกสารไปแขวง</div>
+      <div class="section-title"><span class="num">5</span> ผลการนำส่งเอกสาร</div>
       <div class="send-a">
         <div class="send-hero" id="deadlineBox"></div>
         <div class="send-right">
