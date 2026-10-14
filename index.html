@@ -1294,6 +1294,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .hw-tab-filter button.active:hover,.pill-filter button.active:hover{filter:brightness(1.06);color:#fff}
 /* ===== รูปถ่ายประกอบเคส (ไม่เกิน 2 รูป · เก็บใน Google Drive) ===== */
 .ph-count{display:inline-block;padding:2px 10px;border-radius:999px;font-family:'Sarabun',sans-serif;font-size:13px;font-weight:600;background:#eee;color:#555}
+.ph-count:empty{display:none}
 .ph-count.has{background:#E1F5EE;color:#085041}
 .ph-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:640px){.ph-grid{grid-template-columns:1fr}}
@@ -1676,7 +1677,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
     <div class="card" id="fsecPhoto">
       <div class="section-title">
-        <span class="num">4</span> รูปถ่ายประกอบ <span class="ph-count" id="photoCount">ยังไม่มีรูป</span>
+        <span class="num">4</span> รูปถ่ายประกอบ <span class="ph-count" id="photoCount"></span>
       </div>
       <div id="photoBody">
         <div class="ph-grid" id="photoGrid"></div>
@@ -2053,7 +2054,7 @@ function renderHighwayBarChart(hwRoutesSorted, byHw){
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { right: 40 } },
+      layout: { padding: { right: 72 } },
       scales: {
         x: {
           beginAtZero: true,
@@ -2115,7 +2116,7 @@ function renderTrendChart(years, totalByYear){
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { right: 40 } },
+      layout: { padding: { right: 72 } },
       scales: {
         x: { beginAtZero: true, display: false },
         y: { ticks: { font: { family: "'Sarabun', sans-serif", size: 12 }, crossAlign: 'far' }, grid: { display: false }, border: { display: false } }
@@ -3289,7 +3290,7 @@ const DEFAULT_PROVINCE = 'ระยอง';
    - เลือก/ถ่ายรูป → ย่อในเครื่องทันที (ด้านยาวไม่เกิน 1920 px) → ยังไม่อัปโหลดจนกว่าจะกด "บันทึกข้อมูล"
    - ในเคสเก็บเฉพาะที่อยู่ไฟล์ rec.photos = [{ path, at, by }] · เอารูปออกจากเคส = ตัดออกจากรายการ (ไฟล์ใน Drive ถูกลบเฉพาะเมื่อผู้ทำเป็นเจ้าของ/ผู้ดูแลระบบ)
    - ถ้าอัปโหลดรูปไม่สำเร็จ จะไม่บันทึกเคส (ข้อมูลในฟอร์มยังอยู่ กดบันทึกซ้ำได้ รูปที่อัปโหลดไปแล้วไม่อัปโหลดซ้ำ) */
-const PHOTO_SLOT_LABELS = ['ภาพแนวเขต / จุดชี้แนวเขต', 'ภาพหมุด / หลักเขต'];
+const PHOTO_SLOT_LABELS = ['', ''];
 let formPhotos = [null, null];   // ช่องละ 1 รูป: null | { saved:{path,at,by}, view, blobUrl? } | { blob, blobUrl, view, name }
 let photoBusy = [false, false];
 let photoPickIdx = -1;
@@ -3306,7 +3307,7 @@ function renderPhotoSlots(){
   const grid = document.getElementById('photoGrid');
   if (!grid) return;
   const nPh = formPhotos.filter(Boolean).length, cnt = document.getElementById('photoCount');
-  cnt.textContent = nPh ? ('มี ' + nPh + ' รูป') : 'ยังไม่มีรูป';
+  cnt.textContent = nPh ? ('มี ' + nPh + ' รูป') : '';
   cnt.classList.toggle('has', nPh > 0);
   const on = !!(window.FBL && FBL.photosEnabled);
   document.getElementById('photoHint').textContent = on
@@ -3326,7 +3327,7 @@ function renderPhotoSlots(){
     } else {
       body = `<button type="button" class="ph-empty ph-add" data-ph-pick="${i}"${on ? '' : ' disabled'}>＋ ถ่าย / เลือกรูป</button>`;
     }
-    return `<div class="ph-slot"><div class="ph-title">${escapeHtml('รูปที่ ' + (i + 1) + ' · ' + PHOTO_SLOT_LABELS[i])}</div>${body}</div>`;
+    return `<div class="ph-slot"><div class="ph-title">${escapeHtml('รูปที่ ' + (i + 1))}</div>${body}</div>`;
   }).join('');
   grid.querySelectorAll('[data-ph-pick]').forEach(b => { b.onclick = () => { photoPickIdx = +b.dataset.phPick; document.getElementById('photoFile').click(); }; });
   grid.querySelectorAll('[data-ph-del]').forEach(b => { b.onclick = () => {
@@ -3413,7 +3414,7 @@ function hydrateCasePhotos(rec){
       if (!document.body.contains(el)) return;
       if (!u) { el.innerHTML = '<span>โหลดรูปไม่ได้</span>'; return; }
       el.innerHTML = ''; el.style.backgroundImage = 'url("' + u + '")';
-      el.onclick = () => openPhotoLightbox(u, 'รูปที่ ' + (i + 1) + ' ' + (PHOTO_SLOT_LABELS[i] || ''));
+      el.onclick = () => openPhotoLightbox(u, 'รูปที่ ' + (i + 1));
     });
   });
 }
