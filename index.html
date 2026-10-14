@@ -1052,8 +1052,8 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 /* ใบร่างในโมดัล: ย่อสเกลให้พอดีความสูงหน้าต่าง เห็นครบทั้งผังหมุด + รายละเอียด โดยไม่ต้องเลื่อน (ตัวอักษรไม่ถูกขยายเกินจริง) */
 #pinDraftView .draft-box{padding:6px 10px;overflow:hidden;position:relative}
 .draft-copy{position:absolute;top:8px;right:8px;width:34px;height:34px;z-index:2}
-.draft-copy svg{width:18px;height:18px}
-#pinDraftView .draft-box svg{max-height:calc(100vh - 380px);min-height:240px}
+.draft-box .draft-copy svg{width:18px;height:18px;max-width:none;max-height:none;min-height:0;margin:0;display:block}
+#draftSvgWrap svg{max-height:calc(100vh - 380px);min-height:240px}
 .draft-empty{font-size:13px;color:var(--ink-mute);padding:6px 0}
 .ref-field{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden;transition:border-color .15s ease,box-shadow .15s ease}
 .ref-field:focus-within{border-color:var(--amber-500);box-shadow:0 0 0 3px rgba(224,98,15,.14)}
@@ -1663,7 +1663,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
             <input type="text" id="f_pinKm0" maxlength="11">
             <input type="hidden" id="f_pinDir" value="up">
           </div>
-          <input type="text" id="f_note" maxlength="80" autocomplete="off" placeholder="หมายเหตุ (ถ้ามี) — แสดงต่อท้ายบรรทัด &quot;แปลงที่ดินตั้งอยู่บริเวณ&quot; ในใบร่าง">
+          <input type="text" id="f_note" maxlength="80" autocomplete="off">
         </div>
         <div class="pin-tablewrap" id="pinRows"></div>
         <!-- ระยะเขตทาง "บัญชี" ระบบเติมจากฐานข้อมูลกลางตาม กม. ของหมุดนั้น · "หน้างาน" กรอกเอง (สร้างโดย renderPinSegs/updatePinVals) -->
@@ -5204,7 +5204,7 @@ function updateDraftPreview(){
   if (ar) { ar.style.display = areaBits ? '' : 'none'; set('ddArea', areaBits); }
   if (cr) { cr.style.display = m.coords ? '' : 'none'; set('ddCoords', m.coords || ''); }
   const p0 = document.getElementById('f_pinKm0');
-  if (p0) p0.placeholder = m.km !== null ? 'ว่าง = ใช้ กม. ' + formatKm(m.km) : '';
+  if (p0) p0.placeholder = 'กม.ตั้งต้น';
   try { updateStepUi(); } catch (e) {}   // วันชี้แนวเขต/กำหนดส่งแขวง ตามวันนัด + ผลหมุด
 }
 /* หมุดโฉนด: กรอก "กม." ของแต่ละหมุดโดยตรง → ระบบคำนวณระยะห่างระหว่างหมุด และทิศทาง (กม.เพิ่ม/ลด) ให้เอง
