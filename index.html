@@ -1045,6 +1045,8 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pn-hdi .pin-del{top:8px}
 .pn .pin-add{height:30px}
 .pn input[type=text]{height:28px}
+.pn td.pn-note{text-align:left;padding:0 8px}
+.pn .pn-note input[type=text]{max-width:none;margin:0;text-align:left;padding:0 10px}
 .draft-box{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;margin-top:0;overflow-x:auto;color:#182430}
 .draft-box svg{width:100%;max-width:100%;height:auto;display:block;margin:0 auto}
 /* ใบร่างในโมดัล: ย่อสเกลให้พอดีความสูงหน้าต่าง เห็นครบทั้งผังหมุด + รายละเอียด โดยไม่ต้องเลื่อน (ตัวอักษรไม่ถูกขยายเกินจริง) */
@@ -1175,6 +1177,29 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .area-trio-lbl{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:11.5px;color:var(--ink-mute);text-align:center}
 .cancel-box{margin-top:12px;padding:10px 14px;border:1px dashed var(--line);border-radius:12px}
 .cancel-box label.chk{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+/* ผลการส่งเอกสารไปแขวง — แบบ A: การ์ดกำหนดส่งเด่นทางซ้าย · ช่องกรอกทางขวา */
+.send-a{display:grid;grid-template-columns:230px minmax(0,1fr);gap:16px;align-items:stretch}
+.send-hero{border-radius:14px;padding:16px;display:flex;flex-direction:column;justify-content:center;gap:4px;color:#fff;background:linear-gradient(135deg,#175f87,#08324c)}
+.send-hero small{color:rgba(255,255,255,.78);font-size:13px}
+.send-hero .big{font-size:44px;font-weight:700;line-height:1.05;font-family:'Kanit','Sarabun',sans-serif}
+.send-hero .big span{font-size:16px;font-weight:600;margin-left:4px;font-family:'Sarabun',sans-serif}
+.send-hero.near{background:linear-gradient(135deg,#d9790f,#a3660a)}
+.send-hero.bad{background:linear-gradient(135deg,#d2503d,#9c2e20)}
+.send-hero.ontime{background:linear-gradient(135deg,#25a367,#14693d)}
+.send-hero.na{background:linear-gradient(135deg,#8792a0,#5d6875)}
+.send-right{display:flex;flex-direction:column;gap:12px;justify-content:center;min-width:0}
+.send-right .step-list{border:0;border-radius:0;overflow:visible}
+.send-right .step-row{grid-template-columns:minmax(0,1fr) 180px;padding:0;border:0;background:transparent}
+.send-right .step-name{font-size:15px;font-weight:700}
+.send-right .step-sub{display:block;font-size:13px;font-weight:400;color:var(--ink-soft);margin-top:2px}
+.send-right .cancel-box{margin:0;padding:0;border:0}
+.cancel-box label.cx{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink-soft);cursor:pointer}
+.cancel-box label.cx input{display:none}
+.cancel-box .sw{width:38px;height:22px;border-radius:99px;background:#cfd5cc;position:relative;transition:.15s;flex:none}
+.cancel-box .sw::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.15s}
+.cancel-box label.cx input:checked+.sw{background:var(--rust)}
+.cancel-box label.cx input:checked+.sw::after{left:19px}
+@media(max-width:720px){.send-a{grid-template-columns:1fr}.send-right .step-row{grid-template-columns:1fr}}
 /* หน้าต่างรายละเอียด: เส้นเวลา 7 ขั้นตอน */
 .tl{list-style:none;margin:0;padding:0}
 .tl li{position:relative;padding:0 0 14px 34px}
@@ -1631,7 +1656,6 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <div class="pin-tog" id="pinModeTog"><button type="button" class="on" data-mode="form">กรอกข้อมูล</button><button type="button" data-mode="draft">ดูใบร่าง</button></div>
       </div>
       <div id="pinFormView">
-        <input type="hidden" id="f_note">
         <!-- ช่อง กม. หมุดที่ 1 ถูกย้ายเข้าตารางโดยสคริปต์ (renderPinSegs) · ทิศทาง กม.เพิ่ม/ลด ระบบคำนวณเอง เก็บเป็นค่าซ่อน -->
         <div id="pinKm0Holder" hidden>
           <div class="field" id="pinKm0Field">
@@ -1639,6 +1663,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
             <input type="text" id="f_pinKm0" maxlength="11">
             <input type="hidden" id="f_pinDir" value="up">
           </div>
+          <input type="text" id="f_note" maxlength="80" autocomplete="off" placeholder="หมายเหตุ (ถ้ามี) — แสดงต่อท้ายบรรทัด &quot;แปลงที่ดินตั้งอยู่บริเวณ&quot; ในใบร่าง">
         </div>
         <div class="pin-tablewrap" id="pinRows"></div>
         <!-- ระยะเขตทาง "บัญชี" ระบบเติมจากฐานข้อมูลกลางตาม กม. ของหมุดนั้น · "หน้างาน" กรอกเอง (สร้างโดย renderPinSegs/updatePinVals) -->
@@ -1649,27 +1674,31 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <!-- เนื้อที่โฉนด: ไม่แสดงช่องกรอกในฟอร์มแล้ว เก็บช่องซ่อนไว้เพื่อไม่ให้ข้อมูลเรื่องเก่าหาย -->
       <input type="hidden" id="f_areaRai"><input type="hidden" id="f_areaNgan"><input type="hidden" id="f_areaWa">    </div>
 
-    <div class="card" id="fsec4">
-      <div class="section-title"><span class="num">4</span> ผลการส่งเอกสารไปแขวง</div>
-      <div class="step-list" id="stepList"></div>
-      <div class="deadline-box" id="deadlineBox"></div>
-      <div class="cancel-box">
-        <label class="chk"><input type="checkbox" id="f_cancelled"> ยกเลิกการรังวัด / ผู้ขอถอนเรื่อง (ไม่นับเป็นเรื่องค้าง)</label>
-        <div class="field" id="cancelReasonWrap" style="display:none;margin-top:8px">
-          <label>เหตุผลที่ยกเลิก</label>
-          <input type="text" id="f_cancelReason">
-        </div>
-      </div>
-    </div>
-
     <div class="card" id="fsecPhoto">
       <div class="section-title">
-        <span class="num">5</span> รูปถ่ายประกอบ <span class="ph-count" id="photoCount">ยังไม่มีรูป</span>
+        <span class="num">4</span> รูปถ่ายประกอบ <span class="ph-count" id="photoCount">ยังไม่มีรูป</span>
       </div>
       <div id="photoBody">
         <div class="ph-grid" id="photoGrid"></div>
         <input type="file" accept="image/*" id="photoFile" style="display:none">
         <div class="hint" id="photoHint" style="margin-top:10px"></div>
+      </div>
+    </div>
+
+    <div class="card" id="fsec4">
+      <div class="section-title"><span class="num">5</span> ผลการส่งเอกสารไปแขวง</div>
+      <div class="send-a">
+        <div class="send-hero" id="deadlineBox"></div>
+        <div class="send-right">
+          <div class="step-list" id="stepList"></div>
+          <div class="cancel-box">
+            <label class="cx"><input type="checkbox" id="f_cancelled"><span class="sw"></span>ยกเลิกการรังวัด / ผู้ขอถอนเรื่อง (ไม่นับเป็นเรื่องค้าง)</label>
+            <div class="field" id="cancelReasonWrap" style="display:none;margin-top:8px">
+              <label>เหตุผลที่ยกเลิก</label>
+              <input type="text" id="f_cancelReason">
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -3175,8 +3204,7 @@ function buildStepRows(){
   const SHOW = { sentDate: 'วันที่ส่งเอกสารไปแขวง' };
   box.innerHTML = STEPS.map((s, i) => SHOW[s.field] ? `
     <div class="step-row" data-step="${i}">
-      <span class="step-no">↑</span>
-      <div class="step-name">${SHOW[s.field]}</div>
+      <div class="step-name">${SHOW[s.field]}<span class="step-sub" id="sendSub"></span></div>
       <input type="date" id="f_step_${s.field}" title="วันที่ส่งเอกสารถึงแขวง">
       <div style="display:none">${STEP_EXTRAS[s.field] || ''}</div>
     </div>` : `
@@ -3219,12 +3247,26 @@ function updateStepUi(){
   });
   const box = document.getElementById('deadlineBox');
   const d = deadlineInfo(snap);
-  if (!snap.pointedDate) {
+  const sub = document.getElementById('sendSub');
+  if (sub) sub.textContent = snap.pointedDate ? 'ชี้แนวเขตเมื่อ ' + formatThaiDate(snap.pointedDate) : '';
+  // การ์ดกำหนดส่ง (แบบ A): ตัวเลขวันทำการเป็นจุดเด่น สีตามสถานะ (ok/near/bad/ontime/na)
+  const num = (d.text.match(/\d+/) || [''])[0];
+  let cls = d.cls === 'ok' ? '' : d.cls, head = '', big = '', foot = '';
+  if (snap.cancelled) { cls = 'na'; head = 'สถานะ'; big = 'ยกเลิก'; foot = 'ไม่นับเป็นเรื่องค้าง'; }
+  else if (!snap.pointedDate) {
     const ap = document.getElementById('f_appointDate').value;
-    box.innerHTML = `<span>⏱ ${ap ? 'นัดชี้แนวเขต ' + escapeHtml(formatThaiDate(ap)) + ' → ' : ''}ต้องส่งแขวงภายใน ${REPORT_DAYS} วันทำการ นับจากวันที่ชี้แนวเขต</span>`;
+    cls = 'na'; head = 'ต้องส่งแขวงภายใน'; big = `${REPORT_DAYS}<span>วันทำการ</span>`;
+    foot = (ap ? 'นัดชี้แนวเขต ' + formatThaiDate(ap) + ' · ' : '') + 'นับจากวันที่ชี้แนวเขต';
   } else {
-    box.innerHTML = `<span>⏱ ชี้แนวเขต ${escapeHtml(formatThaiDate(snap.pointedDate))} → ต้องส่งแขวงภายใน <b>${escapeHtml(formatThaiDate(d.due))}</b></span><span class="dl-pill ${d.cls}">${escapeHtml(d.text)}</span>`;
+    if (d.key === 'ontime') { cls = 'ontime'; head = 'ส่งแขวงแล้ว'; big = 'ทันกำหนด'; }
+    else if (d.key === 'late') { head = 'ส่งเกินกำหนด'; big = `${num}<span>วันทำการ</span>`; }
+    else if (d.key === 'overdue') { head = 'เกินกำหนดแล้ว'; big = `${num}<span>วันทำการ</span>`; }
+    else if (num) { head = 'เหลือเวลาส่งแขวง'; big = `${num}<span>วันทำการ</span>`; }
+    else { head = 'ครบกำหนด'; big = 'วันนี้'; }
+    foot = 'ครบกำหนด ' + formatThaiDate(d.due);
   }
+  box.className = 'send-hero' + (cls ? ' ' + cls : '');
+  box.innerHTML = `<small>${escapeHtml(head)}</small><div class="big">${big}</div><small>${escapeHtml(foot)}</small>`;
 }
 function updateDocUi(){
   const hasProxy = document.getElementById('f_hasProxy').value === 'มี';
@@ -3462,7 +3504,7 @@ function requestCloseForm(){
   document.getElementById('fmLeaveStay').focus();
 }
 /* แถบเส้นเวลา (ขั้นตอนฟอร์ม) — กดเลื่อนไปส่วนนั้น ไฮไลต์ตามตำแหน่งที่เลื่อน และบอกสถานะช่องบังคับของแต่ละส่วน */
-const FM_STEPS = [['fsec1', 'ข้อมูลการชี้แนวเขต'], ['fsec2', 'ที่ดิน/ที่ตั้ง'], ['fsecDraft', 'ผลชี้แนวเขต'], ['fsec4', 'ส่งแขวง'], ['fsecPhoto', 'รูปถ่าย']];
+const FM_STEPS = [['fsec1', 'ข้อมูลการชี้แนวเขต'], ['fsec2', 'ที่ดิน/ที่ตั้ง'], ['fsecDraft', 'ผลชี้แนวเขต'], ['fsecPhoto', 'รูปถ่าย'], ['fsec4', 'ส่งแขวง']];
 let fmStepsBuilt = false;
 function fmCards(){ return FM_STEPS.map(s => document.getElementById(s[0])); }
 function fmStepGo(i){
@@ -3488,7 +3530,7 @@ function fmStepsInit(){
 }
 /* การ์ด "รูปถ่ายประกอบ" (ข้อสุดท้าย) สูงเต็มกรอบเลื่อนของหน้าต่าง: เลื่อนสุดแล้วเห็นเฉพาะการ์ดนี้ ไม่มีการ์ดข้อก่อนหน้าโผล่ค้างด้านบน — ช่องรูปยืดตามความสูงที่เหลือ */
 function fitPhotoCard(){
-  const m = document.getElementById('formModal'), card = document.getElementById('fsecPhoto');
+  const m = document.getElementById('formModal'), card = document.getElementById(FM_STEPS[FM_STEPS.length - 1][0]);   // การ์ดข้อสุดท้าย (ผลการส่งเอกสารไปแขวง)
   if (!m || !card || m.style.display === 'none') return;
   const sc = m.querySelector('.form-main');
   if (!sc || !sc.clientHeight) return;
@@ -5126,17 +5168,16 @@ function draftSvg(m, opts){
   if (opts && opts.noDetails) return '<svg viewBox="0 0 ' + W + ' ' + (206 + (RN.some(Boolean) ? 28 : 0)) + '" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ผังหมุดใบร่างงานชี้แนวเขต">' + s + '</svg>';
   // รายละเอียด
   const areaBits = [[m.areaRai, 'ไร่'], [m.areaNgan, 'งาน'], [m.areaWa, 'ตร.วา']].filter(p => p[0] !== '' && p[0] != null).map(p => p[0] + ' ' + p[1]).join(' ');
-  const rows = [['แปลงที่ดินตั้งอยู่บริเวณ : ', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots)]];
+  const rows = [['แปลงที่ดินตั้งอยู่บริเวณ : ', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots), m.note ? 'หมายเหตุ : ' + m.note : '']];   // หมายเหตุต่อท้ายบรรทัดนี้
   if (!perPin) {
     rows.push(['ระยะเขตทางตามบัญชี : ', (RA[0] ? RA[0] : dots) + ' ม.']);
     rows.push(['ระยะเขตทางกันแนวเขตหน้างาน : ', (RW[0] ? RW[0] : dots) + ' ม.']);
   }
   if (areaBits) rows.push(['เนื้อที่โฉนด : ', areaBits]);
   if (m.coords) rows.push(['พิกัดแปลงที่ดิน : ', m.coords]);
-  if (m.note) rows.push(['หมายเหตุ : ', m.note]);
   let y = (perPin ? 284 : 244) + noOff;
   s += T(60, y, 'รายละเอียด', { s: 18, b: 1, a: 'start' });
-  rows.forEach(r => { y += 28; s += '<text x="60" y="' + y + '" font-size="16" fill="currentColor">- ' + e(r[0]) + '<tspan font-weight="700">' + e(r[1]) + '</tspan></text>'; });
+  rows.forEach(r => { y += 28; s += '<text x="60" y="' + y + '" font-size="16" fill="currentColor">- ' + e(r[0]) + '<tspan font-weight="700">' + e(r[1]) + '</tspan>' + (r[2] ? '<tspan dx="14" fill="#a3660a">' + e(r[2]) + '</tspan>' : '') + '</text>'; });
   const H = y + 22;
   return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ใบร่างงานชี้แนวเขต">' + s + '</svg>';
 }
@@ -5221,6 +5262,8 @@ function renderPinSegs(states){
   const box = document.getElementById('pinRows'), holder = document.getElementById('pinKm0Holder'), f0 = document.getElementById('pinKm0Field');
   if (!box) return;
   if (f0 && holder) holder.appendChild(f0);   // เก็บช่อง กม. หมุดที่ 1 ไว้ก่อนวาดตารางใหม่ (ไม่ให้ค่าหาย)
+  const fNote = document.getElementById('f_note');
+  if (fNote && holder) holder.appendChild(fNote);   // ช่องหมายเหตุ: เก็บไว้ก่อนวาดตารางใหม่เช่นกัน
   const list = (Array.isArray(states) && states.length) ? states : [{ d: '' }];
   const n = list.length + 1, A = k => Array.from({ length: n }, (_, i) => k(i)).join('');
   pvEnsure(n);
@@ -5238,9 +5281,12 @@ function renderPinSegs(states){
       <tr><th>ระยะบัญชี (ม.)</th>${A(i => `<td>${unit(`<input type="text" class="pv-a" data-i="${i}" maxlength="6" readonly tabindex="-1" placeholder="จากบัญชี">`)}</td>`)}<td></td><td></td></tr>
       <tr><th>ระยะหน้างาน (ม.)</th>${A(i => `<td>${unit(`<input type="text" class="pv-w" data-i="${i}" maxlength="6" inputmode="decimal" autocomplete="off" placeholder="0.00">`)}</td>`)}<td></td><td></td></tr>
       <tr><th>ส่วนต่าง (หน้างาน − บัญชี)</th>${A(i => `<td><span class="pn-diff" data-i="${i}">–</span></td>`)}<td></td><td></td></tr>
+      <tr><th>หมายเหตุ</th><td class="pn-note" colspan="${n + 2}"></td></tr>
     </tbody></table>`;
   const slot = box.querySelector('.pn-km0');
   if (slot && f0) slot.appendChild(f0);
+  const noteSlot = box.querySelector('.pn-note');
+  if (noteSlot && fNote) noteSlot.appendChild(fNote);
   updateDraftPreview();
 }
 // โหลดเรื่องที่บันทึกไว้ (เก็บเป็นระยะห่าง + ทิศทาง) → ใส่ช่อง "ระยะถึงหมุดถัดไป" ของแต่ละช่วง
@@ -5316,7 +5362,7 @@ function initDraftCard(){
     const reset = () => { if (pvResetStates()) updateDraftPreview(); };
     el.addEventListener('input', reset); el.addEventListener('change', reset);
   });
-  ['f_pinKm0', 'f_side', 'f_location', 'f_areaRai', 'f_areaNgan', 'f_areaWa', 'f_coords'].forEach(id => {
+  ['f_pinKm0', 'f_side', 'f_location', 'f_areaRai', 'f_areaNgan', 'f_areaWa', 'f_coords', 'f_note'].forEach(id => {
     const el = document.getElementById(id);
     el.addEventListener('input', updateDraftPreview);
     el.addEventListener('change', updateDraftPreview);
