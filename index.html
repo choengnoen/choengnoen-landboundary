@@ -1383,7 +1383,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         </div>
         <div class="field">
           <label>เลขที่หนังสือ แขวงฯ</label>
-          <div class="ref-field" id="inField"><span class="ref-prefix">ที่ คค 06087/12/70/ม.1/</span><input type="text" id="f_incomingNo"></div>
+          <div class="ref-field" id="inField"><span class="ref-prefix">ที่ คค 06087/</span><input type="text" id="f_incomingNo"></div>
         </div>
       </div>
       <div class="sec-sub" style="border-top:0;padding-top:0;margin-top:16px">เจ้าของที่ดิน / ผู้รับมอบอำนาจ</div>
@@ -5540,9 +5540,10 @@ function syncProxySeg(){
   const v = document.getElementById('f_hasProxy').value;
   document.querySelectorAll('#proxySeg button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
 }
-/* ===== เลขที่หนังสือ (ช่องรับเรื่อง): ส่วนหน้าตายตัว "ที่ คค 06087/12/70/ม.1/" ระบบใส่ให้ เจ้าหน้าที่พิมพ์เฉพาะเลขท้าย ===== */
-const IN_PREFIX = 'ที่ คค 06087/12/70/ม.1/';
-const IN_PREFIX_RE = /^\s*ที่?\s*คค\s*06087\s*\/\s*12\s*\/\s*70\s*\/\s*ม\.?\s*1\s*\//;
+/* ===== เลขที่หนังสือ (ช่องรับเรื่อง): ส่วนหน้าตายตัว "ที่ คค 06087/" ระบบใส่ให้ เจ้าหน้าที่พิมพ์เฉพาะเลขท้าย ===== */
+const IN_PREFIX = 'ที่ คค 06087/';
+// รองรับข้อมูลเก่าที่เคยบันทึกเป็น "ที่ คค 06087/12/70/ม.1/xxx" ด้วย (ตัดส่วนเก่าออกให้)
+const IN_PREFIX_RE = /^\s*ที่?\s*คค\s*06087\s*\/(?:\s*12\s*\/\s*70\s*\/\s*ม\.?\s*1\s*\/)?/;
 let inFree = false;   // เลขเก่าที่ขึ้นต้นไม่ตรงรูปแบบนี้: แสดงทั้งข้อความในช่อง ไม่ตัดส่วนหน้า
 function inRestOf(text){ return String(text || '').replace(IN_PREFIX_RE, '').replace(/\s+/g, ''); }
 function setIncomingNoField(full){
