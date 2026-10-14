@@ -3886,12 +3886,13 @@ function initDrafts(){
     sectionOf: highwaySection,
     openCase: id => { const rec = records.find(r => r.id === id); if (rec) loadRecordIntoForm(rec); else showToast('ไม่พบเรื่องนี้ (อาจถูกลบ)'); }
   });
+  window.onDraftsChanged = () => { try { renderWeekCalendar(); } catch (e) {} };
   DRAFTS.start();
   DRAFTS.render();
 }
 // กดปุ่ม "บันทึกเคส" ที่ร่าง: ถ้ามีเรื่องเดิม (ทล. เดียวกัน กม. ใกล้กัน ยังไม่มีวันชี้แนว) ให้เติมวันชี้แนวลงเรื่องเดิม ไม่ซ้ำ · ไม่มีก็เปิดฟอร์มเรื่องใหม่
 function prefillFormFromDraft(p){
-  const cand = records
+  const cand = p.km == null ? [] : records
     .filter(r => !r.cancelled && !r.pointedDate && String(r.highway) === String(p.highway) && r.km != null && Math.abs(Number(r.km) - Number(p.km)) <= 500)
     .sort((a, b) => Math.abs(a.km - p.km) - Math.abs(b.km - p.km));
   if (cand.length) {
@@ -3899,6 +3900,7 @@ function prefillFormFromDraft(p){
     const who = [r.ownerName, 'ทล.' + r.highway + ' กม.' + formatKm(r.km)].filter(Boolean).join(' · ');
     if (window.confirm('พบเรื่องเดิมที่ยังไม่มีวันชี้แนวเขต:\n' + who + '\n\nกด "ตกลง" = เปิดเรื่องเดิมแล้วเติมวันชี้แนวให้\nกด "ยกเลิก" = เปิดฟอร์มเรื่องใหม่')) {
       loadRecordIntoForm(r);
+      if (p.parcel && !document.getElementById('f_coords').value.trim()) { document.getElementById('f_coords').value = p.parcel; updateCoordsHint(); }
       document.getElementById('f_step_pointedDate').value = p.startDate || '';
       document.getElementById('f_step_pointedDate').dataset.manual = '1';   // วันชี้แนวมาจากรายการร่าง — ไม่ให้ตามวันนัดทับ
       updateStepUi();
@@ -3912,8 +3914,10 @@ function prefillFormFromDraft(p){
   ensureHighwayOption(p.highway);
   document.getElementById('f_highway').value = p.highway || '';
   document.getElementById('f_section').value = highwaySection(p.highway);
-  document.getElementById('f_km').value = formatKm(p.km);
+  document.getElementById('f_km').value = p.km == null ? '' : formatKm(p.km);
+  document.getElementById('f_coords').value = p.parcel || '';   // ร่างจาก LINE ที่ใช้พิกัดแปลงแทน กม.
   updateKmHint();
+  updateCoordsHint();
   updateHighwayHint();
   updateStepUi();
   openFormModal();
@@ -4545,16 +4549,27 @@ function renderWeekCalendar(){
       if (due) put(due, due < todayStr ? 'ov' : 'rp', due < todayStr ? 'ส่งแขวงเลยกำหนด' : 'ครบกำหนดส่งแขวง', r);
     }
   });
+  // รายการร่าง (ยังไม่ผูกเคส) — ครบกำหนดส่งแขวง = วันชี้แนวเขต + 10 วันทำการ · เลยกำหนดไปแสดงที่วันนี้ (เหมือนเรื่องเลยกำหนดไม่ตกหาย)
+  try {
+    (window.DRAFTS && DRAFTS.openItems ? DRAFTS.openItems() : []).forEach(x => {
+      if (!x.due) return;
+      const over = x.due < todayStr;
+      put(over ? todayStr : x.due, over ? 'ov' : 'rp', (over ? 'ร่างเลยกำหนดส่งแขวง' : 'ร่างครบกำหนดส่งแขวง'), { draft: x.d });
+    });
+  } catch (e) { console.error('draft calendar failed', e); }
+  const placeOf = r => r.draft
+    ? 'ทล.' + String(r.draft.highway) + ' ' + (r.draft.km == null && r.draft.parcel ? 'พิกัด ' + r.draft.parcel : 'กม.' + formatKm(r.draft.km)) + (r.draft.note ? ' · ' + r.draft.note : '')
+    : 'ทล.' + String(r.highway) + ' กม.' + formatKm(r.km) + ' · ' + (r.ownerName || '-');
   const dayHtml = (d, i) => {
     const key = ymd(d), list = items[key] || [], isToday = key === todayStr;
     const shown = list.slice(0, 4);
     return `<div class="wk-day ${isToday ? 'today' : ''}"><div class="wk-dh"><b>${d.getDate()}</b><span>${WK_DAYS[i]}</span>${isToday ? '<span class="wk-tag">วันนี้</span>' : ''}</div>`
-      + (list.length ? shown.map(x => `<div class="wk-it ${x.cls}" data-id="${escapeHtml(x.r.id)}">${escapeHtml(x.label)}<small>ทล.${escapeHtml(String(x.r.highway))} กม.${escapeHtml(formatKm(x.r.km))} · ${escapeHtml(x.r.ownerName || '-')}</small></div>`).join('')
+      + (list.length ? shown.map(x => `<div class="wk-it ${x.cls}" ${x.r.draft ? 'data-draft="' + escapeHtml(x.r.draft.id) + '"' : 'data-id="' + escapeHtml(x.r.id) + '"'}>${escapeHtml(x.label)}<small>${escapeHtml(placeOf(x.r))}</small></div>`).join('')
         + (list.length > shown.length ? `<div class="wk-more">และอีก ${list.length - shown.length} รายการ</div>` : '')
         : '<div class="wk-empty">ว่าง</div>') + '</div>';
   };
   grid.innerHTML = days.map(dayHtml).join('');
-  grid.querySelectorAll('.wk-it').forEach(el => { el.onclick = () => openCaseDetailModal(el.dataset.id); });
+  grid.querySelectorAll('.wk-it').forEach(el => { el.onclick = () => { if (el.dataset.draft) DRAFTS.openDraft(el.dataset.draft); else openCaseDetailModal(el.dataset.id); }; });
 
   // นัดที่ตกวันเสาร์–อาทิตย์ของสัปดาห์นี้ (ไม่มีคอลัมน์) แจ้งไว้ท้ายกล่อง
   const sat = new Date(mon); sat.setDate(mon.getDate() + 5);

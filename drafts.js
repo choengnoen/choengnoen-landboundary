@@ -105,6 +105,7 @@
       '#draftCard .dr-ln:hover{background:#f7fafc}#draftCard .dr-ln:focus-visible{outline:2px solid var(--amber-500,#f07a1f);outline-offset:-2px}' +
       '#draftCard .dr-t{font-family:Kanit,Sarabun,sans-serif;font-weight:600;font-size:15px;min-width:150px;flex:0 1 auto;color:var(--ink,#182430)}' +
       '#draftCard .dr-s,#draftCard .dr-k{margin-left:14px}#draftCard .dr-n{margin-left:6px;flex:1;min-width:0;color:#777;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+      '#draftCard .dr-map{color:#1a5fb4;text-decoration:underline}#draftCard .dr-map:hover{color:#0b3d82}' +
       '#draftCard .dr-d{color:#555;font-size:13.5px;white-space:nowrap}' +
       '#draftCard .dr-act{display:flex;gap:2px;margin-left:2px}' +
       '#draftCard .dr-ib{border:none;background:transparent;width:32px;height:32px;border-radius:8px;cursor:pointer;color:#8a929c;display:inline-grid;place-items:center;padding:0}' +
@@ -159,13 +160,20 @@
     return s ? '<span class="dr-s">ตอน ' + esc(s) + '</span>' : '';
   }
 
+  // พิกัดแปลง "ละติจูด, ลองจิจูด" → ลิงก์เปิด Google Maps (แท็บใหม่) · รูปแบบไม่ถูกต้องก็แสดงเป็นข้อความเฉย ๆ
+  function parcelLink(s) {
+    var m = String(s || '').trim().match(/^(-?\d{1,2}(?:\.\d+)?)\s*[,\s]\s*(-?\d{2,3}(?:\.\d+)?)$/);
+    if (!m) return esc(s);
+    return '<a class="dr-map" href="https://maps.google.com/?q=' + m[1] + ',' + m[2] + '" target="_blank" rel="noopener" title="เปิดใน Google Maps">' + esc(s) + ' ↗</a>';
+  }
+
   // บรรทัดเดียวของหนึ่งร่าง
   function rowHtml(r) {
     var d = r.d, v = r.v, closed = r.closed;
     var canEdit = !d.caseId && d.status !== 'cancelled' && !(d.km == null && d.parcel);   // ร่างจาก LINE ที่ใช้พิกัดแปลงแทน กม. แก้ในฟอร์มนี้ไม่ได้ (ฟอร์มบังคับ กม.)
     var canCancel = ACC ? true : !closed;
     return '<div class="dr-ln" role="button" tabindex="0" data-id="' + esc(d.id) + '">' +
-      '<span class="dr-t">ทล.' + esc(d.highway) + sectionText(d.highway) + '<span class="dr-k">' + (d.km == null && d.parcel ? 'พิกัดแปลง ' + esc(d.parcel) : 'กม.' + esc(fmtKm(d.km))) + '</span></span>' +
+      '<span class="dr-t">ทล.' + esc(d.highway) + sectionText(d.highway) + '<span class="dr-k">' + (d.km == null && d.parcel ? 'พิกัดแปลง ' + parcelLink(d.parcel) : 'กม.' + esc(fmtKm(d.km))) + '</span></span>' +
       '<span class="dr-n">' + esc(d.note || '') + '</span>' +
       '<span class="dr-d">' + (v.due ? 'ครบ ' + esc(tdate(v.due)) : esc(tdate(v.start))) + '</span>' +
       chip(v) + (d.caseId ? '<span class="dr-chip g">บันทึกเคสแล้ว</span>' : '') +
@@ -230,7 +238,7 @@
     el.querySelectorAll('.dr-ln').forEach(function (row) {
       var id = row.getAttribute('data-id');
       function go() { var d = byId(id); if (!d || d.status === 'cancelled') return; if (d.caseId) openCase(d); else makeCase(d); }
-      row.onclick = function (ev) { if (ev.target.closest('button')) return; go(); };
+      row.onclick = function (ev) { if (ev.target.closest('button, a')) return; go(); };
       row.onkeydown = function (ev) { if (ev.target === row && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); go(); } };
       row.querySelectorAll('button[data-act]').forEach(function (b) {
         b.onclick = function () {
@@ -327,7 +335,7 @@
   }
   function makeCase(d) {
     // openNew ล้างฟอร์มก่อน (ล้างค่าค้างด้วย) จึงตั้งค่าร่างที่รอผูกหลังเรียก · ถ้าหน้านั้นเลือกเปิดเรื่องเดิมแทน (ชี้แนวเขต) จะคืน { existingId }
-    var r = CFG.openNew({ startDate: d.startDate, highway: d.highway, km: d.km, draftId: d.id });
+    var r = CFG.openNew({ startDate: d.startDate, highway: d.highway, km: d.km, parcel: d.parcel, draftId: d.id });
     pendingId = d.id;
     pendingExisting = (r && r.existingId) ? String(r.existingId) : '';
   }
@@ -365,8 +373,22 @@
     if (!CFG || started || !window.FBL || !FBL.watch) return;
     started = true;
     loadHolidays(); fetchHolidays();
-    FBL.watch('drafts', function (col, docs) { drafts = docs.map(norm); render(); }).then(function (docs) { drafts = docs.map(norm); render(); });
+    FBL.watch('drafts', function (col, docs) { drafts = docs.map(norm); render(); notify(); }).then(function (docs) { drafts = docs.map(norm); render(); notify(); });
   }
+  // แจ้งหน้าหลักให้วาดปฏิทินสัปดาห์ใหม่เมื่อรายการร่างเปลี่ยน
+  function notify() { try { if (typeof window.onDraftsChanged === 'function') window.onDraftsChanged(); } catch (e) { /* ข้าม */ } }
+  // ร่างที่ยังรอดำเนินการและยังไม่ผูกเคส พร้อมวันครบกำหนด — ใช้แสดงในปฏิทินหน้าภาพรวม
+  function openItems() {
+    var t = today(), out = [];
+    drafts.forEach(function (d) {
+      if (d.caseId) return;
+      var v = viewOf(d, t);
+      if (v.hide || v.state !== 'open') return;
+      out.push({ d: d, due: v.due, left: v.left });
+    });
+    return out;
+  }
+  function openDraft(id) { var d = byId(id); if (d && d.status !== 'cancelled') { if (d.caseId) openCase(d); else makeCase(d); } }
   function norm(d) {
     return { id: d.id || d.__id, startDate: d10(d.startDate), highway: String(d.highway == null ? '' : d.highway), km: (d.km == null || d.km === '') ? null : Number(d.km), parcel: d.parcel ? String(d.parcel) : '',
       caseId: d.caseId || '', status: d.status === 'cancelled' ? 'cancelled' : 'open', source: d.source || '', note: d.note || '', createdAt: d.createdAt || '', createdBy: d.createdBy || '' };
@@ -376,6 +398,8 @@
     init: function (cfg) { CFG = cfg; ACC = cfg && cfg.sys === 'accident'; loadHolidays(); },
     start: start,
     render: render,
+    openItems: openItems,
+    openDraft: openDraft,
     afterCaseSaved: afterCaseSaved,
     clearPending: function () { pendingId = null; pendingExisting = ''; },
     pendingId: function () { return pendingId; },
