@@ -3534,6 +3534,10 @@ function fitPhotoCard(){
   if (!m || !card || m.style.display === 'none') return;
   const sc = m.querySelector('.form-main');
   if (!sc || !sc.clientHeight) return;
+  // ทุกข้อ (ไม่ใช่ข้อสุดท้าย) สูงเต็มพื้นที่มองเห็นของกรอบเลื่อน (หักแถบปุ่มบันทึกที่ตรึงด้านล่าง) — กดขั้นตอนไหนก็เห็นข้อนั้นเต็มพอดี ไม่มีข้อถัดไปโผล่
+  const bar = sc.querySelector('.form-savebar');
+  const avail = Math.max(0, Math.round(sc.clientHeight - (bar ? bar.offsetHeight : 0) - 8 - 12));
+  fmCards().forEach(c => { if (c && c !== card) c.style.minHeight = avail + 'px'; });
   const maxScroll = Math.max(0, sc.scrollHeight - sc.clientHeight);
   const top = card.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - maxScroll; // ตำแหน่งบนของการ์ดเมื่อเลื่อนสุด
   const need = Math.round(top - 8);
