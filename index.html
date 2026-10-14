@@ -4544,6 +4544,7 @@ function renderWeekCalendar(){
   const put = (key, cls, label, r) => { (items[key] = items[key] || []).push({ cls, label, r }); };
   open.forEach(r => {
     if (r.appointDate && !r.pointedDate) put(r.appointDate, 'ap', r.appointDate < todayStr ? 'เลยนัดชี้แนวเขต' : 'นัดชี้แนวเขต', r);
+    if (r.pointedDate) put(String(r.pointedDate).slice(0, 10), 'ap', 'ชี้แนวเขตแล้ว', r);   // วันที่ชี้แนวเขตจริง
     {
       const due = deadlineInfo(r).due;
       if (due) put(due, due < todayStr ? 'ov' : 'rp', due < todayStr ? 'ส่งแขวงเลยกำหนด' : 'ครบกำหนดส่งแขวง', r);
@@ -4553,6 +4554,7 @@ function renderWeekCalendar(){
   try {
     (window.DRAFTS && DRAFTS.openItems ? DRAFTS.openItems() : []).forEach(x => {
       if (!x.due) return;
+      if (x.d.startDate) put(x.d.startDate, 'ap', 'ชี้แนวเขต (ร่าง)', { draft: x.d });   // วันชี้แนวเขตของร่าง
       const over = x.due < todayStr;
       put(over ? todayStr : x.due, over ? 'ov' : 'rp', (over ? 'ร่างเลยกำหนดส่งแขวง' : 'ร่างครบกำหนดส่งแขวง'), { draft: x.d });
     });
