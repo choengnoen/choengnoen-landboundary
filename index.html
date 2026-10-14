@@ -1116,7 +1116,28 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .cd-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
 .cd-sec{font-family:'Kanit',sans-serif;font-weight:600;font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px;color:var(--ink)}
 .cd-count{margin-left:auto;font-family:'Sarabun',sans-serif;font-weight:600;font-size:12.5px;background:var(--paper-2);color:var(--ink-soft);border-radius:999px;padding:2px 11px}
-.cd-dl{margin:0;display:grid;grid-template-columns:104px 1fr;gap:6px 10px;font-size:14px}
+.cd-dl{margin:0;display:grid;grid-template-columns:minmax(104px,max-content) 1fr;gap:6px 10px;font-size:14px}
+.cd-dl dt{white-space:nowrap}
+@media(max-width:560px){.cd-dl{grid-template-columns:104px 1fr}.cd-dl dt{white-space:normal}}
+/* เส้นความคืบหน้าของเรื่อง 7 ขั้น: เขียว = เสร็จแล้ว · ส้ม = ยังไม่เสร็จ · แดง = เลยกำหนดส่งแขวง · เทา = ยกเลิก/ไม่ระบุ */
+.cd-prog{display:flex;align-items:stretch;gap:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:14px}
+.cd-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,1fr);flex:1;min-width:0}
+.cd-st{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;min-width:0;padding:0 3px}
+.cd-st::before{content:'';position:absolute;top:13px;left:-50%;width:100%;height:3px;background:var(--line);z-index:0}
+.cd-st:first-child::before{display:none}
+.cd-st.ok::before{background:#1f9d6b}
+.cd-dot{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;line-height:1;background:var(--paper-2);color:var(--ink-mute);box-shadow:0 0 0 1px var(--line),0 0 0 3px #fff}
+.cd-st.ok .cd-dot{background:#d7f0e1;color:#1c8a53;box-shadow:0 0 0 1px #1f9d6b,0 0 0 3px #fff}
+.cd-st.warn .cd-dot{background:#FAEEDA;color:#a85d00;box-shadow:0 0 0 1px #e59a14,0 0 0 3px #fff}
+.cd-st.bad .cd-dot{background:#FCEBEB;color:#b3261e;box-shadow:0 0 0 1px #d64545,0 0 0 3px #fff}
+.cd-st b{font-size:13px;line-height:1.25;margin-top:5px}
+.cd-ss{font-size:12.5px;line-height:1.25;color:var(--ink-mute);overflow-wrap:anywhere}
+.cd-st.ok .cd-ss{color:#1c7a4d}.cd-st.warn .cd-ss{color:#a85d00;font-weight:600}.cd-st.bad .cd-ss{color:#b3261e;font-weight:700}
+.cd-sn{font-size:11.5px;line-height:1.25;color:var(--ink-mute)}
+.cd-age{flex:none;border-left:1px solid var(--line);padding-left:14px;display:flex;flex-direction:column;justify-content:center;min-width:100px}
+.cd-age span{font-size:12px;color:var(--ink-mute)}.cd-age b{font-family:'Kanit',sans-serif;font-size:20px;line-height:1.2}
+.cd-na{color:#9aa3ad;font-weight:400}.cd-nw{white-space:nowrap}
+@media(max-width:760px){.cd-prog{flex-direction:column}.cd-steps{grid-template-columns:1fr;gap:10px}.cd-st{flex-direction:row;align-items:center;text-align:left;gap:8px;flex-wrap:wrap}.cd-st::before{display:none}.cd-st b{margin-top:0}.cd-age{border-left:0;border-top:1px solid var(--line);padding:8px 0 0;flex-direction:row;gap:8px;align-items:baseline}}
 .cd-dl dt{color:var(--ink-mute)}.cd-dl dd{margin:0;font-weight:500;min-width:0;overflow-wrap:anywhere}
 .cd-k{font-size:12px;color:var(--ink-mute)}
 .cd-person{display:flex;gap:12px;align-items:center;margin-bottom:10px}
@@ -1347,13 +1368,17 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .snap .cd-tile{padding:6px 10px}
 .snap .cd-card{padding:9px 12px;margin-bottom:0}
 .snap .cd-sec{font-size:14px;margin-bottom:6px}
-.snap .cd-dl.wide{display:grid;grid-template-columns:62px 1fr 62px 1fr;gap:3px 8px;font-size:13px}
+.snap .cd-dl.wide{display:grid;grid-template-columns:max-content 1fr max-content 1fr;gap:3px 8px;font-size:13px}
+.snap .cd-dl.wide dt{white-space:nowrap}
+.snap .cd-prog{padding:8px 12px;margin-bottom:0;gap:10px}
+.snap .cd-st b{font-size:12.5px}.snap .cd-ss{font-size:12px}
 .snap .cd-dl.wide dd.full{grid-column:2 / -1}
 .snap .cd-divider{margin:8px 0}
 .snap .cd-photos{gap:8px}
 .snap .cd-photo{aspect-ratio:4/3}
 .snap .snap-items2{display:grid;grid-template-columns:1fr 1fr;column-gap:20px}
-.snap .cd-item{padding:4px 0}
+.snap .cd-item{padding:4px 0;align-items:flex-start;align-self:stretch}
+.snap .snap-items2 .cd-item{line-height:1.45}
 .snap .cd-item b{font-size:13px}
 .snap .cd-q{font-size:11.5px}
 .snap .cd-receipt{padding:8px 13px;margin-top:8px}
@@ -4213,7 +4238,7 @@ async function buildCaseImage(){
   [...L, ...R].forEach(card => {
     card.querySelectorAll('.cd-dl').forEach(dl => dl.replaceWith(snapPairify([dl])));
     const items = [...card.querySelectorAll(':scope > .cd-item')];
-    if (items.length > 1) {
+    if (items.length >= 4) {   // รายการน้อย (1–3 รายการ) แสดงคอลัมน์เดียวตามเดิม
       const receipt = card.querySelector(':scope > .cd-receipt');
       const half = Math.ceil(items.length / 2);
       const cells = []; for (let i = 0; i < half; i++) cells.push(items[i], items[half + i] || mk('', []));   // เรียงสลับซ้าย-ขวาเป็นแถว ให้บรรทัดสองคอลัมน์ตรงกัน
@@ -4231,7 +4256,7 @@ async function buildCaseImage(){
   body.appendChild(mk('snap-col', [...top, grid]));
   const stamp = document.createElement('div');
   stamp.className = 'snap-stamp';
-  stamp.textContent = SNAP_SYSTEM_NAME + ' · หมวดทางหลวงเชิงเนิน แขวงทางหลวงระยอง · คัดลอกเมื่อ ' + new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) + ' น.';
+  stamp.textContent = SNAP_SYSTEM_NAME + ' · หมวดทางหลวงเชิงเนิน แขวงทางหลวงระยอง · คัดลอกเมื่อ ' + (() => { const n = new Date(), z = x => String(x).padStart(2, '0'); return formatThaiDate(n.getFullYear() + '-' + z(n.getMonth() + 1) + '-' + z(n.getDate())) + ' ' + z(n.getHours()) + ':' + z(n.getMinutes()); })() + ' น.';
   shell.append(hd, body, stamp);
 
   const stage = document.createElement('div');
@@ -4328,6 +4353,10 @@ async function copyDraftAsImage(btn){
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('#btnCopyDraft'); if (b) copyDraftAsImage(b); });
 
+// ช่องที่ยังไม่มีข้อมูล แสดง "ยังไม่ระบุ" สีเทาจาง แทนขีด "-" (แยกชัดว่าไม่ใช่ค่าที่กรอกไว้)
+const CD_NA = '<span class="cd-na">ยังไม่ระบุ</span>';
+function cdVal(v){ const s = v == null ? '' : String(v).trim(); return s ? escapeHtml(s) : CD_NA; }
+function cdHtml(h){ return h === '-' ? CD_NA : h; }   // ค่าที่ประกอบเป็น HTML แล้ว: ถ้าได้ "-" แปลว่าว่าง
 function openCaseDetailModal(id){
   const rec = records.find(r => r.id === id);
   if (!rec) return;
@@ -4345,7 +4374,25 @@ function openCaseDetailModal(id){
   const tile = (cls, icon, label, value) => `<div class="cd-tile ${cls}"><div class="cd-ic">${icon}</div><div><span>${label}</span><b>${value}</b></div></div>`;
   // กล่องผลเดียว: เขตทางกันได้ตามบัญชีหรือไม่ ระยะเท่าไร (แทนกล่องสถานะ/รับ/ส่ง/กำหนดส่งเดิม)
   const rr = rowResult(rec);
-  const tilesHtml = `<div class="cd-tiles one">
+  // เส้นความคืบหน้า 7 ขั้นตาม STEPS: เขียว ✓ = ทำแล้ว · ส้ม ! = ยังไม่ทำ · แดง ! = เลยกำหนดส่งแขวง (10 วันทำการนับจากวันชี้แนวเขต — ใช้ deadlineInfo เดิม) · เทา = ยกเลิก
+  const SHORT_STEP = { dateReceived: 'รับเอกสาร', inspectedDate: 'ตรวจสถานที่', pointedDate: 'ชี้แนวเขต', preparedDate: 'จัดทำบันทึก', signedDate: 'ลงนาม', sentDate: 'ส่งแขวง', archivedDate: 'เก็บสำเนา' };
+  const stepLi = (cls, label, sub, note) => `<li class="cd-st ${cls}"><span class="cd-dot">${cls === 'ok' ? '✓' : (cls === 'n' ? '–' : '!')}</span><b>${escapeHtml(label)}</b><span class="cd-ss">${sub}</span>${note ? `<span class="cd-sn">${note}</span>` : ''}</li>`;
+  const progSteps = STEPS.map(s => {
+    const d = normalizeDateStr(rec[s.field]);
+    const label = SHORT_STEP[s.field] || s.label;
+    if (rec.cancelled) return stepLi('n', label, d ? escapeHtml(formatThaiDate(d)) : 'ยกเลิก');
+    if (d) return stepLi('ok', label, escapeHtml(formatThaiDate(d)), (s.field === 'sentDate' && dl.key === 'late') ? escapeHtml(dl.text) : '');
+    if (s.field === 'sentDate') {
+      const sub = dl.key === 'none' ? 'รอชี้แนวเขต' : escapeHtml(dl.text).replace(/(\d+ วันทำการ)/, '<span class="cd-nw">$1</span>');
+      return stepLi(dl.cls === 'bad' ? 'bad' : 'warn', label, sub, dl.due ? 'กำหนด ' + escapeHtml(formatThaiDate(dl.due)) : '');
+    }
+    return stepLi('warn', label, escapeHtml(s.wait || 'ยังไม่ระบุ'));
+  }).join('');
+  const progHtml = `<div class="cd-prog">
+      <ol class="cd-steps">${progSteps}</ol>
+      <div class="cd-age"><span>${rec.sentDate ? 'ใช้เวลาจนส่งแขวง' : 'ระยะเวลาค้าง'}</span><b>${days === null ? '-' : days.toLocaleString('th-TH') + ' วัน'}</b></div>
+    </div>`;
+  const tilesHtml = `${progHtml}<div class="cd-tiles one">
       <div class="cd-tile ${rr.cls}"><div class="cd-ic">${rr.icon}</div><div><span>เขตทางตามบัญชี</span><b>${rr.title}</b>${rr.sub ? '<span class="cd-sub">' + rr.sub + '</span>' : ''}</div></div>
     </div>`;
 
@@ -4372,8 +4419,7 @@ function openCaseDetailModal(id){
         <div class="modal-head cd-hd">
           <div class="cd-band">
             <img src="logo.png" alt="ตรากรมทางหลวง" data-cn-emblem class="cd-logo">
-            <div class="cd-type">รายการชี้แนวเขต</div>
-            <div class="cd-pills"><span class="cd-pill">${rec.pointedDate ? 'ชี้แนวเขต ' + escapeHtml(formatThaiDate(rec.pointedDate)) : (rec.appointDate ? 'นัดชี้แนวเขต ' + escapeHtml(formatThaiDate(rec.appointDate)) : 'ยังไม่ชี้แนวเขต')}</span></div>
+            <div class="cd-type">รายละเอียดชี้แนวเขต</div>
             <div class="cd-hd-actions"><button class="cd-copy" id="caseDetailCopy" type="button" title="คัดลอกเป็นรูป" aria-label="คัดลอกเป็นรูป"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button><button class="modal-close" id="caseDetailCloseX" type="button">×</button></div>
           </div>
           <div class="cd-cells">
@@ -4384,40 +4430,42 @@ function openCaseDetailModal(id){
         </div>
         <div class="modal-body">
           ${rec.cancelled ? `<div class="cd-card" style="border-color:var(--line);background:var(--paper-2)"><b>ยกเลิก / ถอนเรื่อง</b>${rec.cancelReason ? ' — ' + escapeHtml(rec.cancelReason) : ''}</div>` : ''}
+          ${progHtml}
           <div class="cd-cols">
             <div>
               <div class="cd-card"><div class="cd-sec">ข้อมูลที่ดิน</div>
                 <dl class="cd-dl">
-                  <dt>เอกสารสิทธิ์</dt><dd>${escapeHtml(deedText(rec)) || '-'}</dd>
-                  <dt>เลขที่ดิน</dt><dd>${escapeHtml(rec.landNo) || '-'}</dd>
-                  <dt>ที่ตั้ง</dt><dd>${escapeHtml(placeText(rec)) || '-'}</dd>
-                  <dt>เนื้อที่</dt><dd>${escapeHtml(areaText(rec)) || '-'}</dd>
-                  <dt>บริเวณ</dt><dd>${escapeHtml(rec.location) || '-'}</dd>
-                  <dt>ระยะเขตทาง</dt><dd>${rowListText(rec.rowAcctList, rec.rowDistance, ' ม. จากศูนย์กลาง')}</dd>
-                  <dt>ระยะเขตทางกันแนวเขต</dt><dd>${rowListText(rec.rowWorkList, rec.rowWork, ' ม.')}</dd>
-                  <dt>วันนัดชี้แนว</dt><dd>${rec.appointDate ? escapeHtml(formatThaiDate(rec.appointDate)) + (rec.appointTime ? ' เวลา ' + escapeHtml(rec.appointTime) + ' น.' : '') : '-'}</dd>
-                  <dt>ช่างทางหลวง</dt><dd>${rec.repName ? escapeHtml(rec.repName) + (rec.repPosition ? '<br><small>' + escapeHtml(rec.repPosition) + '</small>' : '') + ([rec.repPhone, rec.repMobile].filter(Boolean).length ? '<br><small>' + escapeHtml([rec.repPhone ? 'โทร ' + rec.repPhone : '', rec.repMobile ? 'มือถือ ' + rec.repMobile : ''].filter(Boolean).join(' · ')) + '</small>' : '') : '-'}</dd>
-                  <dt>ช่างรังวัด</dt><dd>${rec.surveyorName ? escapeHtml(rec.surveyorName) + (rec.surveyorPhone ? '<br><small>โทร ' + escapeHtml(rec.surveyorPhone) + '</small>' : '') : '-'}</dd>
-                  <dt>พิกัดแปลง</dt><dd>${coordsHtml(rec.coords)}</dd>
+                  <dt>วันชี้แนวเขต</dt><dd>${rec.pointedDate ? escapeHtml(formatThaiDate(rec.pointedDate)) : '<span class="cd-na">ยังไม่ชี้แนวเขต</span>'}</dd>
+                  <dt>เอกสารสิทธิ์</dt><dd>${cdVal(deedText(rec))}</dd>
+                  <dt>เลขที่ดิน</dt><dd>${cdVal(rec.landNo)}</dd>
+                  <dt>ที่ตั้ง</dt><dd>${cdVal(placeText(rec))}</dd>
+                  <dt>เนื้อที่</dt><dd>${cdVal(areaText(rec))}</dd>
+                  <dt>บริเวณ</dt><dd>${cdVal(rec.location)}</dd>
+                  <dt>ระยะเขตทาง</dt><dd>${cdHtml(rowListText(rec.rowAcctList, rec.rowDistance, ' ม. จากศูนย์กลาง'))}</dd>
+                  <dt>ระยะเขตทางกันแนวเขต</dt><dd>${cdHtml(rowListText(rec.rowWorkList, rec.rowWork, ' ม.'))}</dd>
+                  <dt>วันนัดชี้แนว</dt><dd>${rec.appointDate ? escapeHtml(formatThaiDate(rec.appointDate)) + (rec.appointTime ? ' เวลา ' + escapeHtml(rec.appointTime) + ' น.' : '') : CD_NA}</dd>
+                  <dt>ช่างทางหลวง</dt><dd>${rec.repName ? escapeHtml(rec.repName) + (rec.repPosition ? '<br><small>' + escapeHtml(rec.repPosition) + '</small>' : '') + ([rec.repPhone, rec.repMobile].filter(Boolean).length ? '<br><small>' + escapeHtml([rec.repPhone ? 'โทร ' + rec.repPhone : '', rec.repMobile ? 'มือถือ ' + rec.repMobile : ''].filter(Boolean).join(' · ')) + '</small>' : '') : CD_NA}</dd>
+                  <dt>ช่างรังวัด</dt><dd>${rec.surveyorName ? escapeHtml(rec.surveyorName) + (rec.surveyorPhone ? '<br><small>โทร ' + escapeHtml(rec.surveyorPhone) + '</small>' : '') : CD_NA}</dd>
+                  <dt>พิกัดแปลง</dt><dd>${cdHtml(coordsHtml(rec.coords))}</dd>
                 </dl></div>
               <div class="cd-card"><div class="cd-sec">เจ้าของที่ดิน${rec.hasProxy === 'มี' ? ' / ผู้รับมอบอำนาจ' : ''}</div>
                 <dl class="cd-dl">
-                  <dt>เจ้าของที่ดิน</dt><dd>${escapeHtml(rec.ownerName) || '-'}</dd>
-                  <dt>โทร</dt><dd>${escapeHtml(rec.ownerPhone) || '-'}</dd>
-                  <dt>ที่อยู่</dt><dd>${escapeHtml(rec.ownerAddress) || '-'}</dd>
+                  <dt>เจ้าของที่ดิน</dt><dd>${cdVal(rec.ownerName)}</dd>
+                  <dt>โทร</dt><dd>${cdVal(rec.ownerPhone)}</dd>
+                  <dt>ที่อยู่</dt><dd>${cdVal(rec.ownerAddress)}</dd>
                 </dl>
                 ${rec.hasProxy === 'มี' ? `<div class="cd-divider"></div>
                 <dl class="cd-dl">
-                  <dt>ผู้รับมอบอำนาจ</dt><dd>${escapeHtml(rec.proxyName) || '-'}</dd>
-                  <dt>โทร</dt><dd>${escapeHtml(rec.proxyPhone) || '-'}</dd>
-                  <dt>เกี่ยวข้องเป็น</dt><dd>${escapeHtml(rec.proxyRelation) || '-'}</dd>
+                  <dt>ผู้รับมอบอำนาจ</dt><dd>${cdVal(rec.proxyName)}</dd>
+                  <dt>โทร</dt><dd>${cdVal(rec.proxyPhone)}</dd>
+                  <dt>เกี่ยวข้องเป็น</dt><dd>${cdVal(rec.proxyRelation)}</dd>
                 </dl>` : ''}
               </div>
               <div class="cd-card"><div class="cd-sec">การรับเรื่องและอ้างอิง</div>
                 <dl class="cd-dl">
-                  <dt>เลขที่หนังสือ</dt><dd style="font-size:13px">${escapeHtml(rec.incomingNo) || '-'}</dd>
-                  <dt>หมายเหตุ</dt><dd>${escapeHtml(rec.note) || '-'}</dd>
-                  <dt>ผู้บันทึก</dt><dd>${escapeHtml(rec.recordedBy) || '-'}${rec.updatedBy && rec.updatedBy !== rec.recordedBy ? ' · แก้ไขล่าสุดโดย ' + escapeHtml(rec.updatedBy) : ''}</dd>
+                  <dt>เลขที่หนังสือ</dt><dd style="font-size:13px">${cdVal(rec.incomingNo)}</dd>
+                  ${rec.note ? `<dt>หมายเหตุ</dt><dd>${escapeHtml(rec.note)}</dd>` : ''}
+                  <dt>ผู้บันทึก</dt><dd>${cdVal(rec.recordedBy)}${rec.updatedBy && rec.updatedBy !== rec.recordedBy ? ' · แก้ไขล่าสุดโดย ' + escapeHtml(rec.updatedBy) : ''}</dd>
                 </dl></div>
             </div>
             <div>
