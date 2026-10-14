@@ -997,7 +997,7 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pin-tog button{border:0;background:transparent;padding:8px 18px;border-radius:9px;font:600 14px 'Sarabun',sans-serif;color:var(--ink-soft);cursor:pointer}
 .pin-tog button.on{background:#fff;color:var(--navy-900);box-shadow:0 1px 4px rgba(0,0,0,.18)}
 .pin-info{margin-bottom:12px}
-.pin-info-grid{display:grid;grid-template-columns:180px minmax(120px,.8fr) 150px minmax(200px,1.4fr);gap:12px;align-items:end}
+.pin-info-grid{display:grid;grid-template-columns:150px minmax(200px,1fr);gap:12px;align-items:end}
 .pin-info-grid .field{margin:0;min-width:0}
 .pin-info-grid input[readonly]{background:var(--paper-2);color:var(--ink-soft)}
 @media(max-width:900px){.pin-info-grid{grid-template-columns:1fr 1fr}}
@@ -1033,7 +1033,8 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .pn-hdi .pin-del{position:absolute;top:8px;right:6px;width:24px;height:24px;border:0;background:transparent;color:#9aa39a;border-radius:7px;cursor:pointer;font-size:15px;line-height:1;padding:0}
 .pn-hdi .pin-del:hover{background:#fdecea;color:#c0392b}
 .pn .pn-addth{vertical-align:middle}
-.pn .pin-add{margin:0;width:auto;height:34px;padding:0 12px;white-space:nowrap}
+.pn .pin-add{margin:0;width:auto;height:44px;padding:0 16px;white-space:nowrap;background:#fff;border:1px solid var(--line);border-radius:10px;color:var(--navy-900);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.pn .pin-add:hover{border-color:var(--amber-500);color:var(--amber)}
 .draft-box{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;margin-top:0;overflow-x:auto;color:#182430}
 .draft-box svg{width:100%;max-width:100%;height:auto;display:block;margin:0 auto}
 .draft-empty{font-size:13px;color:var(--ink-mute);padding:6px 0}
@@ -1614,15 +1615,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <div class="section-title"><span class="num">3</span> ผลการชี้แนวเขต</div>
       <div class="pin-tog" id="pinModeTog"><button type="button" class="on" data-mode="form">กรอกข้อมูล</button><button type="button" data-mode="draft">ดูใบร่าง</button></div>
       <div id="pinFormView">
-        <div class="party-block pin-info">
-          <div class="lg-h">ข้อมูลทางหลวง <span class="hint">(ทางหลวง/ตอน เลือกที่ส่วนที่ 2)</span></div>
-          <div class="pin-info-grid">
-            <div class="field"><label>ทางหลวงหมายเลข</label><input type="text" id="pi_highway" readonly tabindex="-1"></div>
-            <div class="field"><label>ตอน</label><input type="text" id="pi_section" readonly tabindex="-1"></div>
-            <div class="field"><label>ด้าน</label><select id="pi_side"></select></div>
-            <div class="field"><label>หมายเหตุ</label><input type="text" id="f_note" autocomplete="off"></div>
-          </div>
-        </div>
+        <input type="hidden" id="f_note">
         <!-- ช่อง กม. หมุดที่ 1 ถูกย้ายเข้าตารางโดยสคริปต์ (renderPinSegs) · ทิศทาง กม.เพิ่ม/ลด ระบบคำนวณเอง เก็บเป็นค่าซ่อน -->
         <div id="pinKm0Holder" hidden>
           <div class="field" id="pinKm0Field">
@@ -2280,13 +2273,14 @@ function updateKmHint(){
    - ไม่ทับค่าที่เจ้าหน้าที่พิมพ์/เรื่องที่บันทึกไว้แล้ว (state: '' = ยังไม่แตะ, '1' = ระบบเติม, '0' = เจ้าหน้าที่แก้/ล้างเอง) */
 /* ระยะเขตทางแยกต่อหมุด: ใต้หมุดแต่ละตัวมี "บัญชี" (เติมจากฐานข้อมูลกลางตาม กม. ของหมุดนั้น) และ "หน้างาน"
    สถานะต่อหมุด PV.st: '' = ยังไม่แตะ (ค่าที่โหลดมาจากเรื่องที่บันทึกไว้ไม่ถูกทับ) · '1' = ระบบเติม · '0' = เจ้าหน้าที่แก้/ล้างเอง */
-const PV = { acct: [], work: [], st: [] };
-function pvEnsure(n){ ['acct', 'work', 'st'].forEach(k => { while (PV[k].length < n) PV[k].push(''); PV[k].length = n; }); }
-function pvReset(){ PV.acct = []; PV.work = []; PV.st = []; }
+const PV = { acct: [], work: [], st: [], no: [] };   // no = เลขหมุดโฉนดของแต่ละหมุด (เจ้าหน้าที่กรอก)
+function pvEnsure(n){ ['acct', 'work', 'st', 'no'].forEach(k => { while (PV[k].length < n) PV[k].push(''); PV[k].length = n; }); }
+function pvReset(){ PV.acct = []; PV.work = []; PV.st = []; PV.no = []; }
 function pvLoad(rec){
   const n = ((Array.isArray(rec.pinGaps) && rec.pinGaps.length) ? rec.pinGaps.length : 1) + 1;
   const fill = (list, single) => Array.from({ length: n }, (_, i) => Array.isArray(list) ? (list[i] != null ? String(list[i]) : '') : String(single || ''));
   PV.acct = fill(rec.rowAcctList, rec.rowDistance); PV.work = fill(rec.rowWorkList, rec.rowWork); PV.st = Array(n).fill('');
+  PV.no = Array.from({ length: n }, (_, i) => Array.isArray(rec.pinNoList) && rec.pinNoList[i] != null ? String(rec.pinNoList[i]) : '');
 }
 function pvMirror(){   // ช่องซ่อน rowDistance/rowWork = ค่าของหมุดที่ 1 (ให้เรื่อง/ส่งออก/หน้ารายละเอียดแบบเดิมอ่านได้)
   const a = document.getElementById('f_rowDistance'), w = document.getElementById('f_rowWork');
@@ -3628,7 +3622,7 @@ async function saveForm(){
   TEXT_FIELDS.forEach(k => { rec[k] = document.getElementById('f_' + k).value.trim(); });
   rec.incomingNo = getIncomingNoField();
   rec.pinGaps = currentGaps();
-  { const n = rec.pinGaps.length + 1; pvEnsure(n); rec.rowAcctList = PV.acct.slice(0, n); rec.rowWorkList = PV.work.slice(0, n);
+  { const n = rec.pinGaps.length + 1; pvEnsure(n); rec.rowAcctList = PV.acct.slice(0, n); rec.rowWorkList = PV.work.slice(0, n); rec.pinNoList = PV.no.slice(0, n);
     rec.rowDistance = rec.rowAcctList[0] || ''; rec.rowWork = rec.rowWorkList[0] || ''; }
   if (rec.pinDir !== 'down') rec.pinDir = 'up';
   if (rec.deedType !== 'อื่นๆ') rec.deedOther = '';
@@ -5016,7 +5010,7 @@ function draftModelFromForm(){
     pinKm0: g('f_pinKm0'), pinDir: pins.dir,
     pinGaps: pins.gaps,
     side: g('f_side'), location: g('f_location'), rowDistance: g('f_rowDistance'), rowWork: g('f_rowWork'),
-    rowAcctList: PV.acct.slice(0, pins.gaps.length + 1), rowWorkList: PV.work.slice(0, pins.gaps.length + 1),
+    rowAcctList: PV.acct.slice(0, pins.gaps.length + 1), rowWorkList: PV.work.slice(0, pins.gaps.length + 1), pinNoList: PV.no.slice(0, pins.gaps.length + 1),
     areaRai: g('f_areaRai'), areaNgan: g('f_areaNgan'), areaWa: g('f_areaWa'), coords: g('f_coords'), note: g('f_note')
   };
 }
@@ -5039,6 +5033,8 @@ function draftSvg(m, opts){
   // ระยะเขตทางแยกต่อหมุด (บัญชี / หน้างาน) — ถ้าไม่เท่ากันตลอดหมุด วาดใต้หมุดแต่ละตัว · เท่ากันหมด = แสดงเป็นบรรทัดเดียวในรายละเอียดเหมือนเดิม
   const pvArr = (arr, single) => Array.from({ length: N }, (_, i) => String(Array.isArray(arr) ? (arr[i] != null ? arr[i] : '') : (single || '')));
   const RA = pvArr(m.rowAcctList, m.rowDistance), RW = pvArr(m.rowWorkList, m.rowWork);
+  const RN = pvArr(m.pinNoList, '').map(t => t.trim());   // เลขหมุดโฉนดต่อหมุด: มีอย่างน้อย 1 หมุด → วาดป้ายกรอบใต้ชื่อหมุด แล้วเลื่อนบัญชี/หน้างานลง
+  const noOff = RN.some(Boolean) ? 28 : 0;
   const pvDiffer = a => new Set(a).size > 1;
   const perPin = !!(opts && opts.perPin) || pvDiffer(RA) || pvDiffer(RW);
   const valid = kms.filter(k => k !== null);
@@ -5056,9 +5052,14 @@ function draftSvg(m, opts){
     s += '<circle cx="' + x + '" cy="' + lineY + '" r="7" fill="' + ((i === 0 || i === N - 1) ? '#d9610a' : 'currentColor') + '"/>';
     s += T(x, 120, kms[i] !== null ? fmtKm2(kms[i]) : dots, { s: 15, c: kms[i] !== null ? null : '#8a949e' });
     s += T(x, 188, 'หมุด ' + (i + 1), { s: 13, c: '#6b7682' });
+    if (RN[i]) {
+      const label = 'เลขหมุด ' + RN[i], bw = Math.max(70, label.length * 7.5 + 18);
+      s += '<rect x="' + (x - bw / 2) + '" y="196" width="' + bw + '" height="22" rx="5" fill="none" stroke="#6b7682" stroke-width="1"/>';
+      s += T(x, 212, label, { s: 12.5, b: 1 });
+    }
     if (perPin && !(opts && opts.noDetails)) {
-      s += T(x, 208, 'บัญชี ' + (RA[i] || '…') + ' ม.', { s: 12, c: '#1d4e83' });
-      s += T(x, 224, 'หน้างาน ' + (RW[i] || '…') + ' ม.', { s: 12, c: '#a3660a' });
+      s += T(x, 208 + noOff, 'บัญชี ' + (RA[i] || '…') + ' ม.', { s: 12, c: '#1d4e83' });
+      s += T(x, 224 + noOff, 'หน้างาน ' + (RW[i] || '…') + ' ม.', { s: 12, c: '#a3660a' });
     }
     if (i < N - 1) {
       const g = gaps[i], mx = (x + xOf(i + 1)) / 2;
@@ -5070,7 +5071,7 @@ function draftSvg(m, opts){
   s += T(xOf(leftIdx), 94, 'กม.ต้น', { s: 16, b: 1, c: '#d9610a' });
   s += T(xOf(rightIdx), 94, 'กม.ปลาย', { s: 16, b: 1, c: '#d9610a' });
   // ในฟอร์ม: วาดเฉพาะผังหมุด — ส่วน "รายละเอียด" เป็นช่องกรอกในตัว (HTML) ใต้ผัง · ใบร่างพิมพ์/หน้ารายละเอียดยังวาดครบเหมือนเดิม
-  if (opts && opts.noDetails) return '<svg viewBox="0 0 ' + W + ' 206" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ผังหมุดใบร่างงานชี้แนวเขต">' + s + '</svg>';
+  if (opts && opts.noDetails) return '<svg viewBox="0 0 ' + W + ' ' + (206 + (RN.some(Boolean) ? 28 : 0)) + '" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ผังหมุดใบร่างงานชี้แนวเขต">' + s + '</svg>';
   // รายละเอียด
   const areaBits = [[m.areaRai, 'ไร่'], [m.areaNgan, 'งาน'], [m.areaWa, 'ตร.วา']].filter(p => p[0] !== '' && p[0] != null).map(p => p[0] + ' ' + p[1]).join(' ');
   const rows = [['แปลงที่ดินตั้งอยู่บริเวณ : ', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots)]];
@@ -5081,19 +5082,11 @@ function draftSvg(m, opts){
   if (areaBits) rows.push(['เนื้อที่โฉนด : ', areaBits]);
   if (m.coords) rows.push(['พิกัดแปลงที่ดิน : ', m.coords]);
   if (m.note) rows.push(['หมายเหตุ : ', m.note]);
-  let y = perPin ? 284 : 244;
+  let y = (perPin ? 284 : 244) + noOff;
   s += T(60, y, 'รายละเอียด', { s: 18, b: 1, a: 'start' });
   rows.forEach(r => { y += 28; s += '<text x="60" y="' + y + '" font-size="16" fill="currentColor">- ' + e(r[0]) + '<tspan font-weight="700">' + e(r[1]) + '</tspan></text>'; });
   const H = y + 22;
   return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ใบร่างงานชี้แนวเขต">' + s + '</svg>';
-}
-/* กล่อง "ข้อมูลทางหลวง" ในส่วนที่ 3: ทล./ตอน อ่านจากส่วนที่ 2 (แสดงอย่างเดียว) · ด้าน = ช่องเลือกคู่กับ f_side (แก้ที่ไหนก็ตรงกัน) */
-function syncPinInfo(){
-  const g = id => document.getElementById(id), hw = g('f_highway'), fs = g('f_side'), ps = g('pi_side');
-  const setv = (id, v) => { const el = g(id); if (el && el.value !== v) el.value = v; };
-  setv('pi_highway', hw && hw.value ? ((hw.selectedOptions && hw.selectedOptions[0]) ? hw.selectedOptions[0].textContent.trim() : hw.value) : '');
-  setv('pi_section', g('f_section') ? g('f_section').value : '');
-  if (ps && fs) { if (ps.options.length !== fs.options.length) ps.innerHTML = fs.innerHTML; if (ps.value !== fs.value) ps.value = fs.value; }
 }
 function updatePtDiff(){   // ส่วนต่าง = หน้างาน − บัญชี (ติดลบ = กันไม่ครบตามบัญชี)
   document.querySelectorAll('#pinRows .pn-diff').forEach(el => {
@@ -5101,13 +5094,12 @@ function updatePtDiff(){   // ส่วนต่าง = หน้างาน �
     if (isNaN(a) || isNaN(w)) { el.textContent = '–'; el.className = 'pn-diff'; return; }
     const df = Math.round((w - a) * 100) / 100;
     el.textContent = (df > 0 ? '+' : '') + df.toFixed(2) + ' ม.';
-    el.className = 'pn-diff ' + (df >= 0 ? 'ok' : 'warn');
+    el.className = 'pn-diff ' + (df === 0 ? 'ok' : 'warn');
   });
 }
 function updateDraftPreview(){
   const wrap = document.getElementById('draftSvgWrap');
   if (!wrap) return;
-  syncPinInfo();
   let m = draftModelFromForm();
   try { updatePinVals(m); m = draftModelFromForm(); } catch (e) { console.error(e); }   // เติม "ระยะเขตทางตามบัญชี" ต่อหมุดจากฐานข้อมูลกลาง
   wrap.innerHTML = draftSvg(m, { perPin: true });
@@ -5189,6 +5181,7 @@ function renderPinSegs(states){
     <thead><tr><th class="pn-corner">หมุดโฉนด</th>${head}<th class="pn-addth"><button type="button" class="pin-add">+ เพิ่มหมุด</button></th><th></th></tr></thead>
     <tbody>
       <tr><th>กม.</th>${A(i => i === 0 ? '<td class="pn-km0"></td>' : '<td><input type="text" class="pin-to-in" readonly tabindex="-1"></td>')}<td></td><td></td></tr>
+      <tr><th>เลขหมุดโฉนด</th>${A(i => `<td><input type="text" class="pv-n" data-i="${i}" maxlength="12" autocomplete="off" value="${escapeHtml(String(PV.no[i] || ''))}"></td>`)}<td></td><td></td></tr>
       <tr class="pn-sep"><th>ระยะถึงหมุดถัดไป (ม.)</th>${A(i => i < n - 1 ? `<td>${unit(`<input type="text" class="pin-dist-in" inputmode="decimal" maxlength="7" value="${escapeHtml(String(list[i].d || ''))}">`)}<span class="pin-arrow"></span></td>` : '<td class="pn-dash">—</td>')}<td></td><td></td></tr>
       <tr><th>ระยะบัญชี (ม.)</th>${A(i => `<td>${unit(`<input type="text" class="pv-a" data-i="${i}" maxlength="6" readonly tabindex="-1" placeholder="จากบัญชี">`)}</td>`)}<td></td><td></td></tr>
       <tr><th>ระยะหน้างาน (ม.)</th>${A(i => `<td>${unit(`<input type="text" class="pv-w" data-i="${i}" maxlength="6" inputmode="decimal" autocomplete="off" placeholder="0.00">`)}</td>`)}<td></td><td></td></tr>
@@ -5212,6 +5205,9 @@ function initDraftCard(){
     if (t.classList.contains('pin-dist-in')) {
       t.value = t.value.replace(/[^0-9.\-]/g, '').replace(/(?!^)-/g, '');
       updateDraftPreview();
+    } else if (t.classList.contains('pv-n')) {   // เลขหมุดโฉนด: เจ้าหน้าที่กรอกเอง
+      PV.no[+t.dataset.i] = t.value;
+      updateDraftPreview();
     } else if (t.classList.contains('pv-w')) {   // หน้างาน: เจ้าหน้าที่กรอกเอง
       t.value = t.value.replace(/[^0-9.]/g, '');
       PV.work[+t.dataset.i] = t.value;
@@ -5234,7 +5230,7 @@ function initDraftCard(){
       s[i - 1].d = (a && b) ? String(r2((a.neg ? -a.abs : a.abs) + (b.neg ? -b.abs : b.abs))) : '';
       s.splice(i, 1);
     }
-    ['acct', 'work', 'st'].forEach(k => PV[k].splice(i, 1));   // ลบหมุด = ลบค่าเขตทางของหมุดนั้นด้วย
+    ['acct', 'work', 'st', 'no'].forEach(k => PV[k].splice(i, 1));   // ลบหมุด = ลบค่าเขตทางของหมุดนั้นด้วย
     renderPinSegs(s);
   };
   // เพิ่มหมุด: คอลัมน์ใหม่ขึ้นทันที (กม. คำนวณจากหมุดก่อนหน้า) + ใบร่างวาดหมุดใหม่ แล้วเลื่อนเคอร์เซอร์ไปช่องระยะ
@@ -5263,11 +5259,7 @@ function initDraftCard(){
     const b = e.target.closest('[data-mode]');
     if (b) setPinMode(b.dataset.mode);
   });
-  // ด้าน (กล่องข้อมูลทางหลวง) = ช่องเลือกคู่กับ f_side ในส่วนที่ 2
-  const ps = document.getElementById('pi_side'), fs = document.getElementById('f_side');
-  ps.innerHTML = fs.innerHTML; ps.value = fs.value;
-  ps.addEventListener('change', () => { fs.value = ps.value; fs.dispatchEvent(new Event('input', { bubbles: true })); fs.dispatchEvent(new Event('change', { bubbles: true })); });
-  document.getElementById('f_note').addEventListener('input', updateDraftPreview);  ['f_highway', 'f_pinKm0', 'f_side'].forEach(id => {
+  ['f_highway', 'f_pinKm0', 'f_side'].forEach(id => {
     const el = document.getElementById(id);
     const reset = () => { if (pvResetStates()) updateDraftPreview(); };
     el.addEventListener('input', reset); el.addEventListener('change', reset);
@@ -5325,7 +5317,7 @@ function draftModelFromRec(r){
   return {
     highway: r.highway || '', section: r.section || '', km: r.km, pinKm0: r.pinKm0 || '', pinDir: r.pinDir || 'up',
     pinGaps: Array.isArray(r.pinGaps) ? r.pinGaps : [], side: r.side || '', location: r.location || '',
-    rowDistance: r.rowDistance || '', rowWork: r.rowWork || '', rowAcctList: Array.isArray(r.rowAcctList) ? r.rowAcctList : undefined, rowWorkList: Array.isArray(r.rowWorkList) ? r.rowWorkList : undefined, areaRai: r.areaRai, areaNgan: r.areaNgan, areaWa: r.areaWa, coords: r.coords || '', note: r.note || ''
+    rowDistance: r.rowDistance || '', rowWork: r.rowWork || '', rowAcctList: Array.isArray(r.rowAcctList) ? r.rowAcctList : undefined, rowWorkList: Array.isArray(r.rowWorkList) ? r.rowWorkList : undefined, pinNoList: Array.isArray(r.pinNoList) ? r.pinNoList : undefined, areaRai: r.areaRai, areaNgan: r.areaNgan, areaWa: r.areaWa, coords: r.coords || '', note: r.note || ''
   };
 }
 function hasDraftData(r){ return !!(r.pinKm0 || (Array.isArray(r.pinGaps) && r.pinGaps.some(g => g !== null && g !== undefined && g !== ''))); }
