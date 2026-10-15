@@ -5061,11 +5061,21 @@ function applyStaffDocs(docs){
   STAFF = (docs || []).map(d => ({
     id: String(d.id || d.__id), name: d.name || '', position: d.position || '', phone: d.phone || '', mobile: d.mobile || '',
     yearFrom: d.yearFrom || '', yearTo: d.yearTo || ''
-  })).sort((a, b) => (!a.yearTo - !b.yearTo) * -1 || String(b.yearFrom).localeCompare(String(a.yearFrom)) || a.name.localeCompare(b.name, 'th'));
+  })).sort((a, b) => (!a.yearTo - !b.yearTo) * -1 || staffDateKey(b.yearFrom).localeCompare(staffDateKey(a.yearFrom)) || a.name.localeCompare(b.name, 'th'));
+}
+// วันที่ดำรงตำแหน่งเก็บเป็น YYYY-MM-DD (ค.ศ.) · ข้อมูลเก่าเก็บเป็นปี พ.ศ. 4 หลัก (เช่น 2567) ยังอ่านได้
+function isLegacyStaffYear(v){ return /^\d{4}$/.test(String(v || '')); }
+function staffDateKey(v){
+  v = String(v || '');
+  return isLegacyStaffYear(v) ? (Number(v) - 543) + '-01-01' : v;
+}
+function staffDateText(v){
+  if (!v) return '';
+  return isLegacyStaffYear(v) ? 'พ.ศ. ' + v : formatThaiDate(v);
 }
 function staffYearsText(s){
   if (!s.yearFrom && !s.yearTo) return '';
-  return 'พ.ศ. ' + (s.yearFrom || '?') + ' – ' + (s.yearTo || 'ปัจจุบัน');
+  return (staffDateText(s.yearFrom) || '?') + ' – ' + (staffDateText(s.yearTo) || 'ปัจจุบัน');
 }
 function refreshRepOptions(keep){
   const sel = document.getElementById('f_repId');
@@ -5145,8 +5155,8 @@ function openStaffModal(id){
           <div class="field s6"><label>ตำแหน่ง <span class="req">*</span></label><input type="text" id="stf_position" placeholder="เช่น หัวหน้าหมวดทางหลวงเชิงเนิน" value="${escapeHtml(s ? s.position : '')}"></div>
           <div class="field s6"><label>โทรศัพท์</label><input type="text" id="stf_phone" inputmode="numeric" autocomplete="off" value="${escapeHtml(s ? s.phone : '')}"></div>
           <div class="field s6"><label>โทรศัพท์มือถือ</label><input type="text" id="stf_mobile" inputmode="numeric" autocomplete="off" value="${escapeHtml(s ? s.mobile : '')}"></div>
-          <div class="field s6"><label>ดำรงตำแหน่งตั้งแต่ปี (พ.ศ.)</label><input type="text" id="stf_from" inputmode="numeric" maxlength="4" placeholder="เช่น 2567" value="${escapeHtml(s ? s.yearFrom : '')}"></div>
-          <div class="field s6"><label>ถึงปี (พ.ศ.)</label><input type="text" id="stf_to" inputmode="numeric" maxlength="4" placeholder="เว้นว่าง = ปัจจุบัน" value="${escapeHtml(s ? s.yearTo : '')}"></div>
+          <div class="field s6"><label>ดำรงตำแหน่งตั้งแต่วันที่</label><input type="date" id="stf_from" value="${escapeHtml(s && !isLegacyStaffYear(s.yearFrom) ? s.yearFrom : '')}">${s && isLegacyStaffYear(s.yearFrom) ? `<div class="hint">ข้อมูลเดิมระบุเป็นปี พ.ศ. ${escapeHtml(s.yearFrom)} — เลือกวันที่เพื่อแทนที่ (ถ้าไม่เลือก จะเก็บค่าเดิมไว้)</div>` : ''}</div>
+          <div class="field s6"><label>ถึงวันที่ (เว้นว่าง = ปัจจุบัน)</label><input type="date" id="stf_to" value="${escapeHtml(s && !isLegacyStaffYear(s.yearTo) ? s.yearTo : '')}">${s && isLegacyStaffYear(s.yearTo) ? `<div class="hint">ข้อมูลเดิมระบุเป็นปี พ.ศ. ${escapeHtml(s.yearTo)} — เลือกวันที่เพื่อแทนที่ (ถ้าไม่เลือก จะเก็บค่าเดิมไว้)</div>` : ''}</div>
         </div>
         <div class="actions" style="margin-top:14px">
           <button class="btn btn-outline" id="stfCancel" type="button">ยกเลิก</button>
@@ -5157,14 +5167,15 @@ function openStaffModal(id){
   document.body.appendChild(dlg);
   const close = () => dlg.remove();
   ['stf_phone', 'stf_mobile'].forEach(i => { const el = document.getElementById(i); el.addEventListener('input', () => { el.value = formatPhone(el.value); }); });
-  ['stf_from', 'stf_to'].forEach(i => { const el = document.getElementById(i); el.addEventListener('input', () => { el.value = el.value.replace(/\D/g, '').slice(0, 4); }); });
   document.getElementById('stfClose').onclick = close;
   document.getElementById('stfCancel').onclick = close;
   document.getElementById('stfSave').onclick = async () => {
     const g = i => document.getElementById(i).value.trim();
     if (!g('stf_name') || !g('stf_position')) { showToast('กรอกชื่อ-นามสกุลและตำแหน่งให้ครบ'); return; }
-    const yf = g('stf_from'), yt = g('stf_to');
-    if (yf && yt && yt < yf) { showToast('ปีที่สิ้นสุดต้องไม่ก่อนปีที่เริ่ม'); return; }
+    // ไม่ได้เลือกวันใหม่ และของเดิมเป็นปีอย่างเดียว → เก็บค่าเดิมไว้
+    const yf = g('stf_from') || (s && isLegacyStaffYear(s.yearFrom) ? s.yearFrom : '');
+    const yt = g('stf_to') || (s && isLegacyStaffYear(s.yearTo) ? s.yearTo : '');
+    if (yf && yt && staffDateKey(yt) < staffDateKey(yf)) { showToast('วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่ม'); return; }
     const btn = document.getElementById('stfSave'); btn.disabled = true;
     try {
       await FBL.saveStaff({ id: s ? s.id : uid(), name: g('stf_name'), position: g('stf_position'), phone: g('stf_phone'), mobile: g('stf_mobile'), yearFrom: yf, yearTo: yt });
