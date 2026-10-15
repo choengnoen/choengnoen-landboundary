@@ -2957,7 +2957,6 @@ function renderTeamPanelInner(){
     </div>
   `).join('');
   el.innerHTML = `
-    <p class="hint">เจ้าของระบบ: <b style="color:var(--ink)">${escapeHtml(teamConfig.ownerName)}</b></p>
     <div style="margin:10px 0 6px">${memberRows || '<span class="hint">ยังไม่มีเจ้าหน้าที่</span>'}</div>
     ${isOwner() ? `
       <button class="btn btn-outline btn-sm" id="btnAddMember" style="margin-top:14px">+ เพิ่มเจ้าหน้าที่</button>
