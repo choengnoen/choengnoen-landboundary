@@ -4243,6 +4243,8 @@ async function buildCaseImage(){
   await waitCasePhotosReady();
   const clone = src.cloneNode(true);
   clone.querySelectorAll('.cd-foot,.cd-hd-actions,.modal-close').forEach(e => e.remove());
+  // ตัดแถว "ผู้บันทึก" ออกจากรูปที่คัดลอก
+  clone.querySelectorAll('.cd-dl dt').forEach(dt => { if (dt.textContent.trim() === 'ผู้บันทึก') { const dd = dt.nextElementSibling; dt.remove(); if (dd && dd.tagName === 'DD') dd.remove(); } });
   snapStripPhones(clone);
   const mk = (cls, kids) => { const d = document.createElement('div'); if (cls) d.className = cls; (kids || []).forEach(k => k && d.appendChild(k)); return d; };
   const hd = clone.querySelector('.cd-hd');
