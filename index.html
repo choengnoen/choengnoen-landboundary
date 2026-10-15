@@ -2942,7 +2942,7 @@ function renderTeamPanelInner(){
     };
     return;
   }
-  const memberRows = teamConfig.members.map(m => `
+  const memberRowOf = m => `
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">
       ${isPrivileged()
         ? `<span class="p-line"><i class="p-dot" data-pdot="${escapeHtml(m.name)}"></i><span>${escapeHtml(m.name)}${m.name === teamConfig.ownerName ? ' 👑' : (m.isAdmin ? ' 🛡️' : '')}<small class="p-sub" data-pstatus="${escapeHtml(m.name)}"></small></span></span>`
@@ -2955,7 +2955,10 @@ function renderTeamPanelInner(){
         </span>
       ` : ''}
     </div>
-  `).join('');
+  `;
+  const grpH = txt => `<div style="font-size:12px;color:var(--ink-mute);padding:10px 0 2px;border-bottom:1px solid var(--line)">${txt}</div>`;
+  const ownerRows = teamConfig.members.filter(m => m.name === teamConfig.ownerName), staffRows = teamConfig.members.filter(m => m.name !== teamConfig.ownerName);
+  const memberRows = (ownerRows.length ? grpH('เจ้าของระบบ') + ownerRows.map(memberRowOf).join('') : '') + (staffRows.length ? grpH('เจ้าหน้าที่') + staffRows.map(memberRowOf).join('') : '');
   el.innerHTML = `
     <div style="margin:10px 0 6px">${memberRows || '<span class="hint">ยังไม่มีเจ้าหน้าที่</span>'}</div>
     ${isOwner() ? `
