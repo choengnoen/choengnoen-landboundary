@@ -848,7 +848,11 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .fm-box{display:flex;flex-direction:column;max-height:100%;padding:0;overflow:hidden}
 .fm-head{flex:none;position:relative;margin-bottom:0;padding:14px 18px 12px}
 .form-layout{flex:1;min-height:0;display:flex;flex-direction:column;align-items:stretch}
-.form-main{flex:1;min-height:0;overflow-y:auto;padding:12px 18px 0}
+.form-main{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:12px 18px 0;scrollbar-width:thin;scrollbar-color:#c3cad3 transparent}
+.form-main::-webkit-scrollbar{width:8px}
+.form-main::-webkit-scrollbar-track{background:transparent;margin:4px 0}
+.form-main::-webkit-scrollbar-thumb{background:#c3cad3;border-radius:8px}
+.form-main::-webkit-scrollbar-thumb:hover{background:#9aa6b2}
 .fm-box .form-savebar{margin:14px -18px 0;padding:12px 18px;border-width:1px 0 0;border-radius:0 0 18px 18px;box-shadow:none}
 @media(max-width:640px){.fm-box{max-height:none;height:100%}.fm-head{padding:12px 10px}.form-main{padding:10px 10px 0}.fm-box .form-savebar{margin:12px -10px 0;padding:12px 10px;border-radius:0}}
 /* แถบเส้นเวลาใต้ชื่อฟอร์ม: กดข้ามไปแต่ละส่วน · วงกลมแดง ! = ยังขาดช่องบังคับ, เขียว ✓ = ครบ */
@@ -1760,7 +1764,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
     <div class="form-savebar">
       <span class="hint" id="editingHint" style="display:none"></span>
-      <div class="edit-mode-banner" id="editModeBanner"><span class="em-icon">✏️</span><span class="em-title">กำลังแก้ไขเรื่องเดิม</span><span class="em-sub" id="editModeSub"></span></div>
+      <div class="edit-mode-banner" id="editModeBanner"><span class="em-icon">✏️</span><span class="em-title">กำลังแก้ไขรายการเดิม</span><span class="em-sub" id="editModeSub"></span></div>
       <button class="btn btn-outline" id="btnClearForm" type="button">ยกเลิก</button>
       <button class="btn btn-primary" id="btnSave" type="button">บันทึกข้อมูล</button>
     </div>
@@ -4518,9 +4522,9 @@ function openCaseDetailModal(id){
           </div>
         </div>
         <div class="cd-foot">
-          <button class="btn btn-danger" id="caseDetailDelete" style="margin-right:auto">ลบเรื่อง</button>
+          <button class="btn btn-danger" id="caseDetailDelete" style="margin-right:auto">ลบรายการ</button>
           <button class="btn btn-outline" id="caseDetailClose">ปิด</button>
-          <button class="btn btn-primary" id="caseDetailEdit">แก้ไข / บันทึกวันส่งแขวง</button>
+          <button class="btn btn-primary" id="caseDetailEdit">แก้ไขรายการ</button>
         </div>
       </div>
     </div>`;
