@@ -764,6 +764,15 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .p-line{display:flex;align-items:center;gap:12px;min-width:0}
 .p-sub{display:block;font-size:12px;color:var(--ink-mute);line-height:1.3}
 .p-sub.on{color:var(--green)}
+.tm-tbl{border:1px solid var(--line);border-radius:10px;overflow-x:auto}
+.tm-tbl table.data th{text-align:left;position:static}
+.tm-tbl table.data tr:last-child td{border-bottom:0}
+.tm-pill{display:inline-block;padding:1px 10px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.tm-pill.gold{background:#fff6dc;color:#7a5200}
+.tm-pill.blue{background:#e6eef6;color:var(--navy-700)}
+.tm-pill.gray{background:var(--paper-2);color:var(--ink-mute)}
+.tm-acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.trash-strip{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 /* ===== หน้าต่างแก้ไขทรัพย์สิน / สายทาง (แบบ 2: หัวขาว + ชิป + ราคาเด่น) ===== */
 .modal.edit-modal{padding:0;max-width:560px}
 .modal.em-route{max-width:660px}
@@ -1851,7 +1860,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
   <div class="view" id="view-settings">
     <div class="card" id="cardTeamPanel">
-      <div class="section-title" style="justify-content:space-between"><span>ระบบควบคุมการเข้าใช้งาน</span><span class="presence-chip" id="presenceChip" style="display:none"></span></div>
+      <div class="section-title"><span>ผู้ใช้งานระบบ</span><span class="presence-chip" id="presenceChip" style="display:none"></span><span style="flex:1"></span><span id="teamHeadActs"></span></div>
       <div id="teamPanel"></div>
     </div>
     <div class="card" id="cardStaff">
@@ -1865,12 +1874,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         </table>
       </div>
     </div>
-    <div class="settings-row">
-      <div class="card" id="cardTrash">
-        <div class="section-title">🗑 ถังขยะ</div>
-        <button class="btn btn-outline" id="btnOpenTrash">เปิดถังขยะ</button>
-      </div>
-    </div>
+    <div class="card" id="cardTrash"><div class="trash-strip"><div class="section-title" style="margin:0">🗑 ถังขยะ</div><span style="flex:1"></span><button class="btn btn-outline" id="btnOpenTrash">เปิดถังขยะ</button></div></div>
     <div class="card">
       <div class="section-title">เกี่ยวกับระบบ</div>
       <p class="hint">
@@ -2925,6 +2929,8 @@ function renderTeamPanel(){
 function renderTeamPanelInner(){
   const el = document.getElementById('teamPanel');
   if (!el) return;
+  const headActs = document.getElementById('teamHeadActs');
+  if (headActs) headActs.innerHTML = (teamConfig.ownerName && isOwner()) ? '<button class="btn btn-primary btn-sm" id="btnAddMember" type="button">+ เพิ่มเจ้าหน้าที่</button>' : '';
   if (!teamConfig.ownerName) {
     el.innerHTML = `
       <p class="hint" style="margin-bottom:12px">ยังไม่มีใครตั้งค่าเป็นเจ้าของระบบ — ตั้งค่าตัวเองเป็นเจ้าของก่อน แล้วค่อยเพิ่มเจ้าหน้าที่ในทีมทีหลังได้</p>
@@ -2942,29 +2948,23 @@ function renderTeamPanelInner(){
     };
     return;
   }
-  const memberRowOf = m => `
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)">
-      ${isPrivileged()
-        ? `<span class="p-line"><i class="p-dot" data-pdot="${escapeHtml(m.name)}"></i><span>${escapeHtml(m.name)}${m.name === teamConfig.ownerName ? ' 👑' : (m.isAdmin ? ' 🛡️' : '')}<small class="p-sub" data-pstatus="${escapeHtml(m.name)}"></small></span></span>`
-        : `<span>${escapeHtml(m.name)}${m.name === teamConfig.ownerName ? ' 👑' : (m.isAdmin ? ' 🛡️' : '')}</span>`}
-      ${isOwner() ? `
-        <span style="display:flex;gap:6px">
-          ${m.name !== teamConfig.ownerName ? `<button class="btn btn-outline btn-sm" data-toggleadmin="${escapeHtml(m.name)}">${m.isAdmin ? 'ยกเลิกผู้ดูแล' : 'ตั้งเป็นผู้ดูแล'}</button>` : ''}
-          <button class="btn btn-outline btn-sm" data-resetpw="${escapeHtml(m.name)}">ตั้งรหัสผ่านใหม่</button>
-          ${m.name !== teamConfig.ownerName ? `<button class="btn btn-danger btn-sm" data-remove="${escapeHtml(m.name)}">ลบ</button>` : ''}
-        </span>
-      ` : ''}
-    </div>
-  `;
-  const grpH = txt => `<div style="font-size:12px;color:var(--ink-mute);padding:10px 0 2px;border-bottom:1px solid var(--line)">${txt}</div>`;
-  const ownerRows = teamConfig.members.filter(m => m.name === teamConfig.ownerName), staffRows = teamConfig.members.filter(m => m.name !== teamConfig.ownerName);
-  const memberRows = (ownerRows.length ? grpH('เจ้าของระบบ') + ownerRows.map(memberRowOf).join('') : '') + (staffRows.length ? grpH('เจ้าหน้าที่') + staffRows.map(memberRowOf).join('') : '');
+  const ownerFirst = teamConfig.members.slice().sort((a, b) => (b.name === teamConfig.ownerName) - (a.name === teamConfig.ownerName));
+  const memberRowOf = m => {
+    const isO = m.name === teamConfig.ownerName;
+    const role = isO ? '<span class="tm-pill gold">👑 เจ้าของระบบ</span>' : (m.isAdmin ? '<span class="tm-pill blue">🛡️ ผู้ดูแลระบบ</span>' : '<span class="tm-pill gray">เจ้าหน้าที่</span>');
+    const status = isPrivileged() ? `<td><span class="p-line"><i class="p-dot" data-pdot="${escapeHtml(m.name)}"></i><small class="p-sub" data-pstatus="${escapeHtml(m.name)}"></small></span></td>` : '';
+    const acts = isOwner() ? `<td><span class="tm-acts">
+      ${!isO ? `<button class="btn btn-outline btn-sm" data-toggleadmin="${escapeHtml(m.name)}">${m.isAdmin ? 'ยกเลิกผู้ดูแล' : 'ตั้งเป็นผู้ดูแล'}</button>` : ''}
+      <button class="btn btn-outline btn-sm" data-resetpw="${escapeHtml(m.name)}">ตั้งรหัสผ่านใหม่</button>
+      ${!isO ? `<button class="btn btn-danger btn-sm" data-remove="${escapeHtml(m.name)}">ลบ</button>` : ''}
+    </span></td>` : '';
+    return `<tr><td>${escapeHtml(m.name)}</td><td>${role}</td>${status}${acts}</tr>`;
+  };
+  const memberRows = ownerFirst.map(memberRowOf).join('');
+  const memberTable = memberRows ? `<div class="tm-tbl"><table class="data"><thead><tr><th>ชื่อ</th><th>สิทธิ์</th>${isPrivileged() ? '<th>สถานะ</th>' : ''}${isOwner() ? '<th></th>' : ''}</tr></thead><tbody>${memberRows}</tbody></table></div>` : '<span class="hint">ยังไม่มีเจ้าหน้าที่</span>';
   el.innerHTML = `
-    <div style="margin:10px 0 6px">${memberRows || '<span class="hint">ยังไม่มีเจ้าหน้าที่</span>'}</div>
-    ${isOwner() ? `
-      <button class="btn btn-outline btn-sm" id="btnAddMember" style="margin-top:14px">+ เพิ่มเจ้าหน้าที่</button>
-      <div id="dirNotice"></div>
-    ` : `<p class="hint">ติดต่อเจ้าของระบบเพื่อขอเพิ่มชื่อหรือรีเซ็ตรหัสผ่าน</p>`}
+    <div style="margin:6px 0 6px">${memberTable}</div>
+    ${isOwner() ? `<div id="dirNotice"></div>` : `<p class="hint">ติดต่อเจ้าของระบบเพื่อขอเพิ่มชื่อหรือรีเซ็ตรหัสผ่าน</p>`}
   `;
   if (isOwner()) {
     renderDirNotice();
