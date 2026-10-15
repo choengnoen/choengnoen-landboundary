@@ -1427,6 +1427,11 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .snap .cd-prog{padding:8px 12px;margin-bottom:0;gap:10px}
 .snap .cd-st b{font-size:12.5px}.snap .cd-ss{font-size:12px}
 .snap .cd-dl.wide dd.full{grid-column:2 / -1}
+.snap .snap-grid{align-items:start}
+.snap .cd-card{flex-shrink:0;overflow:visible}
+.snap .cd-dl.snap-dl{display:grid;grid-template-columns:132px 1fr;gap:5px 10px;font-size:13.5px;line-height:1.5}
+.snap .cd-dl.snap-dl dt{white-space:normal}
+.snap .cd-dl.snap-dl dd{font-size:13.5px !important}
 .snap .cd-divider{margin:8px 0}
 .snap .cd-photos{gap:8px}
 .snap .cd-photo{aspect-ratio:4/3}
@@ -4288,22 +4293,21 @@ async function buildCaseImage(){
   const leftCards = colEls[0] ? [...colEls[0].children] : [];
   const rightCards = colEls[1] ? [...colEls[1].children] : [];
   const isPhoto = c => { const s = c.querySelector && c.querySelector('.cd-sec'); return !!(s && /รูปถ่าย/.test(s.textContent)); };
-  const photoCard = [...leftCards, ...rightCards].find(isPhoto) || null;
-  const L = leftCards.filter(c => c !== photoCard), R = rightCards.filter(c => c !== photoCard);
-  // ย่อการ์ดข้อมูล: หัวข้อ–ค่า 2 ชุดต่อบรรทัด · รายการทรัพย์สินแบ่ง 2 คอลัมน์
-  [...L, ...R].forEach(card => {
-    card.querySelectorAll('.cd-dl').forEach(dl => dl.replaceWith(snapPairify([dl])));
-    const items = [...card.querySelectorAll(':scope > .cd-item')];
-    if (items.length >= 4) {   // รายการน้อย (1–3 รายการ) แสดงคอลัมน์เดียวตามเดิม
-      const receipt = card.querySelector(':scope > .cd-receipt');
-      const half = Math.ceil(items.length / 2);
-      const cells = []; for (let i = 0; i < half; i++) cells.push(items[i], items[half + i] || mk('', []));   // เรียงสลับซ้าย-ขวาเป็นแถว ให้บรรทัดสองคอลัมน์ตรงกัน
-    const list = mk('snap-items2', cells);
-      if (receipt) card.insertBefore(list, receipt); else card.appendChild(list);
-    }
+  const photoCardAny = [...leftCards, ...rightCards].find(isPhoto) || null;
+  // ไม่มีรูปถ่ายในเรื่องนี้ → ไม่แสดงหัวข้อ "รูปถ่าย" ในรูปที่คัดลอก
+  const photoCard = photoCardAny && photoCardAny.querySelector('.cd-photo') ? photoCardAny : null;
+  // เบอร์โทรที่แฝงในบรรทัดเล็กใต้ชื่อ (ช่างทางหลวง / ช่างรังวัด: "โทร …" "มือถือ …") ตัดออกด้วย ให้ตรงกับกติกา "ไม่แสดงเบอร์โทร"
+  clone.querySelectorAll('dd small').forEach(sm => {
+    if (/^\s*(โทร|มือถือ)/.test(sm.textContent)) { const p = sm.previousElementSibling; if (p && p.tagName === 'BR') p.remove(); sm.remove(); }
   });
-  const grid = mk('snap-grid', [mk('snap-col', [photoCard, ...L]), mk('snap-col', R)]);
-  grid.style.gridTemplateColumns = '1fr 1.25fr';
+  // การ์ดข้อมูลที่ไม่เหลือแถวใดเลย ไม่ต้องแสดงเป็นกรอบเปล่า
+  const hasRows = c => { const dl = c.querySelector('.cd-dl'); return !dl || dl.children.length > 0; };
+  const L = leftCards.filter(c => c !== photoCardAny && hasRows(c)), R = rightCards.filter(c => c !== photoCardAny && hasRows(c));
+  // การ์ดข้อมูล: หัวข้อ–ค่า แถวละ 1 รายการ เรียงตามลำดับเนื้อหา (ไม่จับคู่ข้ามหัวข้อ)
+  [...L, ...R].forEach(card => card.querySelectorAll('.cd-dl').forEach(dl => dl.classList.add('snap-dl')));
+  // ซ้าย = ข้อมูลเรื่อง (ข้อมูลที่ดิน → เจ้าของที่ดิน → การรับเรื่องและอ้างอิง) · ขวา = ใบร่างผลการชี้แนวเขต แล้วต่อด้วยรูปถ่าย
+  const grid = mk('snap-grid', [mk('snap-col', L), mk('snap-col', [...R, photoCard])]);
+  grid.style.gridTemplateColumns = '1fr 1fr';
 
   const shell = document.createElement('div');
   shell.className = 'modal case-modal snap';
