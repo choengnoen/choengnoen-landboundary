@@ -1361,6 +1361,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .case-modal .cd-hd .modal-close{font-size:22px;line-height:1}
 .cd-copy svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
 .cd-copy:disabled{cursor:wait}
+.cd-copy,.case-modal .cd-hd .modal-close{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+@media (pointer:coarse){.cd-copy,.case-modal .cd-hd .modal-close{width:44px;height:44px}}
 .cd-copy.ok,.cd-copy.ok:hover{background:#d7f0e1;color:#1c8a53}
 .cd-copy-spin{width:18px;height:18px;border-radius:50%;border:2px solid rgba(43,52,69,.25);border-top-color:#2b3445;animation:cdCopySpin .8s linear infinite}
 @keyframes cdCopySpin{to{transform:rotate(360deg)}}
@@ -4280,7 +4282,41 @@ const SNAP_ICON = {
   check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
   spin: '<span class="cd-copy-spin"></span>'
 };
-const SNAP_FILE_PREFIX = 'ชี้แนวเขต';
+// ตัวสำรองเมื่อคัดลอกเข้าคลิปบอร์ดไม่ได้ (iPad/iPhone Safari ไม่ยอมให้เขียนคลิปบอร์ดหลังสร้างรูปเสร็จ และไม่ยอมโหลดไฟล์จากโค้ด)
+// → เปิดหน้าต่างแสดงรูป ให้ "กดค้างที่รูป → คัดลอก" หรือกดปุ่ม แชร์ / บันทึก (เป็นการแตะใหม่ของผู้ใช้ จึงใช้ได้ทุกเครื่อง)
+function snapShowImage(blob, filename){
+  const old = document.getElementById('snapImgOverlay'); if (old) old.remove();
+  const url = URL.createObjectURL(blob);
+  const ov = document.createElement('div');
+  ov.id = 'snapImgOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.85);display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px;overflow:auto;-webkit-overflow-scrolling:touch';
+  const tip = document.createElement('div');
+  tip.style.cssText = 'color:#fff;font-size:15px;line-height:1.5;text-align:center;max-width:720px';
+  tip.textContent = 'กดค้างที่รูป แล้วเลือก “คัดลอก” หรือ “บันทึกไปยังรูปภาพ” — หรือกดปุ่มด้านล่าง';
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;justify-content:center';
+  const mkBtn = (txt, bg, fg) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.style.cssText = 'min-height:44px;padding:0 18px;border:0;border-radius:10px;font:600 15px inherit;font-family:inherit;touch-action:manipulation;cursor:pointer;background:' + bg + ';color:' + fg; return b; };
+  const close = () => { URL.revokeObjectURL(url); ov.remove(); };
+  let file = null;
+  try { file = new File([blob], filename, { type: 'image/png' }); } catch (e) { file = null; }
+  if (file && navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
+    const sh = mkBtn('แชร์ / ส่งต่อ (LINE)', '#06c755', '#fff');
+    sh.onclick = () => { navigator.share({ files: [file] }).catch(() => {}); };
+    bar.appendChild(sh);
+  }
+  const sv = document.createElement('a');
+  sv.href = url; sv.download = filename; sv.textContent = 'บันทึกรูป';
+  sv.style.cssText = 'display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:10px;font:600 15px inherit;font-family:inherit;background:#fff;color:#1f2937;text-decoration:none';
+  bar.appendChild(sv);
+  const cl = mkBtn('ปิด', '#e5e7eb', '#1f2937'); cl.onclick = close; bar.appendChild(cl);
+  const img = document.createElement('img');
+  img.src = url; img.alt = 'รูปรายละเอียด';
+  img.style.cssText = 'max-width:100%;height:auto;background:#fff;border-radius:6px;-webkit-touch-callout:default;-webkit-user-select:auto;user-select:auto';
+  ov.append(tip, bar, img);
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  document.body.appendChild(ov);
+}
+`const SNAP_FILE_PREFIX = 'ชี้แนวเขต';
 async function copyCaseDetailAsImage(rec, btn){
   btn.disabled = true;
   btn.innerHTML = SNAP_ICON.spin;
@@ -4299,13 +4335,9 @@ async function copyCaseDetailAsImage(rec, btn){
       btn.title = 'คัดลอกแล้ว';
       showToast('คัดลอกรูปแล้ว — เปิด LINE แล้วกด Ctrl+V เพื่อวาง (มือถือ: กดค้างที่ช่องพิมพ์ → วาง)');
     } else {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = SNAP_FILE_PREFIX + '-' + String(rec.fiscalYear || '') + '-' + String(rec.id || '').slice(-6) + '.png';
-      document.body.appendChild(a); a.click();
-      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-      btn.title = 'บันทึกไฟล์แล้ว';
-      showToast('เบราว์เซอร์นี้คัดลอกรูปอัตโนมัติไม่ได้ จึงบันทึกเป็นไฟล์รูปให้แทน — ส่งไฟล์เข้า LINE ได้เลย');
+      snapShowImage(blob, SNAP_FILE_PREFIX + '-' + String(rec.fiscalYear || '') + '-' + String(rec.id || '').slice(-6) + '.png');
+      btn.title = 'เปิดรูปให้แล้ว';
+      showToast('เบราว์เซอร์นี้คัดลอกอัตโนมัติไม่ได้ — กดค้างที่รูปแล้วเลือก “คัดลอก” หรือกดปุ่มแชร์/บันทึก');
     }
   } catch (e) {
     console.error('copy image failed', e);
@@ -4338,11 +4370,8 @@ async function copyDraftAsImage(btn){
     btn.classList.add('ok'); btn.innerHTML = SNAP_ICON.check;
     if (copied) showToast('คัดลอกใบร่างแล้ว — กด Ctrl+V เพื่อวาง');
     else {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob); a.download = 'ใบร่างชี้แนวเขต.png';
-      document.body.appendChild(a); a.click();
-      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-      showToast('คัดลอกอัตโนมัติไม่ได้ จึงบันทึกเป็นไฟล์รูปให้แทน');
+      snapShowImage(blob, 'ใบร่างชี้แนวเขต.png');
+      showToast('คัดลอกอัตโนมัติไม่ได้ — กดค้างที่รูปแล้วเลือก “คัดลอก” หรือกดปุ่มแชร์/บันทึก');
     }
   } catch (e) {
     console.error('copy draft failed', e);
@@ -4485,6 +4514,7 @@ function openCaseDetailModal(id){
   hydrateCasePhotos(rec);
   const pb = document.getElementById('btnPrintDraft'); if (pb) pb.onclick = () => printDraft(draftModelFromRec(rec));
   document.getElementById('caseDetailCopy').onclick = (e) => copyCaseDetailAsImage(rec, e.currentTarget);
+  loadScriptOnce(HTML2CANVAS_URL).catch(() => {});   // โหลดตัวสร้างรูปล่วงหน้า ให้กดคัดลอกแล้วเร็ว (iPad ต้องสร้างรูปให้ทันเวลา)
   document.getElementById('caseDetailCloseX').onclick = () => { root.innerHTML = ''; };
   document.getElementById('caseDetailClose').onclick = () => { root.innerHTML = ''; };
   document.getElementById('caseDetailEdit').onclick = () => { root.innerHTML = ''; loadRecordIntoForm(rec); };
