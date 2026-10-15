@@ -2305,6 +2305,14 @@ function formatThaiDate(dateStr){
   const yearBE = String(d.getFullYear() + 543).slice(-2);
   return `${day} ${month} ${yearBE}`;
 }
+// วันที่แบบเต็มไม่ย่อ (ใช้ในหน้าต่างรายละเอียดและรูปคัดลอก) เช่น 11 สิงหาคม 2569
+const THAI_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+function formatThaiDateFull(dateStr){
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return escapeHtml(dateStr);
+  return `${d.getDate()} ${THAI_MONTHS_FULL[d.getMonth()]} ${d.getFullYear() + 543}`;
+}
 function escapeHtml(s){
   if (s === null || s === undefined) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -4304,7 +4312,7 @@ async function buildCaseImage(){
   body.appendChild(mk('snap-col', [...top, grid]));
   const stamp = document.createElement('div');
   stamp.className = 'snap-stamp';
-  stamp.textContent = SNAP_SYSTEM_NAME + ' · หมวดทางหลวงเชิงเนิน แขวงทางหลวงระยอง · คัดลอกเมื่อ ' + (() => { const n = new Date(), z = x => String(x).padStart(2, '0'); return formatThaiDate(n.getFullYear() + '-' + z(n.getMonth() + 1) + '-' + z(n.getDate())) + ' ' + z(n.getHours()) + ':' + z(n.getMinutes()); })() + ' น.';
+  stamp.textContent = SNAP_SYSTEM_NAME + ' · หมวดทางหลวงเชิงเนิน แขวงทางหลวงระยอง · คัดลอกเมื่อ ' + (() => { const n = new Date(), z = x => String(x).padStart(2, '0'); return formatThaiDateFull(n.getFullYear() + '-' + z(n.getMonth() + 1) + '-' + z(n.getDate())) + ' เวลา ' + z(n.getHours()) + ':' + z(n.getMinutes()); })() + ' น.';
   shell.append(hd, body, stamp);
 
   const stage = document.createElement('div');
@@ -4455,11 +4463,11 @@ function openCaseDetailModal(id){
   const progSteps = STEPS.map(s => {
     const d = normalizeDateStr(rec[s.field]);
     const label = SHORT_STEP[s.field] || s.label;
-    if (rec.cancelled) return stepLi('n', label, d ? escapeHtml(formatThaiDate(d)) : 'ยกเลิก');
-    if (d) return stepLi('ok', label, escapeHtml(formatThaiDate(d)), (s.field === 'sentDate' && dl.key === 'late') ? escapeHtml(dl.text) : '');
+    if (rec.cancelled) return stepLi('n', label, d ? escapeHtml(formatThaiDateFull(d)) : 'ยกเลิก');
+    if (d) return stepLi('ok', label, escapeHtml(formatThaiDateFull(d)), (s.field === 'sentDate' && dl.key === 'late') ? escapeHtml(dl.text) : '');
     if (s.field === 'sentDate') {
       const sub = dl.key === 'none' ? 'รอชี้แนวเขต' : escapeHtml(dl.text).replace(/(\d+ วันทำการ)/, '<span class="cd-nw">$1</span>');
-      return stepLi(dl.cls === 'bad' ? 'bad' : 'warn', label, sub, dl.due ? 'กำหนด ' + escapeHtml(formatThaiDate(dl.due)) : '');
+      return stepLi(dl.cls === 'bad' ? 'bad' : 'warn', label, sub, dl.due ? 'กำหนด ' + escapeHtml(formatThaiDateFull(dl.due)) : '');
     }
     return stepLi('warn', label, escapeHtml(s.wait || 'ยังไม่ระบุ'));
   }).join('');
@@ -4484,7 +4492,7 @@ function openCaseDetailModal(id){
     const extra = stepExtra(s);
     return `<li class="${cls}"><span class="tl-dot">${date ? '✓' : i + 1}</span>
       <div class="tl-name">${escapeHtml(s.label)}</div>
-      <div class="tl-sub">${date ? escapeHtml(formatThaiDate(date)) : (cls === 'next' ? 'ขั้นถัดไป' : 'ยังไม่ดำเนินการ')} · ${escapeHtml(s.who)}${extra ? '<br>' + escapeHtml(extra) : ''}</div></li>`;
+      <div class="tl-sub">${date ? escapeHtml(formatThaiDateFull(date)) : (cls === 'next' ? 'ขั้นถัดไป' : 'ยังไม่ดำเนินการ')} · ${escapeHtml(s.who)}${extra ? '<br>' + escapeHtml(extra) : ''}</div></li>`;
   }).join('')}</ul>`;
 
   const root = document.getElementById('modalRoot');
@@ -4510,7 +4518,7 @@ function openCaseDetailModal(id){
             <div>
               <div class="cd-card"><div class="cd-sec">ข้อมูลที่ดิน</div>
                 <dl class="cd-dl">
-                  <dt>วันชี้แนวเขต</dt><dd>${rec.pointedDate ? escapeHtml(formatThaiDate(rec.pointedDate)) : '<span class="cd-na">ยังไม่ชี้แนวเขต</span>'}</dd>
+                  <dt>วันชี้แนวเขต</dt><dd>${rec.pointedDate ? escapeHtml(formatThaiDateFull(rec.pointedDate)) : '<span class="cd-na">ยังไม่ชี้แนวเขต</span>'}</dd>
                   <dt>เอกสารสิทธิ์</dt><dd>${cdVal(deedText(rec))}</dd>
                   <dt>เลขที่ดิน</dt><dd>${cdVal(rec.landNo)}</dd>
                   <dt>ที่ตั้ง</dt><dd>${cdVal(placeText(rec))}</dd>
@@ -4518,7 +4526,7 @@ function openCaseDetailModal(id){
                   <dt>บริเวณ</dt><dd>${cdVal(rec.location)}</dd>
                   <dt>ระยะเขตทาง</dt><dd>${cdHtml(rowListText(rec.rowAcctList, rec.rowDistance, ' ม. จากศูนย์กลาง'))}</dd>
                   <dt>ระยะเขตทางกันแนวเขต</dt><dd>${cdHtml(rowListText(rec.rowWorkList, rec.rowWork, ' ม.'))}</dd>
-                  <dt>วันนัดชี้แนว</dt><dd>${rec.appointDate ? escapeHtml(formatThaiDate(rec.appointDate)) + (rec.appointTime ? ' เวลา ' + escapeHtml(rec.appointTime) + ' น.' : '') : CD_NA}</dd>
+                  <dt>วันนัดชี้แนว</dt><dd>${rec.appointDate ? escapeHtml(formatThaiDateFull(rec.appointDate)) + (rec.appointTime ? ' เวลา ' + escapeHtml(rec.appointTime) + ' น.' : '') : CD_NA}</dd>
                   <dt>ช่างทางหลวง</dt><dd>${rec.repName ? escapeHtml(rec.repName) + (rec.repPosition ? '<br><small>' + escapeHtml(rec.repPosition) + '</small>' : '') + ([rec.repPhone, rec.repMobile].filter(Boolean).length ? '<br><small>' + escapeHtml([rec.repPhone ? 'โทร ' + rec.repPhone : '', rec.repMobile ? 'มือถือ ' + rec.repMobile : ''].filter(Boolean).join(' · ')) + '</small>' : '') : CD_NA}</dd>
                   <dt>ช่างรังวัด</dt><dd>${rec.surveyorName ? escapeHtml(rec.surveyorName) + (rec.surveyorPhone ? '<br><small>โทร ' + escapeHtml(rec.surveyorPhone) + '</small>' : '') : CD_NA}</dd>
                   <dt>พิกัดแปลง</dt><dd>${cdHtml(coordsHtml(rec.coords))}</dd>
