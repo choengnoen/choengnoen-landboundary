@@ -1537,8 +1537,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <div class="party-block">
         <div class="party-block-title pbt-grid"><span>เจ้าของที่ดิน</span>
           <div class="seg" id="proxySeg">
-            <button type="button" data-v="ไม่มี">เจ้าของมาเอง</button>
-            <button type="button" data-v="มี">มีผู้รับมอบอำนาจ</button>
+            <button type="button" data-v="ไม่มี">เจ้าของ</button>
+            <button type="button" data-v="มี">รับมอบอำนาจ</button>
           </div>
           <select id="f_hasProxy" style="display:none">
             <option value="ไม่มี">ไม่มี (เจ้าของมาเอง)</option>
@@ -1931,7 +1931,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <div id="teamPanel"></div>
     </div>
     <div class="card" id="cardStaff">
-      <div class="section-title" style="justify-content:space-between"><span>ช่างทางหลวง (เจ้าหน้าที่ไปชี้แนวเขต)</span><button class="btn btn-primary btn-sm" id="btnAddStaff" type="button">＋ เพิ่มรายชื่อ</button></div>
+      <div class="section-title" style="justify-content:space-between"><span>ช่างทางหลวง</span><button class="btn btn-primary btn-sm" id="btnAddStaff" type="button">＋ เพิ่มรายชื่อ</button></div>
       <div class="hint" id="staffWarn" style="display:none;color:var(--rust);margin-bottom:8px"></div>
       <div class="table-wrap">
         <table class="data" id="staffTable">
@@ -3661,8 +3661,15 @@ function fmStepsInit(){
 }
 /* การ์ด "รูปถ่ายประกอบ" (ข้อสุดท้าย) สูงเต็มกรอบเลื่อนของหน้าต่าง: เลื่อนสุดแล้วเห็นเฉพาะการ์ดนี้ ไม่มีการ์ดข้อก่อนหน้าโผล่ค้างด้านบน — ช่องรูปยืดตามความสูงที่เหลือ */
 function fitPhotoCard(){
-  // ไม่ยืดการ์ดให้เต็มหน้าต่างอีกต่อไป — การ์ดสูงตามเนื้อหาจริง (ล้างค่าที่เคยตั้งไว้)
-  fmCards().forEach(c => { if (c && c.style.minHeight) c.style.minHeight = ''; });
+  // เฉพาะการ์ด "รูปถ่ายประกอบ" สูงเต็มพื้นที่มองเห็นของกรอบเลื่อน (เหมือนระบบอุบัติเหตุ) ช่องรูปยืดตาม · การ์ดข้ออื่นสูงตามเนื้อหา
+  const m = document.getElementById('formModal'), card = document.getElementById('fsecPhoto');
+  fmCards().forEach(c => { if (c && c !== card && c.style.minHeight) c.style.minHeight = ''; });
+  if (!m || !card || m.style.display === 'none') return;
+  const sc = m.querySelector('.form-main');
+  if (!sc || !sc.clientHeight) return;
+  const bar = sc.querySelector('.form-savebar');
+  const avail = Math.max(0, Math.round(sc.clientHeight - (bar ? bar.offsetHeight : 0) - 8 - 12));
+  card.style.minHeight = avail + 'px';
 }function fmStepsRefresh(){
   const wrap = document.getElementById('fmSteps'), m = document.getElementById('formModal');
   if (!wrap || !m || !fmStepsBuilt) return;
