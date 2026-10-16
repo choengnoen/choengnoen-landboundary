@@ -308,6 +308,9 @@ table.data th{
 table.data td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:normal}
 table.data td.nowrap-cell{white-space:nowrap}
 table.data td.center-cell{text-align:center}
+/* ตารางรายชื่อช่างทางหลวง: ชื่อ/ตำแหน่งชิดซ้าย · โทรศัพท์/มือถือ/ดำรงตำแหน่ง หัวและข้อมูลอยู่กึ่งกลาง · ปุ่มชิดขวา */
+#staffTable th:nth-child(-n+2){text-align:left}
+#staffTable th:nth-child(n+3):nth-child(-n+5),#staffTable td:nth-child(n+3):nth-child(-n+5){text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums}
 table.data td.wrap-cell{white-space:normal;min-width:140px}
 table.data td.hw-cell{white-space:normal;min-width:80px}
 table.data td.plate-cell{white-space:normal}
@@ -922,6 +925,18 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .dcombo-caret{position:absolute;right:10px;top:50%;transform:translateY(-50%)}
 /* หน้าจอกว้าง: ปุ่มสลับมอบอำนาจกว้างคงที่ และช่องเลขที่หนังสือ แขวงฯ ชิดซ้ายให้ขอบขวาตรงกับขอบซ้ายของปุ่ม */
 #proxySeg{width:300px}#proxySeg button{flex:1}
+/* ส่วน 1: ความกว้างช่องตามข้อมูล (12 ส่วน) ขอบคอลัมน์ 3/6/9 ตรงกันทุกแถว · ปุ่มเลือกเจ้าของ/ผู้รับมอบกว้างเท่าช่องเบอร์โทร */
+.g12{grid-template-columns:repeat(12,minmax(0,1fr))}
+.g12 .c3{grid-column:span 3}.g12 .c6{grid-column:span 6}
+@media(min-width:721px){
+  .addr-grid .a-name{grid-column:span 9}.addr-grid .a-phone{grid-column:span 3}
+  .addr-grid .a-house{grid-column:span 2}.addr-grid .a-moo{grid-column:span 1}.addr-grid .a-street{grid-column:span 3}
+  .addr-grid .a-tam{grid-column:span 3}.addr-grid .a-chip{grid-column:span 3}
+  .party-block-title.pbt-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:10px 12px;align-items:center}
+  .party-block-title.pbt-grid>span{grid-column:span 9}
+  .party-block-title.pbt-grid #proxySeg{grid-column:span 3;width:100%}
+}
+@media(max-width:720px){.g12{grid-template-columns:repeat(2,minmax(0,1fr))}.g12 .c3{grid-column:span 1}.g12 .c6{grid-column:span 2}}
 @media(min-width:900px){
   #fsec1 > .grid-4{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,2fr)}
 }
@@ -1504,23 +1519,23 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
     <div class="card" id="fsec1">
       <div class="section-title"><span class="num">1</span> ข้อมูลการชี้แนวเขต</div>
-      <div class="grid grid-4">
-        <div class="field">
+      <div class="grid g12">
+        <div class="field c3">
           <label>ปีงบประมาณ <span class="req">*</span></label>
           <select id="f_fiscalYear"></select>
         </div>
-        <div class="field">
+        <div class="field c3">
           <label>วันที่หนังสือ แขวงฯ <span class="req">*</span></label>
           <input type="date" id="f_dateReceived">
         </div>
-        <div class="field">
+        <div class="field c6">
           <label>เลขที่หนังสือ แขวงฯ</label>
           <div class="ref-field" id="inField"><span class="ref-prefix">ที่ คค 06087/</span><input type="text" id="f_incomingNo"></div>
         </div>
       </div>
-      <div class="sec-sub" style="border-top:0;padding-top:0;margin-top:16px">เจ้าของที่ดิน / ผู้รับมอบอำนาจ</div>
+      <div class="sec-sub" style="border-top:0;padding-top:0;margin-top:16px">เจ้าของ/ผู้รับมอบอำนาจ</div>
       <div class="party-block">
-        <div class="party-block-title"><span>เจ้าของที่ดิน</span>
+        <div class="party-block-title pbt-grid"><span>เจ้าของที่ดิน</span>
           <div class="seg" id="proxySeg">
             <button type="button" data-v="ไม่มี">เจ้าของมาเอง</button>
             <button type="button" data-v="มี">มีผู้รับมอบอำนาจ</button>
@@ -1917,7 +1932,6 @@ tr.route-editable:hover td{background:var(--amber-glow)}
     </div>
     <div class="card" id="cardStaff">
       <div class="section-title" style="justify-content:space-between"><span>ช่างทางหลวง (เจ้าหน้าที่ไปชี้แนวเขต)</span><button class="btn btn-primary btn-sm" id="btnAddStaff" type="button">＋ เพิ่มรายชื่อ</button></div>
-      <p class="hint" style="margin-bottom:10px">รายชื่อนี้ใช้เป็นตัวเลือก "ช่างทางหลวง" ในฟอร์มบันทึกเรื่อง — เลือกชื่อแล้วระบบแสดงตำแหน่งและเบอร์โทรให้อัตโนมัติ (เรื่องที่บันทึกไปแล้วเก็บข้อมูลตอนนั้นไว้ ไม่เปลี่ยนตามเมื่อแก้รายชื่อทีหลัง)</p>
       <div class="hint" id="staffWarn" style="display:none;color:var(--rust);margin-bottom:8px"></div>
       <div class="table-wrap">
         <table class="data" id="staffTable">
@@ -3647,19 +3661,8 @@ function fmStepsInit(){
 }
 /* การ์ด "รูปถ่ายประกอบ" (ข้อสุดท้าย) สูงเต็มกรอบเลื่อนของหน้าต่าง: เลื่อนสุดแล้วเห็นเฉพาะการ์ดนี้ ไม่มีการ์ดข้อก่อนหน้าโผล่ค้างด้านบน — ช่องรูปยืดตามความสูงที่เหลือ */
 function fitPhotoCard(){
-  const m = document.getElementById('formModal'), card = document.getElementById(FM_STEPS[FM_STEPS.length - 1][0]);   // การ์ดข้อสุดท้าย (ผลการส่งเอกสารไปแขวง)
-  if (!m || !card || m.style.display === 'none') return;
-  const sc = m.querySelector('.form-main');
-  if (!sc || !sc.clientHeight) return;
-  // ทุกข้อ (ไม่ใช่ข้อสุดท้าย) สูงเต็มพื้นที่มองเห็นของกรอบเลื่อน (หักแถบปุ่มบันทึกที่ตรึงด้านล่าง) — กดขั้นตอนไหนก็เห็นข้อนั้นเต็มพอดี ไม่มีข้อถัดไปโผล่
-  const bar = sc.querySelector('.form-savebar');
-  const avail = Math.max(0, Math.round(sc.clientHeight - (bar ? bar.offsetHeight : 0) - 8 - 12));
-  fmCards().forEach(c => { if (c && c !== card) c.style.minHeight = avail + 'px'; });
-  const maxScroll = Math.max(0, sc.scrollHeight - sc.clientHeight);
-  const top = card.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - maxScroll; // ตำแหน่งบนของการ์ดเมื่อเลื่อนสุด
-  const need = Math.round(top - 8);
-  if (Math.abs(need) < 2) return;
-  card.style.minHeight = Math.max(0, card.offsetHeight + need) + 'px';
+  // ไม่ยืดการ์ดให้เต็มหน้าต่างอีกต่อไป — การ์ดสูงตามเนื้อหาจริง (ล้างค่าที่เคยตั้งไว้)
+  fmCards().forEach(c => { if (c && c.style.minHeight) c.style.minHeight = ''; });
 }function fmStepsRefresh(){
   const wrap = document.getElementById('fmSteps'), m = document.getElementById('formModal');
   if (!wrap || !m || !fmStepsBuilt) return;
