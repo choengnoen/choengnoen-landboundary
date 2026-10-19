@@ -238,7 +238,7 @@
     el.querySelectorAll('.dr-ln').forEach(function (row) {
       var id = row.getAttribute('data-id');
       function go() { var d = byId(id); if (!d || d.status === 'cancelled') return; if (d.caseId) openCase(d); else makeCase(d); }
-      row.onclick = function (ev) { if (ev.target.closest('button, a')) return; go(); };
+      row.ondblclick = function (ev) { if (ev.target.closest('button, a')) return; go(); };
       row.onkeydown = function (ev) { if (ev.target === row && (ev.key === 'Enter' || ev.key === ' ')) { ev.preventDefault(); go(); } };
       row.querySelectorAll('button[data-act]').forEach(function (b) {
         b.onclick = function () {

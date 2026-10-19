@@ -4142,7 +4142,7 @@ function renderTable(){
       <td>${statusPillOf(r)}</td>
       <td><span class="c-sub" style="margin:0 0 3px">${r.sentDate ? 'ส่งเมื่อ ' + escapeHtml(formatThaiDate(r.sentDate)) : (dl.due ? 'ภายใน ' + escapeHtml(formatThaiDate(dl.due)) : '')}</span>${deadlinePill(r)}</td>
     `;
-    tr.addEventListener('click', () => openCaseDetailModal(r.id));
+    tr.addEventListener('dblclick', () => openCaseDetailModal(r.id));
     tbody.appendChild(tr);
   });
 }
@@ -4692,7 +4692,7 @@ function renderFollowUp(){
     </div>`;
   }).join('');
   el.innerHTML = statsHtml;   // ไม่แสดงรายการเรื่องค้าง
-  el.querySelectorAll('.follow-row').forEach(row => { row.onclick = () => openCaseDetailModal(row.dataset.id); });
+  el.querySelectorAll('.follow-row').forEach(row => { row.ondblclick = () => openCaseDetailModal(row.dataset.id); });
   const more = document.getElementById('followMoreLink');
   if (more) more.onclick = () => goToFilteredList(dashYear, { status: 'open' });
 }
@@ -4751,7 +4751,7 @@ function renderWeekCalendar(){
         : '<div class="wk-empty">ว่าง</div>') + '</div></div>';
   };
   grid.innerHTML = days.map(dayHtml).join('');
-  grid.querySelectorAll('.wk-it').forEach(el => { el.onclick = () => { if (el.dataset.draft) DRAFTS.openDraft(el.dataset.draft); else openCaseDetailModal(el.dataset.id); }; });
+  grid.querySelectorAll('.wk-it').forEach(el => { el.ondblclick = () => { if (el.dataset.draft) DRAFTS.openDraft(el.dataset.draft); else openCaseDetailModal(el.dataset.id); }; });
 
   // นัดที่ตกวันเสาร์–อาทิตย์ของสัปดาห์นี้ (ไม่มีคอลัมน์) แจ้งไว้ท้ายกล่อง
   const sat = new Date(mon); sat.setDate(mon.getDate() + 5);
@@ -4780,7 +4780,7 @@ function renderAppointments(){
       <div class="f-right"><span class="age-pill ${when.cls}">${when.text}</span></div>
     </div>`;
   }).join('') + (list.length > 7 ? '<p class="hint" style="margin-top:6px">และอีก ' + (list.length - 7) + ' นัด — ดูทั้งหมดในหน้ารายการ</p>' : '');
-  el.querySelectorAll('.follow-row').forEach(row => { row.onclick = () => openCaseDetailModal(row.dataset.id); });
+  el.querySelectorAll('.follow-row').forEach(row => { row.ondblclick = () => openCaseDetailModal(row.dataset.id); });
 }
 
 // ไปหน้ารายการพร้อมตัวกรอง (ใช้จากการ์ด/กล่องในหน้าภาพรวม)
