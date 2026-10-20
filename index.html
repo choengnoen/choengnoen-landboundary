@@ -1680,7 +1680,11 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <select id="f_highway"></select>
           <span class="hint km-hint" id="highwayHint"></span>
           <input type="hidden" id="f_section">
-          <input type="hidden" id="f_km"><span id="kmHint" hidden></span>
+        </div>
+        <div class="field" style="flex:1">
+          <label>กม. <span class="req">*</span></label>
+          <input type="text" id="f_km" placeholder="เช่น 230+500">
+          <span class="hint km-hint" id="kmHint"></span>
         </div>
         </div>
         <div class="lln">
@@ -3772,13 +3776,14 @@ async function saveForm(){
   const fiscalYear = parseInt(document.getElementById('f_fiscalYear').value, 10);
   const dateReceived = document.getElementById('f_dateReceived').value;
   const highway = document.getElementById('f_highway').value;
-  // กม. ไม่บังคับตอนรับเรื่อง (ยังไม่ทราบก่อนออกไปชี้แนวเขต) · ถ้ายังว่างแต่กรอก "กม. หมุดที่ 1" ในส่วนผลชี้แนวเขตแล้ว ใช้ค่านั้นเป็น กม. ของเรื่อง
+  // กม. บังคับ (ผู้ใช้สั่ง 20 ต.ค. 69) · ถ้ายังว่างแต่กรอก "กม. หมุดที่ 1" ในส่วนผลชี้แนวเขตแล้ว ใช้ค่านั้นเป็น กม. ของเรื่อง
   let km = parseKm(document.getElementById('f_km').value);
   if (km === null) km = parseKm(document.getElementById('f_pinKm0').value);
   const ownerName = document.getElementById('f_ownerName').value.trim();
 
   if (!dateReceived) { showToast('กรุณากรอกวันที่หนังสือ'); return; }
   if (!highway) { showToast('กรุณาเลือกทางหลวง (ทล.)'); return; }
+  if (km === null) { showToast('กรุณากรอก กม. ให้ถูกรูปแบบ เช่น 230+500'); return; }
   if (!ownerName) { showToast('กรุณากรอกชื่อเจ้าของที่ดิน'); return; }
   // วันที่ของขั้นตอนต้องไม่ก่อนวันที่รับเรื่อง
   const snap = stepSnapshot();
