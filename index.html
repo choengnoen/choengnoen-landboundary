@@ -826,7 +826,8 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 /* แถบเมนู: ปุ่มส่งออก Excel/PDF อยู่ขวาสุด แสดงเฉพาะหน้า "รายการเรื่องชี้แนวเขต" */
 .tabs-row{position:relative;max-width:1180px;margin:14px auto 0}
 .tabs-row .tabs{margin:0;max-width:none}
-.header-export{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:8px;align-items:center}
+/* z-index: transform สร้างชั้นซ้อนใหม่ ต้องยกทั้งกล่องขึ้น ไม่งั้นเมนูส่งออกโดนปุ่มตัวกรองในหน้ารายการทับ */
+.header-export{position:absolute;right:0;top:50%;transform:translateY(-50%);display:flex;gap:8px;align-items:center;z-index:10}
 .hx-btn{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);color:#fff;border-radius:8px;padding:4px 12px;font-family:'Sarabun',sans-serif;font-size:12.5px;cursor:pointer}
 .hx-btn:hover{background:rgba(255,255,255,.2)}
 @media(max-width:900px){.header-export{position:static;transform:none;justify-content:flex-end;padding:8px 0 2px}}
