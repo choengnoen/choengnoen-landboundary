@@ -3,6 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ตัวกันอัปโหลดผิดระบบ: ไฟล์นี้ต้องอยู่ใน repo choengnoen-landboundary เท่านั้น
+     ถ้าเปิดบน github.io แล้วชื่อ repo ไม่ตรง จะขึ้นจอแดงและหยุดโหลดทันที (ไม่เชื่อมฐานข้อมูล)
+     เปิดจากเครื่อง (file:// หรือ localhost) จะไม่ถูกตรวจ -->
+<script>
+(function(){
+  var MY_REPO='choengnoen-landboundary', MY_NAME='งานระวังชี้แนวเขตที่ดิน';
+  if(!/\.github\.io$/i.test(location.hostname))return;
+  var repo=(location.pathname.split('/')[1]||'').toLowerCase().replace(/[^a-z0-9._-]/g,'');
+  if(repo===MY_REPO)return;
+  document.documentElement.innerHTML='<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>อัปโหลดผิดระบบ</title></head>'
+    +'<body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#b3261e;color:#fff;font-family:Sarabun,Tahoma,sans-serif;padding:24px;box-sizing:border-box;text-align:center">'
+    +'<div style="max-width:560px"><div style="font-size:56px">⚠️</div><h1 style="font-size:26px;margin:8px 0 12px">อัปโหลดผิดระบบ!</h1>'
+    +'<p style="font-size:18px;line-height:1.6;margin:0 0 10px">ไฟล์ index.html นี้เป็นของ <b>'+MY_NAME+'</b> ('+MY_REPO+')<br>แต่ถูกอัปโหลดไว้ใน repo <b>'+(repo||'(หน้าแรก)')+'</b></p>'
+    +'<p style="font-size:15px;line-height:1.6;opacity:.9;margin:0">ระบบหยุดทำงานเพื่อไม่ให้ข้อมูลบันทึกผิดที่<br>กรุณาอัปโหลดไฟล์ของระบบที่ถูกต้องกลับเข้า repo นี้</p></div></body>';
+  window.stop();
+  throw new Error('อัปโหลดผิดระบบ: index.html ของ '+MY_REPO+' อยู่ใน repo '+repo);
+})();
+</script>
 <title>งานระวังชี้แนวเขตที่ดิน หมวดทางหลวงเชิงเนิน</title>
 <link rel="icon" href="logo.png" data-cn-emblem>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

@@ -32,6 +32,22 @@
   };
   // ▲▲▲ ▲▲▲
 
+  // ตัวกันอัปโหลดผิดระบบ: projectId ตั้งชื่อตรงกับ repo บน GitHub (choengnoen-landboundary)
+  // ถ้าเปิดบน github.io แล้วชื่อ repo ไม่ตรง = อัปโหลดไฟล์นี้ผิดระบบ → ขึ้นจอแดงและหยุดก่อนเชื่อมฐานข้อมูล
+  // (เปิดจากเครื่อง file:// หรือ localhost จะไม่ถูกตรวจ)
+  if (/\.github\.io$/i.test(location.hostname)) {
+    const repo = (location.pathname.split('/')[1] || '').toLowerCase().replace(/[^a-z0-9._-]/g, '');
+    if (repo !== firebaseConfig.projectId) {
+      document.documentElement.innerHTML = '<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>อัปโหลดผิดระบบ</title></head>'
+        + '<body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#b3261e;color:#fff;font-family:Sarabun,Tahoma,sans-serif;padding:24px;box-sizing:border-box;text-align:center">'
+        + '<div style="max-width:560px"><div style="font-size:56px">⚠️</div><h1 style="font-size:26px;margin:8px 0 12px">อัปโหลดผิดระบบ!</h1>'
+        + '<p style="font-size:18px;line-height:1.6;margin:0 0 10px">ไฟล์ firebase-layer.js นี้เป็นของ <b>' + firebaseConfig.projectId + '</b><br>แต่ถูกอัปโหลดไว้ใน repo <b>' + (repo || '(หน้าแรก)') + '</b></p>'
+        + '<p style="font-size:15px;line-height:1.6;opacity:.9;margin:0">ระบบหยุดทำงานเพื่อไม่ให้ข้อมูลบันทึกผิดที่<br>กรุณาอัปโหลดไฟล์ของระบบที่ถูกต้องกลับเข้า repo นี้</p></div></body>';
+      window.stop();
+      throw new Error('อัปโหลดผิดระบบ: firebase-layer.js ของ ' + firebaseConfig.projectId + ' อยู่ใน repo ' + repo);
+    }
+  }
+
   // ยังไม่ได้วางค่า config — ไม่เริ่ม Firebase (หน้าเว็บจะแสดงข้อความแนะนำแทน)
   if (/วาง|^$/.test(firebaseConfig.apiKey) || /วาง/.test(firebaseConfig.appId)) {
     window.FBL_CONFIG_MISSING = true;
