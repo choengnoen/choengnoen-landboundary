@@ -1836,16 +1836,16 @@ tr.route-editable:hover td{background:var(--amber-glow)}
         <div class="filter-wrap" id="filterWrap"><button type="button" class="btn btn-outline" id="btnFilterToggle" aria-expanded="false" aria-controls="filterPop"><svg class="filter-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg> ตัวกรอง <span class="filter-badge" id="filterBadge">0</span></button><div class="filter-pop" id="filterPop" hidden>
         <div class="field">
           <label style="text-align:center">ปีงบประมาณ</label>
-          <select id="filterYear"><option value="">ทั้งหมด</option></select>
+          <select id="filterYear" multiple><option value="" selected>ทั้งหมด</option></select>
         </div>
         <div class="field">
           <label style="text-align:center">ทล.</label>
-          <select id="filterHighway"><option value="">ทั้งหมด</option></select>
+          <select id="filterHighway" multiple><option value="" selected>ทั้งหมด</option></select>
         </div>
         <div class="field">
           <label style="text-align:center">สถานะ</label>
-          <select id="filterStatus">
-            <option value="">ทั้งหมด</option>
+          <select id="filterStatus" multiple>
+            <option value="" selected>ทั้งหมด</option>
             <option value="open">กำลังดำเนินการ</option>
             <option value="done">เสร็จสิ้น</option>
             <option value="cancelled">ยกเลิก</option>
@@ -3240,7 +3240,7 @@ function refreshHighwayOptions(){
   sel.value = prevVal;
 
   const fh = document.getElementById('filterHighway');
-  const prevFh = fh.value;
+  const prevFh = selVals(fh);
   fh.innerHTML = '<option value="">ทั้งหมด</option>';
   ROUTES.forEach(r => {
     const opt = document.createElement('option');
@@ -3248,7 +3248,7 @@ function refreshHighwayOptions(){
     opt.textContent = 'ทล.' + r.highway;
     fh.appendChild(opt);
   });
-  fh.value = prevFh;
+  setSelVals(fh, prevFh);
 }
 // ตอนเปิดเคสเก่ามาแก้ไข: ถ้าเคสนั้นอยู่บนสายทางที่โอนไปแล้ว ต้องเพิ่มตัวเลือกนั้นชั่วคราว ไม่งั้นค่า ทล. ของเคสจะหายจากฟอร์ม
 function ensureHighwayOption(hw){
@@ -3273,14 +3273,14 @@ function populateHighwaySelect(){
 function populateYearFilter(){
   const years = Array.from(new Set(records.map(r => r.fiscalYear).filter(Boolean))).sort((a,b)=>b-a);
   const fy = document.getElementById('filterYear');
-  const prevValue = fy.value; 
+  const prev = selVals(fy);
   fy.innerHTML = '<option value="">ทั้งหมด</option>';
   years.forEach(y => {
     const opt = document.createElement('option');
     opt.value = y; opt.textContent = 'ปีงบ ' + y;
     fy.appendChild(opt);
   });
-  if (years.some(y => String(y) === prevValue)) fy.value = prevValue;
+  setSelVals(fy, prev);
 }
 function setSaveButtonLoading(loading){
   const btn = document.getElementById('btnSave');
@@ -4939,6 +4939,17 @@ let listWaitPointOnly = false;   // ตัวกรองชั่วครา�
    - ตัว <select> เดิมยังอยู่ในหน้า (ซ่อนไว้) โค้ดเดิมที่อ่าน/ตั้งค่า .value หรือฟัง event change ทำงานเหมือนเดิมทุกอย่าง
    - ช่องที่สร้างทีหลัง (แถวทรัพย์สิน คู่กรณีร่วม หน้าล็อกอิน) ถูกแปลงอัตโนมัติ ช่องที่ซ่อนไว้ตั้งแต่แรกไม่แปลง
    - ทุกช่องข้อความปิดการจำ/แนะนำค่าเดิมของเบราว์เซอร์ (กล่องดำที่เด้งใต้ช่องกรอก) */
+// ตัวกรองหน้ารายการเป็น <select multiple>: อ่าน/ตั้งค่าที่เลือก (ไม่นับ "ทั้งหมด") — ไม่มีค่าที่เลือก = ทั้งหมด
+function selVals(sel){
+  if (typeof sel === 'string') sel = document.getElementById(sel);
+  return [...sel.options].filter(o => o.selected && o.value !== '').map(o => o.value);
+}
+function setSelVals(sel, vals){
+  let any = false;
+  [...sel.options].forEach(o => { o.selected = o.value !== '' && vals.includes(o.value); if (o.selected) any = true; });
+  if (!any && sel.options[0]) sel.options[0].selected = true;
+  sel.dispatchEvent(new Event('dsel-refresh'));
+}
 const DSEL_DESC = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
 const DSEL_IDX = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'selectedIndex');
 // วางเมนูเลือกให้อยู่ในกรอบที่มองเห็นจริง (ทั้งหน้าจอ และกรอบเลื่อน/กรอบตัดขอบของหน้าต่างที่ช่องนั้นอยู่) — เปิดลงถ้าที่พอ ไม่พอก็เปิดขึ้น และจำกัดความสูงเมนู (เลื่อนดูในเมนูได้) ไม่ให้ส่วนบน/ล่างถูกตัดขอบ
@@ -4974,8 +4985,22 @@ function enhanceSelect(sel){
   sel.classList.add('dsel-native'); sel.tabIndex = -1;
   const label = btn.querySelector('.dsel-label'), size = btn.querySelector('.dsel-size');
   let active = -1, typed = '', typedTimer = null;
+  // <select multiple> (ตัวกรองหน้ารายการ): คลิกแต่ละแถว = เลือก/ยกเลิก เมนูไม่ปิด / "ทั้งหมด" (value "") = ล้างที่เลือก
+  const multi = sel.multiple;
+  const isSel = (i) => multi ? sel.options[i].selected : i === sel.selectedIndex;
+  const menuHtml = () => [...sel.options].map((o, i) => `<div class="it-dd-item dsel-item${isSel(i) ? ' sel' : ''}" data-i="${i}" role="option">${escapeHtml(o.textContent)}${isSel(i) ? '<span class="dsel-tick">✓</span>' : ''}</div>`).join('');
 
   const refresh = () => {
+    if (multi) {
+      const picked = [...sel.options].filter(x => x.selected && x.value !== '');
+      label.textContent = !picked.length ? (sel.options[0] ? sel.options[0].textContent : '')
+        : picked.length === 1 ? picked[0].textContent
+        : picked[0].textContent + ' +' + (picked.length - 1);
+      btn.title = picked.map(x => x.textContent).join(', ');
+      btn.disabled = sel.disabled;
+      if (isOpen()) { menu.innerHTML = menuHtml(); paint(); }
+      return;
+    }
     const o = sel.options[sel.selectedIndex];
     label.textContent = o ? o.textContent : '';
     size.textContent = [...sel.options].reduce((m, x) => x.textContent.length > m.length ? x.textContent : m, '');
@@ -4985,6 +5010,7 @@ function enhanceSelect(sel){
   Object.defineProperty(sel, 'value', { configurable: true, get(){ return DSEL_DESC.get.call(this); }, set(v){ DSEL_DESC.set.call(this, v); refresh(); } });
   Object.defineProperty(sel, 'selectedIndex', { configurable: true, get(){ return DSEL_IDX.get.call(this); }, set(v){ DSEL_IDX.set.call(this, v); refresh(); } });
   new MutationObserver(refresh).observe(sel, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['disabled'] });
+  sel.addEventListener('dsel-refresh', refresh);
 
   const isOpen = () => menu.style.display !== 'none';
   const paint = () => {
@@ -4995,14 +5021,29 @@ function enhanceSelect(sel){
   const open = () => {
     if (sel.disabled) return;
     closeAllDropdownMenus(menu);
-    menu.innerHTML = [...sel.options].map((o, i) => `<div class="it-dd-item dsel-item${i === sel.selectedIndex ? ' sel' : ''}" data-i="${i}" role="option">${escapeHtml(o.textContent)}${i === sel.selectedIndex ? '<span class="dsel-tick">✓</span>' : ''}</div>`).join('');
+    menu.innerHTML = menuHtml();
+    if (multi) menu.setAttribute('aria-multiselectable', 'true');
     menu.style.display = '';
     placeDropdown(wrap, menu);   // เลือกเปิดขึ้น/ลง และจำกัดความสูงให้พอดีที่ว่างในกรอบเลื่อน (ไม่ให้เมนูถูกตัดขอบ)
     active = sel.selectedIndex;
     paint();
   };
   const close = () => { menu.style.display = 'none'; active = -1; };
+  const toggle = (i) => {
+    if (i < 0 || i >= sel.options.length) return;
+    const o = sel.options[i];
+    if (o.value === '') [...sel.options].forEach(x => { x.selected = x === o; });
+    else {
+      o.selected = !o.selected;
+      const any = [...sel.options].some(x => x.selected && x.value !== '');
+      [...sel.options].forEach(x => { if (x.value === '') x.selected = !any; });
+    }
+    active = i;
+    refresh();
+    sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true }));
+  };
   const choose = (i) => {
+    if (multi) { toggle(i); return; }
     if (i < 0 || i >= sel.options.length) return;
     const changed = i !== sel.selectedIndex;
     DSEL_IDX.set.call(sel, i);
@@ -5025,7 +5066,7 @@ function enhanceSelect(sel){
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && e.key !== ' ') {   // พิมพ์ตัวอักษรเพื่อข้ามไปตัวเลือกที่ขึ้นต้นด้วยตัวนั้น
       typed += e.key.toLowerCase(); clearTimeout(typedTimer); typedTimer = setTimeout(() => { typed = ''; }, 700);
       const i = [...sel.options].findIndex(o => o.textContent.trim().toLowerCase().startsWith(typed));
-      if (i >= 0) { if (isOpen()) { active = i; paint(); } else { choose(i); } }
+      if (i >= 0) { if (isOpen()) { active = i; paint(); } else if (!multi) { choose(i); } }
     }
   });
   refresh();
@@ -5924,19 +5965,18 @@ function xlStatusStyle(cell, value, doneWord){
 function listFilterState(){
   return {
     q: document.getElementById('searchBox').value.trim().toLowerCase(),
-    year: document.getElementById('filterYear').value,
-    hw: document.getElementById('filterHighway').value,
-    status: document.getElementById('filterStatus').value,
+    year: selVals('filterYear'),
+    hw: selVals('filterHighway'),
+    status: selVals('filterStatus'),
     waitPoint: listWaitPointOnly,
     waitReport: listWaitReportOnly
   };
 }
+// แต่ละตัวกรองเลือกได้หลายค่า: ในกลุ่มเดียวกันตรงค่าใดค่าหนึ่งก็ผ่าน (หรือ) ต่างกลุ่มต้องผ่านทุกกลุ่ม (และ)
 function recordMatchesList(r, f, seqMap){
-  if (f.year && String(r.fiscalYear) !== f.year) return false;
-  if (f.hw && String(r.highway) !== f.hw) return false;
-  if (f.status === 'open' && !isOpenCase(r)) return false;
-  if (f.status === 'done' && !isDone(r)) return false;
-  if (f.status === 'cancelled' && !r.cancelled) return false;
+  if (f.year.length && !f.year.includes(String(r.fiscalYear))) return false;
+  if (f.hw.length && !f.hw.includes(String(r.highway))) return false;
+  if (f.status.length && !f.status.some(v => v === 'open' ? isOpenCase(r) : v === 'done' ? isDone(r) : !!r.cancelled)) return false;
   if (f.waitPoint && (!isOpenCase(r) || r.pointedDate)) return false;
   if (f.waitReport && (!isOpenCase(r) || !r.pointedDate)) return false;
   if (f.q) {
@@ -5948,7 +5988,7 @@ function recordMatchesList(r, f, seqMap){
 }
 function hasListFilters(){
   const f = listFilterState();
-  return !!(f.q || f.year || f.hw || f.status || f.waitPoint || f.waitReport);
+  return !!(f.q || f.year.length || f.hw.length || f.status.length || f.waitPoint || f.waitReport);
 }
 function getListRecords(scope){
   if (scope === 'all') return records.slice();
@@ -5957,9 +5997,9 @@ function getListRecords(scope){
 }
 function describeListFilters(){
   const f = listFilterState(), out = [];
-  if (f.year) out.push('ปีงบประมาณ ' + f.year);
-  if (f.hw) out.push('ทล.' + f.hw);
-  if (f.status) out.push(({ open: 'กำลังดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' })[f.status]);
+  if (f.year.length) out.push('ปีงบประมาณ ' + f.year.join(', '));
+  if (f.hw.length) out.push('ทล.' + f.hw.join(', '));
+  if (f.status.length) out.push(f.status.map(v => ({ open: 'กำลังดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' })[v]).join(', '));
   if (f.waitPoint) out.push('รอชี้แนวเขต');
   if (f.waitReport) out.push('รอส่งแขวง');
   if (f.q) out.push('คำค้น "' + document.getElementById('searchBox').value.trim() + '"');
