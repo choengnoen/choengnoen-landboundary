@@ -1308,6 +1308,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 .send-hero small{color:rgba(255,255,255,.78);font-size:13px}
 .send-hero .big{font-size:44px;font-weight:700;line-height:1.05;font-family:'Kanit','Sarabun',sans-serif}
 .send-hero .big span{font-size:16px;font-weight:600;margin-left:4px;font-family:'Sarabun',sans-serif}
+.send-hero .big.due span{font-size:22px;font-family:'Kanit','Sarabun',sans-serif;margin-left:6px}
+.send-hero .sh-st{align-self:flex-start;margin:4px 0 2px;padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.2);font-size:12.5px;font-weight:600;color:#fff}
 .send-hero.near{background:linear-gradient(135deg,#d9790f,#a3660a)}
 .send-hero.bad{background:linear-gradient(135deg,#d2503d,#9c2e20)}
 .send-hero.ontime{background:linear-gradient(135deg,#25a367,#14693d)}
@@ -3447,24 +3449,28 @@ function updateStepUi(){
   const d = deadlineInfo(snap);
   const sub = document.getElementById('sendSub');
   if (sub) sub.textContent = snap.pointedDate ? 'ชี้แนวเขตเมื่อ ' + formatThaiDate(snap.pointedDate) : '';
-  // การ์ดกำหนดส่ง (แบบ A): ตัวเลขวันทำการเป็นจุดเด่น สีตามสถานะ (ok/near/bad/ontime/na)
-  const num = (d.text.match(/\d+/) || [''])[0];
-  let cls = d.cls === 'ok' ? '' : d.cls, head = '', big = '', foot = '';
+  // การ์ดกำหนดส่ง (แบบ A): วันครบกำหนดเป็นจุดเด่น · จำนวนวันทำการที่เหลือ/เกินเป็นป้ายรอง · สีตามสถานะ (ok/near/bad/ontime/na)
+  let cls = d.cls === 'ok' ? '' : d.cls, head = '', big = '', st = '', foot = '';
   if (snap.cancelled) { cls = 'na'; head = 'สถานะ'; big = 'ยกเลิก'; foot = 'ไม่นับเป็นเรื่องค้าง'; }
   else if (!snap.pointedDate) {
     const ap = document.getElementById('f_appointDate').value;
     cls = 'na'; head = 'ต้องส่งแขวงภายใน'; big = `${REPORT_DAYS}<span>วันทำการ</span>`;
     foot = (ap ? 'นัดชี้แนวเขต ' + formatThaiDate(ap) + ' · ' : '') + 'นับจากวันที่ชี้แนวเขต';
   } else {
-    if (d.key === 'ontime') { cls = 'ontime'; head = 'ส่งแขวงแล้ว'; big = 'ทันกำหนด'; }
-    else if (d.key === 'late') { head = 'ส่งเกินกำหนด'; big = `${num}<span>วันทำการ</span>`; }
-    else if (d.key === 'overdue') { head = 'เกินกำหนดแล้ว'; big = `${num}<span>วันทำการ</span>`; }
-    else if (num) { head = 'เหลือเวลาส่งแขวง'; big = `${num}<span>วันทำการ</span>`; }
-    else { head = 'ครบกำหนด'; big = 'วันนี้'; }
-    foot = 'ครบกำหนด ' + formatThaiDate(d.due);
+    if (d.key === 'ontime') cls = 'ontime';
+    head = 'ครบกำหนดส่งแขวง';
+    big = dueBigHtml(d.due);
+    st = d.text;
+    foot = snap.sentDate ? 'ส่งแขวงเมื่อ ' + formatThaiDate(snap.sentDate) : 'นับ ' + REPORT_DAYS + ' วันทำการจากวันชี้แนวเขต';
   }
   box.className = 'send-hero' + (cls ? ' ' + cls : '');
-  box.innerHTML = `<small>${escapeHtml(head)}</small><div class="big">${big}</div><small>${escapeHtml(foot)}</small>`;
+  box.innerHTML = `<small>${escapeHtml(head)}</small><div class="big${st ? ' due' : ''}">${big}</div>`
+    + (st ? `<span class="sh-st">${escapeHtml(st)}</span>` : '') + `<small>${escapeHtml(foot)}</small>`;
+}
+// วันครบกำหนดตัวใหญ่: "7" ใหญ่ + "ก.ค. 69" รอง
+function dueBigHtml(due){
+  const p = formatThaiDate(due).split(' ');
+  return escapeHtml(p[0]) + '<span>' + escapeHtml(p.slice(1).join(' ')) + '</span>';
 }
 function updateDocUi(){
   const hasProxy = document.getElementById('f_hasProxy').value === 'มี';
