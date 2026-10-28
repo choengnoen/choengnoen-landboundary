@@ -4634,16 +4634,18 @@ function openCaseDetailModal(id){
   const rr = rowResult(rec);
   // เส้นความคืบหน้า 6 ขั้นตาม STEPS (ตัดขั้นเก็บสำเนาออก 29 ต.ค. 69): เขียว ✓ = ทำแล้ว · ส้ม ! = ยังไม่ทำ · แดง ! = เลยกำหนดส่งแขวง (10 วันทำการนับจากวันชี้แนวเขต — ใช้ deadlineInfo เดิม) · เทา = ยกเลิก
   const SHORT_STEP = { dateReceived: 'รับเอกสาร', inspectedDate: 'ตรวจสถานที่', pointedDate: 'ชี้แนวเขต', preparedDate: 'จัดทำบันทึก', signedDate: 'ลงนาม', sentDate: 'ส่งแขวง' };
+  // วันที่ในเส้นสถานะใช้แบบย่อ (25 ส.ค. 69) และห้ามตัดบรรทัดกลางวันที่
+  const sd = s => '<span class="cd-nw">' + escapeHtml(formatThaiDate(s)) + '</span>';
   const stepLi = (cls, label, sub, note) => `<li class="cd-st ${cls}"><span class="cd-dot">${cls === 'ok' ? '✓' : (cls === 'n' ? '–' : '!')}</span><b>${escapeHtml(label)}</b><span class="cd-ss">${sub}</span>${note ? `<span class="cd-sn">${note}</span>` : ''}</li>`;
   const progSteps = STEPS.map(s => {
     const d = normalizeDateStr(rec[s.field]);
     const label = SHORT_STEP[s.field] || s.label;
-    if (rec.cancelled) return stepLi('n', label, d ? escapeHtml(formatThaiDateFull(d)) : 'ยกเลิก');
-    if (d) return stepLi('ok', label, escapeHtml(formatThaiDateFull(d)));
+    if (rec.cancelled) return stepLi('n', label, d ? sd(d) : 'ยกเลิก');
+    if (d) return stepLi('ok', label, sd(d));
     if (s.field === 'sentDate') {
       // แสดงวันที่ต้องส่ง ไม่แสดงจำนวนวันทำการ — สีแดงบอกว่าเลยกำหนด
       if (dl.key === 'none' || !dl.due) return stepLi('warn', label, 'รอชี้แนวเขต');
-      return stepLi(dl.cls === 'bad' ? 'bad' : 'warn', label, 'กำหนดส่ง ' + escapeHtml(formatThaiDateFull(dl.due)));
+      return stepLi(dl.cls === 'bad' ? 'bad' : 'warn', label, 'กำหนดส่ง ' + sd(dl.due));
     }
     return stepLi('warn', label, escapeHtml(s.wait || 'ยังไม่ระบุ'));
   }).join('');
