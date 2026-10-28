@@ -345,6 +345,17 @@ table.data tr:hover td{background:var(--tint)}
 .status-pill.done{background:var(--green-bg);color:var(--green)}
 .status-pill.pending{background:var(--rust-bg);color:var(--rust)}
 .status-pill.unknown{background:var(--paper-2);color:var(--ink-soft)}
+/* ไอคอนเตือนข้อมูลไม่ครบ (ข้างป้ายสถานะ) + กล่องรายการที่ขาด */
+table.data td.status-cell{white-space:nowrap}
+.miss-ico{display:inline-flex;align-items:center;gap:2px;margin-left:6px;padding:1px 6px 1px 4px;border-radius:99px;background:#fff4e5;color:#c2410c;border:1px solid #fdba74;font-size:11.5px;line-height:1.4;vertical-align:middle;cursor:help}
+.miss-ico svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.miss-ico b{font-weight:700}
+.miss-ico:focus{outline:2px solid #fb923c;outline-offset:1px}
+.miss-float{position:fixed;z-index:9999;max-width:300px;background:#fff;border:1px solid #fdba74;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:8px 12px;font-size:12.5px;line-height:1.55;color:var(--ink);pointer-events:none}
+.miss-float b{display:block;color:#c2410c;margin-bottom:2px}
+.miss-float span{display:block}
+/* ช่องที่ขาดในตารางกรอกหมุด */
+#pinRows input.pv-miss{border-color:#dc2626 !important;background:#fef2f2}
 
 .empty-state{padding:40px 20px;text-align:center;color:var(--ink-soft)}
 .empty-state h3{margin:0 0 6px}
@@ -1911,12 +1922,20 @@ tr.route-editable:hover td{background:var(--amber-glow)}
             <option value="cancelled">ยกเลิก</option>
           </select>
         </div>
+        <div class="field">
+          <label style="text-align:center">ความครบถ้วน</label>
+          <select id="filterMissing" multiple>
+            <option value="" selected>ทั้งหมด</option>
+            <option value="miss">ข้อมูลไม่ครบ</option>
+            <option value="ok">ข้อมูลครบ</option>
+          </select>
+        </div>
       </div></div>
       </div>
       <div class="list-count-row"><span class="list-count" id="listCount"></span><button type="button" class="link-clear" id="btnClearFilters" title="ล้างตัวกรองทั้งหมด">↺ ล้างตัวกรอง</button></div>
       <div class="table-wrap">
         <table class="data" id="dataTable">
-          <colgroup><col style="width:12%"><col style="width:21%"><col style="width:27%"><col style="width:26%"><col style="width:14%"></colgroup>
+          <colgroup><col style="width:12%"><col style="width:20%"><col style="width:25%"><col style="width:25%"><col style="width:18%"></colgroup>
           <thead>
             <tr>
               <th>วันที่</th><th>สายทาง / กม.</th><th>เจ้าของที่ดิน</th>
@@ -2039,8 +2058,7 @@ const STEPS = [
   { field: 'pointedDate',   label: 'ทำการระวังชี้แนวเขต',                       wait: 'รอชี้แนวเขต',        who: 'หัวหน้าหมวดการทาง' },
   { field: 'preparedDate',  label: 'จัดทำบันทึกพร้อมหนังสือรับรองเขตที่ดิน',     wait: 'รอจัดทำบันทึก',      who: 'ธุรการหมวดการทาง',  desc: 'บันทึกข้อความ + หนังสือรับรองเขตที่ดิน (ม.1-03)' },
   { field: 'signedDate',    label: 'ลงนาม',                                   wait: 'รอลงนาม',           who: 'หัวหน้าหมวดการทาง' },
-  { field: 'sentDate',      label: 'ออกเลข / ทำสำเนา / ลงสมุดส่ง',              wait: 'รอออกเลข/ส่ง',      who: 'ธุรการหมวดการทาง',  desc: 'กำหนดส่งภายใน 10 วันทำการหลังชี้แนวเขต' },
-  { field: 'archivedDate',  label: 'เก็บสำเนาเอกสาร',                          wait: 'รอเก็บสำเนา',        who: 'ธุรการหมวดการทาง',  desc: 'เก็บสำเนาหลักฐานที่เกี่ยวข้อง 1 ชุด' }
+  { field: 'sentDate',      label: 'ออกเลข / ทำสำเนา / ลงสมุดส่ง',              wait: 'รอออกเลข/ส่ง',      who: 'ธุรการหมวดการทาง',  desc: 'กำหนดส่งภายใน 10 วันทำการหลังชี้แนวเขต' }
 ];
 const REPORT_DAYS = 10;   // ระเบียบ: ส่งแขวงภายใน 10 วันทำการ นับจากวันที่ชี้แนวเขต (นับเฉพาะวันทำการ จันทร์–ศุกร์)
 
@@ -2072,6 +2090,65 @@ function caseStatus(r){
   if (r.cancelled) return { cls: 'cancel', text: 'ยกเลิก' };
   if (isDone(r)) return { cls: 'done', text: 'ส่งแขวงแล้ว' };
   return { cls: 'step', text: r.pointedDate ? 'รอส่งแขวง' : 'รอชี้แนวเขต' };
+}
+
+/* ===== ตรวจข้อมูลสำคัญไม่ครบ (ผู้ใช้สั่ง 29 ต.ค. 69) =====
+   เตือนเฉพาะเรื่องที่ชี้แนวเขตแล้ว (มีวันชี้แนวเขต หรือกรอกผลหมุดแล้ว) · ไม่ตรวจเรื่องยกเลิก · หมายเหตุไม่บังคับ
+   เป็นการเตือนอย่างเดียว บันทึก/ส่งแขวงได้ตามปกติ */
+// ช่องที่ขาดต่อหมุด: no = เลขหมุดโฉนด · work = ระยะหน้างาน · acct = ระยะบัญชี · gap = ระยะถึงหมุดถัดไป
+function pinMissing(m){
+  const gaps = Array.isArray(m.pinGaps) ? m.pinGaps : [];
+  const n = Math.max(gaps.length, 1) + 1;
+  const at = (list, single, i) => String(Array.isArray(list) ? (list[i] != null ? list[i] : '') : (single || '')).trim();
+  return Array.from({ length: n }, (_, i) => {
+    const miss = [];
+    if (!at(m.pinNoList, '', i)) miss.push('no');
+    if (!at(m.rowWorkList, m.rowWork, i)) miss.push('work');
+    if (!at(m.rowAcctList, m.rowDistance, i)) miss.push('acct');
+    if (i < n - 1) { const g = gaps[i]; if (g === null || g === undefined || g === '' || isNaN(Number(g))) miss.push('gap'); }
+    return miss;
+  });
+}
+const PIN_MISS_TEXT = { no: 'ไม่มีเลขหมุดโฉนด', work: 'ไม่มีระยะหน้างาน', acct: 'ไม่มีระยะบัญชี', gap: 'ไม่มีระยะถึงหมุดถัดไป' };
+function missingInfo(r){
+  if (r.cancelled || !(r.pointedDate || hasDraftData(r))) return [];
+  const out = [];
+  if (!formatKm(r.km) && !String(r.pinKm0 || '').trim()) out.push('ไม่มี กม.');
+  if (!String(r.ownerName || '').trim()) out.push('ไม่มีชื่อเจ้าของที่ดิน');
+  if (r.deedType !== 'ไม่มีเอกสารสิทธิ์' && !String(r.deedNo || '').trim()) out.push('ไม่มีเลขเอกสารสิทธิ์');
+  if (!String(r.side || '').trim()) out.push('ไม่ระบุด้านของแปลง');
+  if (![r.areaRai, r.areaNgan, r.areaWa].some(v => v !== '' && v != null)) out.push('ไม่มีเนื้อที่');
+  if (!hasDraftData(r)) { out.push('ยังไม่กรอกผลหมุด'); return out; }
+  pinMissing(r).forEach((miss, i) => { if (miss.length) out.push('หมุด ' + (i + 1) + ': ' + miss.map(k => PIN_MISS_TEXT[k]).join(', ')); });
+  return out;
+}
+const MISS_ICON_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>';
+function missIconHtml(r){
+  const miss = missingInfo(r);
+  if (!miss.length) return '';
+  const tip = 'ข้อมูลไม่ครบ ' + miss.length + ' รายการ\n' + miss.map(t => '• ' + t).join('\n');
+  return `<span class="miss-ico" tabindex="0" aria-label="${escapeHtml(tip)}">${MISS_ICON_SVG}<b>${miss.length}</b><span class="miss-tip" hidden><b>ข้อมูลไม่ครบ ${miss.length} รายการ</b>${miss.map(t => '<span>• ' + escapeHtml(t) + '</span>').join('')}</span></span>`;
+}
+// กล่องรายการที่ขาด: ลอยตามตำแหน่งไอคอน (position:fixed) จึงไม่ถูกขอบตารางที่เลื่อนได้ตัดทิ้ง · ชี้เมาส์/แตะไอคอนเพื่อดู
+function initMissTip(){
+  const box = document.createElement('div');
+  box.className = 'miss-float'; box.hidden = true;
+  document.body.appendChild(box);
+  let cur = null;
+  const hide = () => { box.hidden = true; cur = null; };
+  const show = ico => {
+    const src = ico.querySelector('.miss-tip');
+    if (!src) return;
+    cur = ico; box.innerHTML = src.innerHTML; box.hidden = false;
+    const r = ico.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight;
+    const left = Math.max(8, Math.min(r.right - bw, window.innerWidth - bw - 8));
+    const top = (r.bottom + 6 + bh > window.innerHeight - 8) ? r.top - bh - 6 : r.bottom + 6;
+    box.style.left = left + 'px'; box.style.top = Math.max(8, top) + 'px';
+  };
+  document.addEventListener('mouseover', e => { const ico = e.target.closest && e.target.closest('.miss-ico'); if (ico) { if (ico !== cur) show(ico); } else if (cur && !box.contains(e.target)) hide(); });
+  document.addEventListener('focusin', e => { const ico = e.target.closest && e.target.closest('.miss-ico'); if (ico) show(ico); });
+  document.addEventListener('click', e => { const ico = e.target.closest && e.target.closest('.miss-ico'); if (ico) { e.stopPropagation(); show(ico); } else hide(); }, true);
+  window.addEventListener('scroll', hide, true);
 }
 
 /* ===== วันทำการ (จันทร์–ศุกร์ ยังไม่หักวันหยุดนักขัตฤกษ์) ===== */
@@ -3393,9 +3470,6 @@ const STEP_EXTRAS = {
       <div class="field"><label>เลขที่หนังสือส่ง (ออกเลข)</label>
         <div class="ref-field" id="refField"><span class="ref-prefix" id="refPrefix">ที่ สทล.14 ขท.ระยอง.1/</span><input type="text" id="f_referenceNo"></div></div>
       <div class="field"><label>ส่งถึง</label><input type="text" id="f_sentTo" placeholder="เช่น แขวงทางหลวงระยอง"></div>
-    </div>`,
-  archivedDate: `<div class="step-extra g2">
-      <div class="field"><label>ที่เก็บสำเนา (แฟ้ม / ตู้)</label><input type="text" id="f_archiveLocation" placeholder="เช่น แฟ้มชี้แนวเขต ปีงบ 2569"></div>
     </div>`
 };
 function buildStepRows(){
@@ -3486,7 +3560,7 @@ function updateCancelUi(){
 // ช่องข้อความทั่วไปของฟอร์ม (id = 'f_' + ชื่อฟิลด์)
 const TEXT_FIELDS = ['incomingNo', 'side', 'location', 'deedNo', 'landNo', 'surveyPage',
   'tambon', 'amphoe', 'province', 'areaRai', 'areaNgan', 'areaWa', 'rowDistance', 'ownerName', 'ownerPhone', 'ownerAddress',
-  'proxyName', 'proxyPhone', 'proxyRelation', 'pointedBy', 'pointedWith', 'certNo', 'sentTo', 'archiveLocation', 'note', 'cancelReason', 'appointDate', 'coords',
+  'proxyName', 'proxyPhone', 'proxyRelation', 'pointedBy', 'pointedWith', 'certNo', 'sentTo', 'note', 'cancelReason', 'appointDate', 'coords',
   'deedOther', 'mapSheet', 'appointTime', 'repId', 'repName', 'repPosition', 'repPhone', 'repMobile', 'surveyorName', 'surveyorPhone', 'pinKm0', 'pinDir', 'rowWork'];
 const DEFAULT_PROVINCE = 'ระยอง';
 
@@ -4079,7 +4153,7 @@ function initDrafts(){
   if (!window.DRAFTS) return;
   DRAFTS.init({
     sys: 'boundary', startLabel: 'วันชี้แนวเขต', caseCol: 'boundaries',
-    startOf: c => c.pointedDate, sentOf: c => c.sentDate, doneOf: c => !!normalizeDateStr(c.archivedDate) || c.cancelled === true,
+    startOf: c => c.pointedDate, sentOf: c => c.sentDate, doneOf: c => c.cancelled === true,
     highways: () => ROUTES.filter(isRouteActive).map(r => ({ value: r.highway, label: r.highway + (r.section ? ' (' + r.section + ')' : '') })),
     parseKm: parseKm,
     openNew: prefillFormFromDraft,
@@ -4177,6 +4251,14 @@ function populateStatusFilter(){
   records.forEach(r => { if (r.cancelled) n.cancelled++; else if (r.sentDate) n.done++; else n.open++; });
   const base = { '': 'ทั้งหมด', open: 'รอส่งแขวง', done: 'ส่งแขวงแล้ว', cancelled: 'ยกเลิก' };
   [...sel.options].forEach(o => { if (o.value in base) { const t = base[o.value] + (o.value ? ' (' + n[o.value] + ')' : ''); if (o.textContent !== t) o.textContent = t; } });
+  // ตัวกรอง "ความครบถ้วน" ใส่จำนวนเรื่องเช่นกัน
+  const ms = document.getElementById('filterMissing');
+  if (ms) {
+    const m = { miss: 0, ok: 0 };
+    records.forEach(r => { m[missingInfo(r).length ? 'miss' : 'ok']++; });
+    const mb = { '': 'ทั้งหมด', miss: 'ข้อมูลไม่ครบ', ok: 'ข้อมูลครบ' };
+    [...ms.options].forEach(o => { if (o.value in mb) { const t = mb[o.value] + (o.value ? ' (' + m[o.value] + ')' : ''); if (o.textContent !== t) o.textContent = t; } });
+  }
 }
 // เรียงตามความเร่งด่วน: เรื่องที่ยังดำเนินการอยู่ก่อน (เกินกำหนดนานสุด → ใกล้ครบ → ยังไม่ถึงกำหนด → ยังไม่ชี้แนว) ตามด้วยเรื่องเสร็จสิ้น/ยกเลิก
 function listSortKey(r){
@@ -4212,7 +4294,7 @@ function renderTable(){
       <td class="hw-cell nowrap-cell">ทล.${escapeHtml(r.highway)} · ${formatKm(r.km) ? 'กม.' + escapeHtml(formatKm(r.km)) : 'กม.รอระบุ'}<span class="c-sub">${escapeHtml([r.side, r.section].filter(Boolean).join(' · '))}</span></td>
       <td>${escapeHtml(r.ownerName || '-')}${r.hasProxy === 'มี' && r.proxyName ? `<span class="c-sub">มอบอำนาจ: ${escapeHtml(r.proxyName)}</span>` : ''}</td>
       <td>${escapeHtml(deedText(r))}<span class="c-sub">${escapeHtml(placeText(r))}</span></td>
-      <td>${statusPillOf(r)}</td>
+      <td class="status-cell">${statusPillOf(r)}${missIconHtml(r)}</td>
     `;
     tr.addEventListener('dblclick', () => openCaseDetailModal(r.id));
     tbody.appendChild(tr);
@@ -4406,6 +4488,7 @@ async function buildCaseImage(){
   const stage = document.createElement('div');
   stage.className = 'cd-snap-stage';
   stage.appendChild(shell);
+  stage.querySelectorAll('.dr-miss, .miss-ico').forEach(n => n.remove());   // เครื่องหมายเตือนข้อมูลไม่ครบมีไว้ดูบนจอ ไม่ใส่ในรูป
   document.body.appendChild(stage);
   // ตรากรมในหัวรูป: ใช้ตรากลางจากฮับ (ถ้าโหลดไม่ได้ใช้ logo.png ของระบบ)
   const emb = shell.querySelector('.cd-logo');
@@ -4497,7 +4580,11 @@ async function buildDraftImage(){
   if (!box) throw new Error('ไม่พบใบร่าง');
   await loadScriptOnce(HTML2CANVAS_URL);
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
-  const canvas = await window.html2canvas(box, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, ignoreElements: el => el.id === 'btnCopyDraft' });
+  const marks = [...box.querySelectorAll('.dr-miss')];
+  marks.forEach(n => n.style.display = 'none');   // กรอบแดงข้อมูลไม่ครบไม่ใส่ในรูป
+  let canvas;
+  try { canvas = await window.html2canvas(box, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false, ignoreElements: el => el.id === 'btnCopyDraft' }); }
+  finally { marks.forEach(n => n.style.display = ''); }
   return await new Promise((resolve, reject) => canvas.toBlob(b => b ? resolve(b) : reject(new Error('สร้างรูปไม่สำเร็จ')), 'image/png'));
 }
 async function copyDraftAsImage(btn){
@@ -4537,7 +4624,7 @@ function openCaseDetailModal(id){
   const dl = deadlineInfo(rec);
   const cur = currentStepIndex(rec);
 
-  // ระยะเวลาดำเนินการ: เรื่องที่ยังไม่เสร็จ = นับถึงวันนี้ / เสร็จแล้ว = นับถึงวันเก็บสำเนา
+  // ระยะเวลาดำเนินการ: เรื่องที่ยังไม่ส่งแขวง = นับถึงวันนี้ / ส่งแขวงแล้ว = นับถึงวันส่งแขวง
   const start = parseYmd(rec.dateReceived);
   const end = rec.sentDate ? parseYmd(rec.sentDate) : new Date();
   const days = start ? Math.max(0, Math.floor((end - start) / 86400000)) : null;
@@ -4545,8 +4632,8 @@ function openCaseDetailModal(id){
   const tile = (cls, icon, label, value) => `<div class="cd-tile ${cls}"><div class="cd-ic">${icon}</div><div><span>${label}</span><b>${value}</b></div></div>`;
   // กล่องผลเดียว: เขตทางกันได้ตามบัญชีหรือไม่ ระยะเท่าไร (แทนกล่องสถานะ/รับ/ส่ง/กำหนดส่งเดิม)
   const rr = rowResult(rec);
-  // เส้นความคืบหน้า 7 ขั้นตาม STEPS: เขียว ✓ = ทำแล้ว · ส้ม ! = ยังไม่ทำ · แดง ! = เลยกำหนดส่งแขวง (10 วันทำการนับจากวันชี้แนวเขต — ใช้ deadlineInfo เดิม) · เทา = ยกเลิก
-  const SHORT_STEP = { dateReceived: 'รับเอกสาร', inspectedDate: 'ตรวจสถานที่', pointedDate: 'ชี้แนวเขต', preparedDate: 'จัดทำบันทึก', signedDate: 'ลงนาม', sentDate: 'ส่งแขวง', archivedDate: 'เก็บสำเนา' };
+  // เส้นความคืบหน้า 6 ขั้นตาม STEPS (ตัดขั้นเก็บสำเนาออก 29 ต.ค. 69): เขียว ✓ = ทำแล้ว · ส้ม ! = ยังไม่ทำ · แดง ! = เลยกำหนดส่งแขวง (10 วันทำการนับจากวันชี้แนวเขต — ใช้ deadlineInfo เดิม) · เทา = ยกเลิก
+  const SHORT_STEP = { dateReceived: 'รับเอกสาร', inspectedDate: 'ตรวจสถานที่', pointedDate: 'ชี้แนวเขต', preparedDate: 'จัดทำบันทึก', signedDate: 'ลงนาม', sentDate: 'ส่งแขวง' };
   const stepLi = (cls, label, sub, note) => `<li class="cd-st ${cls}"><span class="cd-dot">${cls === 'ok' ? '✓' : (cls === 'n' ? '–' : '!')}</span><b>${escapeHtml(label)}</b><span class="cd-ss">${sub}</span>${note ? `<span class="cd-sn">${note}</span>` : ''}</li>`;
   const progSteps = STEPS.map(s => {
     const d = normalizeDateStr(rec[s.field]);
@@ -4570,9 +4657,7 @@ function openCaseDetailModal(id){
   const stepExtra = (s) => {
     if (s.field === 'pointedDate' && (rec.pointedBy || rec.pointedWith)) return [rec.pointedBy, rec.pointedWith].filter(Boolean).join(' · ');
     if (s.field === 'preparedDate' && rec.certNo) return 'ม.1-03 เลขที่ ' + rec.certNo;
-    if (s.field === 'sentDate' && (rec.outgoingNo || rec.sentTo)) return [rec.outgoingNo, rec.sentTo ? 'ส่งถึง ' + rec.sentTo : ''].filter(Boolean).join(' · ');
-    if (s.field === 'archivedDate' && rec.archiveLocation) return 'เก็บที่ ' + rec.archiveLocation;
-    return '';
+    if (s.field === 'sentDate' && (rec.outgoingNo || rec.sentTo)) return [rec.outgoingNo, rec.sentTo ? 'ส่งถึง ' + rec.sentTo : ''].filter(Boolean).join(' · ');    return '';
   };
   const timelineHtml = `<ul class="tl">${STEPS.map((s, i) => {
     const date = rec[s.field];
@@ -4640,7 +4725,7 @@ function openCaseDetailModal(id){
                 </dl></div>
             </div>
             <div>
-              ${hasDraftData(rec) ? '<div class="cd-card"><div class="cd-sec">ใบร่างผลการชี้แนวเขต <button type="button" class="btn btn-outline btn-sm" id="btnPrintDraft" style="margin-left:auto">พิมพ์ใบร่าง</button></div><div class="draft-box" style="margin-top:6px">' + draftSvg(draftModelFromRec(rec)) + '</div></div>' : ''}
+              ${hasDraftData(rec) ? '<div class="cd-card"><div class="cd-sec">ใบร่างผลการชี้แนวเขต ' + missIconHtml(rec) + '<button type="button" class="btn btn-outline btn-sm" id="btnPrintDraft" style="margin-left:auto">พิมพ์ใบร่าง</button></div><div class="draft-box" style="margin-top:6px">' + draftSvg(draftModelFromRec(rec), { markMissing: !!missingInfo(rec).length }) + '</div></div>' : ''}
               ${casePhotosCardHtml(rec)}
             </div>
           </div>
@@ -5092,6 +5177,7 @@ function goToFilteredList(fiscalYear, opt){
   document.getElementById('filterYear').value = (fiscalYear === 'ทั้งหมด') ? '' : String(fiscalYear);
   document.getElementById('filterHighway').value = '';
   document.getElementById('filterStatus').value = opt.status || (opt.waitPoint || opt.waitReport ? 'open' : '');
+  document.getElementById('filterMissing').value = '';
   listWaitPointOnly = !!opt.waitPoint;
   listWaitReportOnly = !!opt.waitReport;
   renderTable();
@@ -5569,6 +5655,16 @@ function draftSvg(m, opts){
   s += T(W / 2, 54, 'ทางหลวงหมายเลข ' + (m.highway || dots) + (m.section ? '  ตอน ' + m.section : ''), { s: 14 });
   // เส้นและหมุด
   s += '<line x1="' + left + '" y1="' + lineY + '" x2="' + right + '" y2="' + lineY + '" stroke="currentColor" stroke-width="3"/>';
+  // กรอบแดงรอบหมุดที่ข้อมูลไม่ครบ (เฉพาะหน้าจอ — ใบร่างที่พิมพ์ไม่มีกรอบ และตอนคัดลอกเป็นรูปถูกซ่อน)
+  const PM = (opts && opts.markMissing) ? pinMissing(m) : null;
+  if (PM) {
+    const hw = Math.max(30, Math.min(62, geo.step / 2 - 24)), yB = (perPin ? 232 : (RN.some(Boolean) ? 222 : 196)) + (perPin ? noOff : 0) + 8;
+    PM.forEach((miss, i) => {
+      if (!miss.some(k => k !== 'gap')) return;
+      const x0 = Math.max(3, xOf(i) - hw), x1 = Math.min(W - 3, xOf(i) + hw);   // ไม่ให้กรอบหมุดริมเลยขอบใบร่าง
+      s += '<rect class="dr-miss" x="' + x0 + '" y="102" width="' + (x1 - x0) + '" height="' + (yB - 102) + '" rx="6" fill="none" stroke="#dc2626" stroke-width="2.5"><title>' + e('หมุด ' + (i + 1) + ': ' + miss.filter(k => k !== 'gap').map(k => PIN_MISS_TEXT[k]).join(', ')) + '</title></rect>';
+    });
+  }
   for (let i = 0; i < N; i++) {
     const x = xOf(i);
     s += '<circle cx="' + x + '" cy="' + lineY + '" r="7" fill="' + ((i === 0 || i === N - 1) ? '#d9610a' : 'currentColor') + '"/>';
@@ -5585,7 +5681,7 @@ function draftSvg(m, opts){
     }
     if (i < N - 1) {
       const g = gaps[i], mx = (x + xOf(i + 1)) / 2;
-      s += T(mx, lineY - 10, (g !== null && g !== undefined && g !== '') ? (Number(g) + ' ม.') : dots, { s: 15, b: 1, c: '#0369a1' });
+      s += T(mx, lineY - 10, (g !== null && g !== undefined && g !== '') ? (Number(g) + ' ม.') : dots, { s: 15, b: 1, c: (PM && PM[i] && PM[i].includes('gap')) ? '#dc2626' : '#0369a1' });
     }
   }
   // กม.ต้น / กม.ปลาย (ปลายทางซ้าย-ขวาของเส้น: ซ้าย = กม.น้อย)
@@ -5610,6 +5706,14 @@ function draftSvg(m, opts){
   const H = y + 22;
   return '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" font-family="Sarabun, Tahoma, sans-serif" role="img" aria-label="ใบร่างงานชี้แนวเขต">' + s + '</svg>';
 }
+// ตารางกรอกหมุด: ช่องที่ยังว่าง (เลขหมุดโฉนด / ระยะหน้างาน / ระยะถึงหมุดถัดไป) ขอบแดง · m = null → ล้างขอบแดงทั้งหมด
+function markPinInputsMissing(m){
+  const PM = m ? pinMissing(m) : [];
+  const has = (i, k) => !!(PM[i] && PM[i].includes(k));
+  document.querySelectorAll('#pinRows input.pv-n').forEach(el => el.classList.toggle('pv-miss', has(+el.dataset.i, 'no')));
+  document.querySelectorAll('#pinRows input.pv-w').forEach(el => el.classList.toggle('pv-miss', has(+el.dataset.i, 'work')));
+  document.querySelectorAll('#pinRows input.pin-dist-in').forEach((el, i) => el.classList.toggle('pv-miss', has(i, 'gap')));
+}
 function updatePtDiff(){   // ส่วนต่าง = หน้างาน − บัญชี (ติดลบ = กันไม่ครบตามบัญชี)
   document.querySelectorAll('#pinRows .pn-diff').forEach(el => {
     const i = +el.dataset.i, a = parseFloat(PV.acct[i]), w = parseFloat(PV.work[i]);
@@ -5624,7 +5728,9 @@ function updateDraftPreview(){
   if (!wrap) return;
   let m = draftModelFromForm();
   try { updatePinVals(m); m = draftModelFromForm(); } catch (e) { console.error(e); }   // เติม "ระยะเขตทางตามบัญชี" ต่อหมุดจากฐานข้อมูลกลาง
-  wrap.innerHTML = draftSvg(m, { perPin: true });
+  const started = !!String(m.pinKm0 || '').trim();   // เริ่มกรอกผลหมุดแล้วจึงตีกรอบแดง (เรื่องใหม่ที่ยังไม่ได้ชี้แนวไม่ขึ้นแดงทั้งผัง)
+  wrap.innerHTML = draftSvg(m, { perPin: true, markMissing: started });
+  markPinInputsMissing(started ? m : null);
   // ข้อความในส่วนรายละเอียดใต้ผัง (ช่องกรอก ระยะเขตทาง 2 ช่อง อยู่ในบรรทัดเองและไม่ถูกวาดใหม่ จึงพิมพ์ต่อเนื่องได้)
   const dots = '……………', set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
   set('ddLoc', 'ด้าน ' + ([m.side, m.location].filter(Boolean).join(' ') || dots));
@@ -5739,6 +5845,7 @@ function initDraftCard(){
       t.value = t.value.replace(/[^0-9.]/g, '');
       PV.work[+t.dataset.i] = t.value;
       pvMirror(); updatePtDiff();
+      if (t.classList.contains('pv-miss') || !t.value.trim()) t.classList.toggle('pv-miss', !t.value.trim() && !!km0.value.trim());
     }
   });
   // ออกจากช่อง: จัดรูปแบบ กม. ให้เป็นมาตรฐาน (พิมพ์ 1025.5 → 1+025.5)
@@ -6132,6 +6239,7 @@ function listFilterState(){
     year: selVals('filterYear'),
     hw: selVals('filterHighway'),
     status: selVals('filterStatus'),
+    miss: selVals('filterMissing'),
     waitPoint: listWaitPointOnly,
     waitReport: listWaitReportOnly
   };
@@ -6141,6 +6249,7 @@ function recordMatchesList(r, f, seqMap){
   if (f.year.length && !f.year.includes(String(r.fiscalYear))) return false;
   if (f.hw.length && !f.hw.includes(String(r.highway))) return false;
   if (f.status.length && !f.status.some(v => v === 'open' ? isOpenCase(r) : v === 'done' ? isDone(r) : !!r.cancelled)) return false;
+  if (f.miss.length && !f.miss.includes(missingInfo(r).length ? 'miss' : 'ok')) return false;
   if (f.waitPoint && (!isOpenCase(r) || r.pointedDate)) return false;
   if (f.waitReport && (!isOpenCase(r) || !r.pointedDate)) return false;
   if (f.q) {
@@ -6152,7 +6261,7 @@ function recordMatchesList(r, f, seqMap){
 }
 function hasListFilters(){
   const f = listFilterState();
-  return !!(f.q || f.year.length || f.hw.length || f.status.length || f.waitPoint || f.waitReport);
+  return !!(f.q || f.year.length || f.hw.length || f.status.length || f.miss.length || f.waitPoint || f.waitReport);
 }
 function getListRecords(scope){
   if (scope === 'all') return records.slice();
@@ -6164,6 +6273,7 @@ function describeListFilters(){
   if (f.year.length) out.push('ปีงบประมาณ ' + f.year.join(', '));
   if (f.hw.length) out.push('ทล.' + f.hw.join(', '));
   if (f.status.length) out.push(f.status.map(v => ({ open: 'กำลังดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' })[v]).join(', '));
+  if (f.miss.length) out.push(f.miss.map(v => v === 'miss' ? 'ข้อมูลไม่ครบ' : 'ข้อมูลครบ').join(', '));
   if (f.waitPoint) out.push('รอชี้แนวเขต');
   if (f.waitReport) out.push('รอส่งแขวง');
   if (f.q) out.push('คำค้น "' + document.getElementById('searchBox').value.trim() + '"');
@@ -6898,10 +7008,11 @@ async function init(){
     renderTable();
     document.getElementById('searchBox').focus();
   });
-  ['filterYear', 'filterHighway', 'filterStatus'].forEach(id =>
+  ['filterYear', 'filterHighway', 'filterStatus', 'filterMissing'].forEach(id =>
     document.getElementById(id).addEventListener('change', () => { listWaitPointOnly = false; listWaitReportOnly = false; renderTable(); }));
+  initMissTip();
   document.getElementById('btnClearFilters').addEventListener('click', () => {
-    ['filterYear', 'filterHighway', 'filterStatus'].forEach(id => { document.getElementById(id).value = ''; });
+    ['filterYear', 'filterHighway', 'filterStatus', 'filterMissing'].forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('searchBox').value = '';
     document.getElementById('searchWrap').classList.remove('has-text');
     listWaitPointOnly = false; listWaitReportOnly = false;
