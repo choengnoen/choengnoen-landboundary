@@ -1844,19 +1844,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
       <!-- เนื้อที่โฉนด: ไม่แสดงช่องกรอกในฟอร์มแล้ว เก็บช่องซ่อนไว้เพื่อไม่ให้ข้อมูลเรื่องเก่าหาย -->
       <input type="hidden" id="f_areaRai"><input type="hidden" id="f_areaNgan"><input type="hidden" id="f_areaWa">    </div>
 
-    <div class="card" id="fsecPhoto">
-      <div class="section-title">
-        <span class="num">4</span> รูปถ่ายประกอบ <span class="ph-count" id="photoCount"></span>
-      </div>
-      <div id="photoBody">
-        <div class="ph-grid" id="photoGrid"></div>
-        <input type="file" accept="image/*" id="photoFile" style="display:none">
-        <div class="hint" id="photoHint" style="margin-top:10px"></div>
-      </div>
-    </div>
-
     <div class="card" id="fsec4">
-      <div class="section-title"><span class="num">5</span> ผลการนำส่งเอกสาร</div>
+      <div class="section-title"><span class="num">4</span> ผลการนำส่งเอกสาร</div>
       <div class="send-a">
         <div class="send-hero" id="deadlineBox"></div>
         <div class="send-right">
@@ -1869,6 +1858,18 @@ tr.route-editable:hover td{background:var(--amber-glow)}
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- รูปถ่ายประกอบ = ข้อสุดท้ายของฟอร์มเสมอ (แนวเดียวกับระบบอุบัติเหตุ/โจรกรรม) -->
+    <div class="card" id="fsecPhoto">
+      <div class="section-title">
+        <span class="num">5</span> รูปถ่ายประกอบ <span class="ph-count" id="photoCount"></span>
+      </div>
+      <div id="photoBody">
+        <div class="ph-grid" id="photoGrid"></div>
+        <input type="file" accept="image/*" id="photoFile" style="display:none">
+        <div class="hint" id="photoHint" style="margin-top:10px"></div>
       </div>
     </div>
 
@@ -3708,7 +3709,7 @@ function requestCloseForm(){
   document.getElementById('fmLeaveStay').focus();
 }
 /* แถบเส้นเวลา (ขั้นตอนฟอร์ม) — กดเลื่อนไปส่วนนั้น ไฮไลต์ตามตำแหน่งที่เลื่อน และบอกสถานะช่องบังคับของแต่ละส่วน */
-const FM_STEPS = [['fsec1', 'ข้อมูลการชี้แนวเขต'], ['fsec2', 'ที่ดิน/ที่ตั้ง'], ['fsecDraft', 'ผลชี้แนวเขต'], ['fsecPhoto', 'รูปถ่าย'], ['fsec4', 'ส่งแขวง']];
+const FM_STEPS = [['fsec1', 'ข้อมูลการชี้แนวเขต'], ['fsec2', 'ที่ดิน/ที่ตั้ง'], ['fsecDraft', 'ผลชี้แนวเขต'], ['fsec4', 'ส่งแขวง'], ['fsecPhoto', 'รูปถ่าย']];
 let fmStepsBuilt = false;
 function fmCards(){ return FM_STEPS.map(s => document.getElementById(s[0])); }
 function fmStepGo(i){
