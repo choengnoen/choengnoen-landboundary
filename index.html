@@ -4043,7 +4043,7 @@ function initDrafts(){
     sectionOf: highwaySection,
     openCase: id => { const rec = records.find(r => r.id === id); if (rec) loadRecordIntoForm(rec); else showToast('ไม่พบเรื่องนี้ (อาจถูกลบ)'); }
   });
-  window.onDraftsChanged = () => { try { renderWeekCalendar(); } catch (e) {} };
+  window.onDraftsChanged = () => { try { renderDashboard(); } catch (e) {} };   // การ์ดตัวเลขนับร่างด้วย (renderDashboard วาดปฏิทินสัปดาห์ให้แล้ว)
   DRAFTS.start();
   DRAFTS.render();
 }
@@ -4649,15 +4649,31 @@ function renderDashboard(){
   const rows = dashRows();
   const active = rows.filter(r => !r.cancelled);
   const open = active.filter(isOpenCase);
-  document.getElementById('statTotal').textContent = active.length;
-  document.getElementById('statOpen').textContent = open.filter(r => r.pointedDate).length;
+  // รายการร่างที่ยังไม่ผูกเคส นับรวมด้วย: วันชี้แนวเขตยังไม่ถึง = รอชี้แนวเขต · ถึง/เลยวันชี้แล้ว = รอส่งแขวง (เลยครบกำหนด 10 วันทำการ = เกินกำหนดส่ง)
+  const todayStr = todayYmd();
+  let drafts = [];
+  try { drafts = (window.DRAFTS && DRAFTS.openItems ? DRAFTS.openItems() : []).filter(x => dashYear === 'ทั้งหมด' || String(fiscalYearOfDate(x.d.startDate)) === String(dashYear)); } catch (e) { console.error('draft stats failed', e); }
+  const draftWait = drafts.filter(x => x.d.startDate > todayStr).length;
+  const draftPointed = drafts.length - draftWait;
+  const draftOver = drafts.filter(x => x.d.startDate <= todayStr && x.due && x.due < todayStr).length;
+  const caseOpen = open.filter(r => r.pointedDate).length;
+  const caseOver = open.filter(r => deadlineInfo(r).key === 'overdue').length;
+  const caseWait = open.filter(r => !r.pointedDate).length;
+  document.getElementById('statTotal').textContent = active.length + drafts.length;
+  document.getElementById('statOpen').textContent = caseOpen + draftPointed;
   document.getElementById('statDone').textContent = active.filter(isDone).length;
-  document.getElementById('statOverdue').textContent = open.filter(r => deadlineInfo(r).key === 'overdue').length;
-  document.getElementById('statWaitPoint').textContent = open.filter(r => !r.pointedDate).length;
-  document.getElementById('cardOpen').onclick = () => goToFilteredList(dashYear, { waitReport: true });
+  document.getElementById('statOverdue').textContent = caseOver + draftOver;
+  document.getElementById('statWaitPoint').textContent = caseWait + draftWait;
+  // กดการ์ด: ตัวเลขมาจากร่างล้วน → ไปตารางรายการร่าง · มีเคสด้วย → ไปหน้ารายการตามเดิม แล้วแจ้งว่ามีอีกกี่เรื่องอยู่ในรายการร่าง
+  const goCard = (nCase, nDraft, opt) => {
+    if (nDraft && !nCase) return goToDrafts();
+    goToFilteredList(dashYear, opt);
+    if (nDraft) showToast('มีอีก ' + nDraft + ' เรื่องอยู่ในรายการร่าง (แท็บ ＋ รายการใหม่)');
+  };
+  document.getElementById('cardOpen').onclick = () => goCard(caseOpen, draftPointed, { waitReport: true });
   document.getElementById('cardDone').onclick = () => goToFilteredList(dashYear, { status: 'done' });
-  document.getElementById('cardOverdue').onclick = () => goToFilteredList(dashYear, { status: 'open' });
-  document.getElementById('cardWaitPoint').onclick = () => goToFilteredList(dashYear, { waitPoint: true });
+  document.getElementById('cardOverdue').onclick = () => goCard(caseOver, draftOver, { status: 'open' });
+  document.getElementById('cardWaitPoint').onclick = () => goCard(caseWait, draftWait, { waitPoint: true });
 
   const byHw = {};
   active.forEach(r => { byHw[r.highway] = (byHw[r.highway]||0) + 1; });
@@ -4945,6 +4961,11 @@ function renderGuide(){
   });
 }
 
+// ไปตาราง "รายการร่าง" (อยู่ในแท็บ ＋ รายการใหม่) แล้วเลื่อนลงไปให้เห็น
+function goToDrafts(){
+  document.querySelector('.tab-btn[data-view="form"]').click();
+  setTimeout(() => { const c = document.getElementById('draftCard'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+}
 function goToFilteredList(fiscalYear, opt){
   opt = opt || {};
   document.querySelector('.tab-btn[data-view="list"]').click();
