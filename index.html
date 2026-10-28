@@ -722,6 +722,13 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .wk-nav{display:inline-flex;align-items:center;gap:8px;font-family:'Sarabun',sans-serif;font-weight:400;font-size:13px;color:var(--ink-mute)}
 .wk-nav button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:2px 12px;font:inherit;color:var(--ink-soft);cursor:pointer}
 .wk-nav button:hover{background:var(--paper)}
+.wk-nav button.now{border-color:var(--amber-500);color:var(--amber);font-weight:600}
+.wk-nav button.now:disabled{opacity:.4;cursor:default;background:#fff}
+.wk-range{cursor:pointer;border-bottom:1px dashed #b8c0c8}
+.wk-tools{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wk-seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;font-family:'Sarabun',sans-serif;font-weight:400}
+.wk-seg button{border:0;background:#fff;padding:2px 14px;font:inherit;font-size:13px;color:var(--ink-soft);cursor:pointer}
+.wk-seg button.on{background:var(--navy-900);color:#fff}
 .wk-info{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .wk-chip{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:5px 11px;font-size:13px;background:var(--paper);color:var(--ink-soft)}
 .wk-chip b{font-family:'Kanit',sans-serif;font-weight:600;font-size:15px}
@@ -730,7 +737,8 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .wk-day{border-right:1px solid var(--line);min-height:150px;min-width:0;display:flex;flex-direction:column;background:#fff}
 .wk-day:last-child{border-right:0}
 .wk-day.today{box-shadow:inset 0 -4px 0 var(--amber-500);background:#fffaf5}
-.wk-dh{text-align:center;padding:8px 0 7px;background:#dbe6f1;border-bottom:1px solid var(--line)}
+.wk-dh{text-align:center;padding:8px 0 7px;background:#dbe6f1;border-bottom:1px solid var(--line);position:relative}
+.wk-cnt{position:absolute;top:7px;right:8px;background:#fff;color:var(--navy-900);border-radius:999px;font-size:11.5px;font-weight:600;min-width:20px;padding:0 6px;line-height:18px}
 .wk-dh span{display:block;font-size:12px;color:#4a6580}
 .wk-dh b{font-family:'Kanit',sans-serif;font-weight:600;font-size:22px;line-height:1.1;color:var(--navy-900)}
 .wk-day.today .wk-dh{background:var(--amber-500);border-bottom-color:var(--amber-500)}
@@ -744,10 +752,35 @@ tr.asset-frequent:hover td{background:#fbe9c9 !important}
 .wk-it.rp{background:#faeeda;border-color:#ecd3a8;color:#633806}.wk-it.rp em{background:#ba7517}
 .wk-it.ov{background:#fcebeb;border-color:#ecbcbc;color:#791f1f}.wk-it.ov em{background:#a32d2d}
 .wk-empty{color:#a8afb8;font-size:12.5px;text-align:center;margin:auto}
-.wk-more{font-size:12px;color:var(--ink-mute);padding-left:4px}
-.wk-foot{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--ink-mute)}
+.wk-more{font-size:12.5px;color:var(--amber);font-weight:600;padding:2px 4px;cursor:pointer;background:none;border:0;text-align:left;font-family:inherit}
+.wk-more:hover{text-decoration:underline}
+.wk-foot{display:flex;gap:6px 12px;flex-wrap:wrap;align-items:center;margin-top:10px;font-size:12.5px;color:var(--ink-mute)}
 .wk-foot i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
-@media(max-width:760px){.wk-grid{grid-template-columns:1fr}.wk-day{min-height:0;border-right:0;border-bottom:1px solid var(--line)}.wk-day:last-child{border-bottom:0}.wk-empty{margin:0;text-align:left}}
+.wk-lg{cursor:pointer;border-radius:999px;padding:2px 10px;user-select:none}
+.wk-lg:hover{background:var(--paper)}
+.wk-lg.off{opacity:.38;text-decoration:line-through}
+.wk-link{color:var(--amber);font-weight:600;cursor:pointer}
+.wk-hint{margin-left:auto;color:#98a2ad}
+/* โหมดเดือน: จันทร์–ศุกร์ กว้าง เสาร์–อาทิตย์ แคบ · แถบใช้คำเต็ม (ไม่ย่อ นัด/ส่ง/เลย) */
+.mo-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) repeat(2,minmax(0,.55fr));border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.mo-h{background:#dbe6f1;color:#4a6580;font-size:12.5px;text-align:center;padding:6px 0}
+.mo-c{min-height:86px;border-top:1px solid var(--line);border-right:1px solid var(--line);padding:5px 6px;cursor:pointer;min-width:0;background:#fff}
+.mo-c:nth-child(7n){border-right:0}
+.mo-c.we{background:#f7f7f5}
+.mo-c.out{opacity:.4}
+.mo-c.today{box-shadow:inset 0 0 0 2px var(--amber-500)}
+.mo-c.sel{background:#fff6ec}
+.mo-c .n{font-family:'Kanit',sans-serif;font-weight:600;font-size:14px}
+.mo-bar{font-size:11px;line-height:1.35;border-radius:5px;padding:1px 5px;margin-top:3px;border:1px solid;word-break:break-word}
+.mo-bar.ap{background:#e6f1fb;border-color:#b8d3ec;color:#0c447c}
+.mo-bar.rp{background:#faeeda;border-color:#ecd3a8;color:#633806}
+.mo-bar.ov{background:#fcebeb;border-color:#ecbcbc;color:#791f1f}
+.mo-plus{font-size:11px;color:var(--ink-mute);margin-top:2px}
+.mo-list{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+.mo-list h4{margin:0 0 8px;font-family:'Kanit',sans-serif;font-weight:600;font-size:15px;color:var(--navy-900)}
+.mo-rows{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.cal-pop{padding:8px 24px 4px;display:flex;flex-direction:column;gap:6px}
+@media(max-width:760px){.wk-grid{grid-template-columns:1fr}.wk-day{min-height:0;border-right:0;border-bottom:1px solid var(--line)}.wk-day:last-child{border-bottom:0}.wk-empty{margin:0;text-align:left}.wk-hint{margin-left:0}.mo-c{min-height:52px}.mo-bar{display:none}}
 .follow-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid var(--line);cursor:pointer;border-radius:8px}
 .follow-row:last-of-type{border-bottom:0}
 .follow-row:hover{background:var(--paper)}
@@ -1910,10 +1943,14 @@ tr.route-editable:hover td{background:var(--amber-glow)}
 
     <div class="card" id="weekCard">
       <div class="section-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span>ปฏิทินสัปดาห์นี้</span>
-        <span class="wk-nav"><button type="button" id="wkPrev">‹ ก่อนหน้า</button><span id="wkRange"></span><button type="button" id="wkNext">ถัดไป ›</button></span>
+        <span id="wkTitle">ปฏิทิน</span>
+        <span class="wk-tools">
+          <span class="wk-seg"><button type="button" data-cal="week">สัปดาห์</button><button type="button" data-cal="month">เดือน</button></span>
+          <span class="wk-nav"><button type="button" id="wkPrev">‹ ก่อนหน้า</button><span id="wkRange" class="wk-range" title="กดเพื่อกลับวันนี้"></span><button type="button" id="wkNext">ถัดไป ›</button><button type="button" id="wkToday" class="now">วันนี้</button></span>
+        </span>
       </div>
       <div class="wk-grid" id="wkGrid"></div>
+      <div class="mo-list" id="moList" style="display:none"></div>
       <div class="wk-foot" id="wkFoot"></div>
     </div>
 
@@ -4740,69 +4777,145 @@ function renderFollowUp(){
   const more = document.getElementById('followMoreLink');
   if (more) more.onclick = () => goToFilteredList(dashYear, { status: 'open' });
 }
-/* กล่อง "ปฏิทินสัปดาห์นี้" (แทน "เรื่องที่ต้องติดตาม" + "นัดหมายชี้แนวเขต")
-   จันทร์–ศุกร์: นัดชี้แนวเขต (ฟ้า) · ครบกำหนดส่งแขวง 10 วันทำการ (เหลือง) · เลยกำหนด (แดง)
+/* กล่อง "ปฏิทิน" หน้าภาพรวม (แทน "เรื่องที่ต้องติดตาม" + "นัดหมายชี้แนวเขต") — สลับดูรายสัปดาห์ / รายเดือน
+   นัดชี้แนวเขต (ฟ้า) · ครบกำหนดส่งแขวง 10 วันทำการ (เหลือง) · เลยกำหนด (แดง — ย้ายมาแสดงที่วันนี้เสมอ ไม่ตกหายเมื่อพ้นสัปดาห์)
    ไม่ขึ้นกับตัวกรองปีงบ เพราะเป็นงานที่ต้องทำตอนนี้ — ฟังก์ชัน renderFollowUp/renderAppointments ด้านล่างไม่ถูกเรียกแล้ว */
-let weekOffset = 0;
-const WK_DAYS = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสฯ', 'ศุกร์'];
+let weekOffset = 0;   // เลื่อนสัปดาห์ (โหมดสัปดาห์) หรือเดือน (โหมดเดือน) · 0 = ปัจจุบัน
+let calMode = (() => { try { return localStorage.getItem('lbCalMode') === 'week' ? 'week' : 'month'; } catch (e) { return 'month'; } })();
+let calSel = null;    // วันที่เลือกในโหมดเดือน ('YYYY-MM-DD')
+const calFilter = new Set(['ap', 'rp', 'ov']);   // กดคำอธิบายสีท้ายกล่องเพื่อซ่อน/แสดง
+const CAL_DAYS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสฯ', 'ศุกร์', 'เสาร์'];
+const CAL_MONTHS = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
 const WK_TYPE = { ap: 'นัดชี้แนวเขต', rp: 'ครบกำหนด', ov: 'เลยกำหนด' };
+const CAL_BAR = { ap: 'นัดชี้แนวเขต', rp: 'ครบกำหนดส่งแขวง', ov: 'เลยกำหนดส่งแขวง' };   // แถบโหมดเดือน ใช้คำเต็ม
+const CAL_COLOR = { ap: '#185fa5', rp: '#ba7517', ov: '#a32d2d' };
+const calAddDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+// รวบรวมงานทั้งหมดเป็น { 'YYYY-MM-DD': [{cls, label, r}] }
+// label: นัด = อีกกี่วัน (วันปฏิทิน) · ส่งแขวง = เหลือ/เลยกี่วันทำการ (ตรงกับ deadlineInfo)
+function collectCalItems(todayStr){
+  const items = {};
+  const put = (key, cls, label, r) => { if (key) (items[key] = items[key] || []).push({ cls, label, r }); };
+  const dd = s => Math.round((parseYmd(s) - parseYmd(todayStr)) / 864e5);
+  const putDue = (due, r) => {
+    const n = due < todayStr ? workdaysBetween(due, todayStr) : workdaysBetween(todayStr, due);
+    if (due < todayStr) put(todayStr, 'ov', 'ส่งแขวงเลยกำหนด ' + n + ' วันทำการ', r);
+    else put(due, 'rp', due === todayStr ? 'ส่งแขวงวันนี้' : 'ส่งแขวง เหลือ ' + n + ' วันทำการ', r);
+  };
+  const apLabel = s => { const n = dd(s); return n < 0 ? 'เลยนัดชี้แนวเขต ' + (-n) + ' วัน' : n === 0 ? 'นัดวันนี้' : n === 1 ? 'นัดพรุ่งนี้' : 'นัดอีก ' + n + ' วัน'; };
+  records.filter(isOpenCase).forEach(r => {
+    if (r.appointDate && !r.pointedDate) put(r.appointDate, 'ap', apLabel(r.appointDate), r);
+    if (r.pointedDate) put(String(r.pointedDate).slice(0, 10), 'ap', 'ชี้แนวเขตแล้ว', r);   // วันที่ชี้แนวเขตจริง
+    const due = deadlineInfo(r).due;
+    if (due) putDue(due, r);
+  });
+  // รายการร่าง (ยังไม่ผูกเคส) — ครบกำหนดส่งแขวง = วันชี้แนวเขต + 10 วันทำการ
+  try {
+    (window.DRAFTS && DRAFTS.openItems ? DRAFTS.openItems() : []).forEach(x => {
+      if (!x.due) return;
+      if (x.d.startDate) put(x.d.startDate, 'ap', dd(x.d.startDate) > 0 ? apLabel(x.d.startDate) : 'ชี้แนวเขตแล้ว', { draft: x.d });
+      putDue(x.due, { draft: x.d });
+    });
+  } catch (e) { console.error('draft calendar failed', e); }
+  const ord = { ov: 0, ap: 1, rp: 2 };
+  Object.values(items).forEach(l => l.sort((a, b) => ord[a.cls] - ord[b.cls]));
+  return items;
+}
+const calHighway = r => String(r.draft ? r.draft.highway : r.highway);
+const calPlace = r => r.draft
+  ? 'ทล.' + String(r.draft.highway) + (r.draft.km == null ? '' : ' กม.' + formatKm(r.draft.km)) + (r.draft.note ? ' · ' + r.draft.note : '')   // ไม่แสดงพิกัดแปลง · แสดง กม. เมื่อมีข้อมูล
+  : 'ทล.' + String(r.highway) + ' กม.' + formatKm(r.km) + ' · ' + (r.ownerName || '-');
+const calCard = x => `<div class="wk-it ${x.cls}" ${x.r.draft ? 'data-draft="' + escapeHtml(x.r.draft.id) + '"' : 'data-id="' + escapeHtml(x.r.id) + '"'}><em>${WK_TYPE[x.cls]}</em><b>${escapeHtml(x.label)}</b><small>${escapeHtml(calPlace(x.r))}</small></div>`;
+function bindCalCards(el, before){
+  el.querySelectorAll('.wk-it').forEach(it => { it.ondblclick = () => { if (before) before(); if (it.dataset.draft) DRAFTS.openDraft(it.dataset.draft); else openCaseDetailModal(it.dataset.id); }; });
+}
+// หน้าต่าง "ดูทั้งหมด" ของวันที่มีงานเกินช่อง / งานวันเสาร์–อาทิตย์
+function openCalDayList(keys){
+  const items = collectCalItems(todayYmd());
+  const list = keys.flatMap(k => (items[k] || []).filter(x => calFilter.has(x.cls)));
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `<div class="modal-backdrop" id="calListBg"><div class="modal">
+    <div class="modal-head"><h3>${keys.map(k => escapeHtml(formatThaiDate(k))).join(' และ ')}<span class="trash-count">${list.length} รายการ</span></h3><button class="modal-close" id="calListClose" type="button">×</button></div>
+    <div class="cal-pop">${list.map(calCard).join('') || '<p class="hint">ไม่มีงาน</p>'}</div></div></div>`;
+  const close = () => { root.innerHTML = ''; };
+  document.getElementById('calListClose').onclick = close;
+  document.getElementById('calListBg').onclick = e => { if (e.target.id === 'calListBg') close(); };
+  bindCalCards(root, close);
+}
 function renderWeekCalendar(){
   const grid = document.getElementById('wkGrid');
   if (!grid) return;
   const todayStr = todayYmd(), today = parseYmd(todayStr);
-  const dow = today.getDay();   // เสาร์–อาทิตย์ แสดงสัปดาห์ถัดไปเป็นค่าเริ่มต้น
-  const mon = new Date(today); mon.setDate(mon.getDate() + (dow === 0 ? 1 : dow === 6 ? 2 : 1 - dow) + weekOffset * 7);
-  const days = [0, 1, 2, 3, 4].map(i => { const d = new Date(mon); d.setDate(mon.getDate() + i); return d; });
-  const fri = days[4];
+  const items = collectCalItems(todayStr);
+  const on = key => (items[key] || []).filter(x => calFilter.has(x.cls));
   const yy = d => String((d.getFullYear() + 543) % 100);
-  document.getElementById('wkRange').textContent = (days[0].getMonth() === fri.getMonth()
-    ? days[0].getDate() + ' – ' + fri.getDate() + ' ' + THAI_MONTHS_SHORT[fri.getMonth()] + ' ' + yy(fri)
-    : days[0].getDate() + ' ' + THAI_MONTHS_SHORT[days[0].getMonth()] + ' – ' + fri.getDate() + ' ' + THAI_MONTHS_SHORT[fri.getMonth()] + ' ' + yy(fri));
+  const moList = document.getElementById('moList');
+
+  document.querySelectorAll('#weekCard [data-cal]').forEach(b => {
+    b.classList.toggle('on', b.dataset.cal === calMode);
+    b.onclick = () => { calMode = b.dataset.cal; weekOffset = 0; calSel = null; try { localStorage.setItem('lbCalMode', calMode); } catch (e) {} renderWeekCalendar(); };
+  });
+  const goToday = () => { weekOffset = 0; calSel = todayStr; renderWeekCalendar(); };
   document.getElementById('wkPrev').onclick = () => { weekOffset--; renderWeekCalendar(); };
   document.getElementById('wkNext').onclick = () => { weekOffset++; renderWeekCalendar(); };
+  document.getElementById('wkRange').onclick = goToday;
+  const todayBtn = document.getElementById('wkToday');
+  todayBtn.onclick = goToday;
+  todayBtn.disabled = weekOffset === 0;
 
-  const open = records.filter(isOpenCase);
-
-  const seqMap = computeSeqMap();
-  const items = {};   // 'YYYY-MM-DD' -> [{cls, label, r}]
-  const put = (key, cls, label, r) => { (items[key] = items[key] || []).push({ cls, label, r }); };
-  open.forEach(r => {
-    if (r.appointDate && !r.pointedDate) put(r.appointDate, 'ap', r.appointDate < todayStr ? 'เลยนัดชี้แนวเขต' : 'นัดชี้แนวเขต', r);
-    if (r.pointedDate) put(String(r.pointedDate).slice(0, 10), 'ap', 'ชี้แนวเขตแล้ว', r);   // วันที่ชี้แนวเขตจริง
-    {
-      const due = deadlineInfo(r).due;
-      if (due) put(due, due < todayStr ? 'ov' : 'rp', due < todayStr ? 'ส่งแขวงเลยกำหนด' : 'ครบกำหนดส่งแขวง', r);
+  let weekendLink = '';
+  if (calMode === 'week') {
+    const dow = today.getDay();   // เสาร์–อาทิตย์ แสดงสัปดาห์ถัดไปเป็นค่าเริ่มต้น
+    const mon = calAddDays(today, (dow === 0 ? 1 : dow === 6 ? 2 : 1 - dow) + weekOffset * 7);
+    const days = [0, 1, 2, 3, 4].map(i => calAddDays(mon, i));
+    const fri = days[4];
+    document.getElementById('wkTitle').textContent = weekOffset === 0 ? 'ปฏิทินสัปดาห์นี้' : 'ปฏิทินรายสัปดาห์';
+    document.getElementById('wkRange').textContent = (days[0].getMonth() === fri.getMonth()
+      ? days[0].getDate() + ' – ' + fri.getDate() + ' ' + THAI_MONTHS_SHORT[fri.getMonth()] + ' ' + yy(fri)
+      : days[0].getDate() + ' ' + THAI_MONTHS_SHORT[days[0].getMonth()] + ' – ' + fri.getDate() + ' ' + THAI_MONTHS_SHORT[fri.getMonth()] + ' ' + yy(fri));
+    grid.className = 'wk-grid';
+    grid.innerHTML = days.map(d => {
+      const key = ymd(d), list = on(key), isToday = key === todayStr, shown = list.slice(0, 3);
+      return `<div class="wk-day ${isToday ? 'today' : ''}"><div class="wk-dh"><span>${CAL_DAYS[d.getDay()]}${isToday ? ' · วันนี้' : ''}</span><b>${d.getDate()}</b>${list.length ? `<span class="wk-cnt">${list.length}</span>` : ''}</div><div class="wk-body">`
+        + (list.length ? shown.map(calCard).join('')
+          + (list.length > shown.length ? `<button type="button" class="wk-more" data-more="${key}">+ ดูอีก ${list.length - shown.length} รายการ</button>` : '')
+          : '<div class="wk-empty">ว่าง</div>') + '</div></div>';
+    }).join('');
+    moList.style.display = 'none';
+    moList.innerHTML = '';
+    // งานที่ตกวันเสาร์–อาทิตย์ (ไม่มีคอลัมน์) แจ้งไว้ท้ายกล่อง กดดูได้
+    const sat = ymd(calAddDays(mon, 5)), sun = ymd(calAddDays(mon, 6));
+    const wkend = on(sat).length + on(sun).length;
+    if (wkend) weekendLink = `<span class="wk-link" data-more="${sat}|${sun}">มีงานวันเสาร์–อาทิตย์ ${wkend} รายการ ›</span>`;
+  } else {
+    const first = new Date(today.getFullYear(), today.getMonth() + weekOffset, 1);
+    const sameMonth = s => { const d = parseYmd(s); return d && d.getFullYear() === first.getFullYear() && d.getMonth() === first.getMonth(); };
+    if (!calSel || !sameMonth(calSel)) calSel = weekOffset === 0 ? todayStr : ymd(first);
+    document.getElementById('wkTitle').textContent = 'ปฏิทินรายเดือน';
+    document.getElementById('wkRange').textContent = CAL_MONTHS[first.getMonth()] + ' ' + (first.getFullYear() + 543);
+    const start = calAddDays(first, -((first.getDay() + 6) % 7));   // เริ่มวันจันทร์
+    let cells = '';
+    for (let i = 0; i < 42; i++) {
+      const d = calAddDays(start, i), key = ymd(d), list = on(key);
+      if (i % 7 === 0 && i > 0 && d.getMonth() !== first.getMonth()) break;
+      cells += `<div class="mo-c ${i % 7 >= 5 ? 'we' : ''} ${d.getMonth() !== first.getMonth() ? 'out' : ''} ${key === todayStr ? 'today' : ''} ${key === calSel ? 'sel' : ''}" data-day="${key}"><div class="n">${d.getDate()}</div>`
+        + list.slice(0, 2).map(x => `<div class="mo-bar ${x.cls}">${CAL_BAR[x.cls]} ทล.${escapeHtml(calHighway(x.r))}</div>`).join('')
+        + (list.length > 2 ? `<div class="mo-plus">+ อีก ${list.length - 2} รายการ</div>` : '') + '</div>';
     }
-  });
-  // รายการร่าง (ยังไม่ผูกเคส) — ครบกำหนดส่งแขวง = วันชี้แนวเขต + 10 วันทำการ · เลยกำหนดไปแสดงที่วันนี้ (เหมือนเรื่องเลยกำหนดไม่ตกหาย)
-  try {
-    (window.DRAFTS && DRAFTS.openItems ? DRAFTS.openItems() : []).forEach(x => {
-      if (!x.due) return;
-      if (x.d.startDate) put(x.d.startDate, 'ap', 'ชี้แนวเขต', { draft: x.d });   // วันชี้แนวเขตของร่าง
-      const over = x.due < todayStr;
-      put(over ? todayStr : x.due, over ? 'ov' : 'rp', (over ? 'ส่งแขวงเลยกำหนด' : 'ครบกำหนดส่งแขวง'), { draft: x.d });
-    });
-  } catch (e) { console.error('draft calendar failed', e); }
-  const placeOf = r => r.draft
-    ? 'ทล.' + String(r.draft.highway) + (r.draft.km == null ? '' : ' กม.' + formatKm(r.draft.km)) + (r.draft.note ? ' · ' + r.draft.note : '')   // ไม่แสดงพิกัดแปลง · แสดง กม. เมื่อมีข้อมูล
-    : 'ทล.' + String(r.highway) + ' กม.' + formatKm(r.km) + ' · ' + (r.ownerName || '-');
-  const dayHtml = (d, i) => {
-    const key = ymd(d), list = items[key] || [], isToday = key === todayStr;
-    const shown = list.slice(0, 4);
-    return `<div class="wk-day ${isToday ? 'today' : ''}"><div class="wk-dh"><span>${WK_DAYS[i]}${isToday ? ' · วันนี้' : ''}</span><b>${d.getDate()}</b></div><div class="wk-body">`
-      + (list.length ? shown.map(x => `<div class="wk-it ${x.cls}" ${x.r.draft ? 'data-draft="' + escapeHtml(x.r.draft.id) + '"' : 'data-id="' + escapeHtml(x.r.id) + '"'}><em>${WK_TYPE[x.cls]}</em><b>${escapeHtml(x.label)}</b><small>${escapeHtml(placeOf(x.r))}</small></div>`).join('')
-        + (list.length > shown.length ? `<div class="wk-more">และอีก ${list.length - shown.length} รายการ</div>` : '')
-        : '<div class="wk-empty">ว่าง</div>') + '</div></div>';
-  };
-  grid.innerHTML = days.map(dayHtml).join('');
-  grid.querySelectorAll('.wk-it').forEach(el => { el.ondblclick = () => { if (el.dataset.draft) DRAFTS.openDraft(el.dataset.draft); else openCaseDetailModal(el.dataset.id); }; });
+    grid.className = 'mo-grid';
+    grid.innerHTML = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'].map(h => `<div class="mo-h">${h}</div>`).join('') + cells;
+    const selList = on(calSel);
+    moList.style.display = '';
+    moList.innerHTML = `<h4>${escapeHtml(formatThaiDate(calSel))}${calSel === todayStr ? ' (วันนี้)' : ''} · ${selList.length} รายการ</h4>`
+      + (selList.length ? `<div class="mo-rows">${selList.map(calCard).join('')}</div>` : '<p class="hint">ไม่มีงานในวันนี้</p>');
+    grid.querySelectorAll('[data-day]').forEach(c => { c.onclick = () => { calSel = c.dataset.day; renderWeekCalendar(); }; });
+  }
 
-  // นัดที่ตกวันเสาร์–อาทิตย์ของสัปดาห์นี้ (ไม่มีคอลัมน์) แจ้งไว้ท้ายกล่อง
-  const sat = new Date(mon); sat.setDate(mon.getDate() + 5);
-  const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
-  const wkend = (items[ymd(sat)] || []).length + (items[ymd(sun)] || []).length;
-  document.getElementById('wkFoot').innerHTML = '<span><i style="background:#185fa5"></i>นัดชี้แนวเขต</span><span><i style="background:#ba7517"></i>ครบกำหนดส่งแขวง (10 วันทำการ)</span><span><i style="background:#a32d2d"></i>เลยกำหนด</span>'
-    + (wkend ? `<span>มีกำหนดตกวันเสาร์–อาทิตย์ ${wkend} รายการ</span>` : '');
+  const foot = document.getElementById('wkFoot');
+  foot.innerHTML = ['ap', 'rp', 'ov'].map(c => `<span class="wk-lg ${calFilter.has(c) ? '' : 'off'}" data-lg="${c}" title="กดเพื่อซ่อน/แสดง"><i style="background:${CAL_COLOR[c]}"></i>${c === 'rp' ? 'ครบกำหนดส่งแขวง (10 วันทำการ)' : c === 'ov' ? 'เลยกำหนด' : 'นัดชี้แนวเขต'}</span>`).join('')
+    + weekendLink + '<span class="wk-hint">ดับเบิลคลิกการ์ดเพื่อเปิดรายละเอียด</span>';
+  foot.querySelectorAll('[data-lg]').forEach(el => { el.onclick = () => { const c = el.dataset.lg; if (calFilter.has(c)) calFilter.delete(c); else calFilter.add(c); renderWeekCalendar(); }; });
+  document.querySelectorAll('#weekCard [data-more]').forEach(el => { el.onclick = () => openCalDayList(el.dataset.more.split('|')); });
+  bindCalCards(document.getElementById('weekCard'));
 }
 // กล่อง "นัดหมายชี้แนวเขต" — เรื่องที่มีวันนัดและยังไม่ได้ชี้แนวเขต เรียงตามวันนัด (เลยนัดขึ้นก่อน) ไม่ขึ้นกับตัวกรองปีงบ
 function renderAppointments(){
