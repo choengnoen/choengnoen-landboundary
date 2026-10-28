@@ -4781,7 +4781,7 @@ function renderFollowUp(){
    นัดชี้แนวเขต (ฟ้า) · ครบกำหนดส่งแขวง 10 วันทำการ (เหลือง) · เลยกำหนด (แดง — ย้ายมาแสดงที่วันนี้เสมอ ไม่ตกหายเมื่อพ้นสัปดาห์)
    ไม่ขึ้นกับตัวกรองปีงบ เพราะเป็นงานที่ต้องทำตอนนี้ — ฟังก์ชัน renderFollowUp/renderAppointments ด้านล่างไม่ถูกเรียกแล้ว */
 let weekOffset = 0;   // เลื่อนสัปดาห์ (โหมดสัปดาห์) หรือเดือน (โหมดเดือน) · 0 = ปัจจุบัน
-let calMode = (() => { try { return localStorage.getItem('lbCalMode') === 'week' ? 'week' : 'month'; } catch (e) { return 'month'; } })();
+let calMode = 'month';   // เปิดเว็บแสดงรายเดือนเสมอ (ไม่จำโหมดที่เลือกครั้งก่อน)
 let calSel = null;    // วันที่เลือกในโหมดเดือน ('YYYY-MM-DD')
 const calFilter = new Set(['ap', 'rp', 'ov']);   // กดคำอธิบายสีท้ายกล่องเพื่อซ่อน/แสดง
 const CAL_DAYS = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสฯ', 'ศุกร์', 'เสาร์'];
@@ -4852,7 +4852,7 @@ function renderWeekCalendar(){
 
   document.querySelectorAll('#weekCard [data-cal]').forEach(b => {
     b.classList.toggle('on', b.dataset.cal === calMode);
-    b.onclick = () => { calMode = b.dataset.cal; weekOffset = 0; calSel = null; try { localStorage.setItem('lbCalMode', calMode); } catch (e) {} renderWeekCalendar(); };
+    b.onclick = () => { calMode = b.dataset.cal; weekOffset = 0; calSel = null; renderWeekCalendar(); };
   });
   const goToday = () => { weekOffset = 0; calSel = todayStr; renderWeekCalendar(); };
   document.getElementById('wkPrev').onclick = () => { weekOffset--; renderWeekCalendar(); };
