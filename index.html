@@ -356,6 +356,30 @@ table.data td.status-cell{white-space:nowrap}
 .miss-float span{display:block}
 /* ช่องที่ขาดในตารางกรอกหมุด */
 #pinRows input.pv-miss{border-color:#dc2626 !important;background:#fef2f2}
+/* ระบุเขตทางผิดในเอกสารที่ส่งแขวง: แดง = ผิด รอแก้ · ฟ้า = แก้แล้ว (เก็บประวัติ) · ส้ม = อยู่ใกล้จุดที่เคยผิด */
+table.data tr.rowerr-open td{background:#fdf0ee}
+table.data tr.rowerr-open td:first-child{box-shadow:inset 4px 0 0 var(--rust)}
+table.data tr.rowerr-fixed td:first-child{box-shadow:inset 4px 0 0 #2f7fc1}
+.re-pill{display:inline-block;margin-top:4px;padding:1px 9px;border-radius:99px;font-size:11.5px;font-weight:600;line-height:1.5}
+.re-pill.open{background:var(--rust-bg);color:var(--rust)}
+.re-pill.fixed{background:#e3eff9;color:#1f5f94}
+.re-line{display:block;font-size:12px;margin-top:2px;line-height:1.45}
+.re-line.open{color:var(--rust)}
+.re-line.fixed{color:#1f5f94}
+.re-line.near{color:#a3660a}
+.re-list{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.re-item{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13.5px;line-height:1.55}
+.re-item.open{border-color:#f1b8ae;background:#fdf6f4}
+.re-item.fixed{border-color:#bcd6ec;background:#f4f8fc}
+.re-item .re-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.re-item .re-h b{flex:1;min-width:0}
+.re-item small{color:var(--ink-soft);display:block}
+.re-near{border:1px solid #f4cf8f;background:#fdf6e8;color:#7a4f0a;border-radius:10px;padding:8px 12px;font-size:13px;line-height:1.55;margin-top:6px}
+.re-near b{color:#a3660a}
+.km-err-hint[hidden]{display:none}
+.re-form{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.re-form .full{grid-column:1/-1}
+@media (max-width:560px){.re-form{grid-template-columns:1fr}}
 
 .empty-state{padding:40px 20px;text-align:center;color:var(--ink-soft)}
 .empty-state h3{margin:0 0 6px}
@@ -1930,6 +1954,16 @@ tr.route-editable:hover td{background:var(--amber-glow)}
             <option value="ok">ข้อมูลครบ</option>
           </select>
         </div>
+        <div class="field">
+          <label style="text-align:center">เขตทางในเอกสาร</label>
+          <select id="filterRowErr" multiple>
+            <option value="" selected>ทั้งหมด</option>
+            <option value="open">ระบุผิด รอแก้</option>
+            <option value="fixed">ระบุผิด แก้แล้ว</option>
+            <option value="near">ใกล้จุดที่เคยผิด</option>
+            <option value="none">ไม่มีประวัติผิด</option>
+          </select>
+        </div>
       </div></div>
       </div>
       <div class="list-count-row"><span class="list-count" id="listCount"></span><button type="button" class="link-clear" id="btnClearFilters" title="ล้างตัวกรองทั้งหมด">↺ ล้างตัวกรอง</button></div>
@@ -2149,6 +2183,135 @@ function initMissTip(){
   document.addEventListener('focusin', e => { const ico = e.target.closest && e.target.closest('.miss-ico'); if (ico) show(ico); });
   document.addEventListener('click', e => { const ico = e.target.closest && e.target.closest('.miss-ico'); if (ico) { e.stopPropagation(); show(ico); } else hide(); }, true);
   window.addEventListener('scroll', hide, true);
+}
+
+/* ===== ระบุเขตทางผิดในเอกสารที่ส่งแขวง (ผู้ใช้สั่ง 29 ต.ค. 69) =====
+   เก็บเป็นประวัติใน rec.rowErrors (ไม่แก้ค่าเดิมในเรื่อง เพราะเป็นค่าที่ส่งไปจริง) · แก้แล้วยังเก็บไว้
+   เรื่องอื่นที่ กม. อยู่ใกล้จุดที่เคยผิด (ทล. เดียวกัน ไม่เกิน ROWERR_NEAR_M เมตร) จะถูกเตือนให้ตรวจละเอียด */
+const ROWERR_CAUSES = ['ใช้ค่าผิดด้าน (ซ้าย/ขวา)', 'อยู่ช่วงที่เขตทางเปลี่ยน', 'บัญชีเขตทางยังไม่ปรับปรุง', 'กรอก/พิมพ์ผิด', 'วัดในสนามผิด', 'อื่นๆ'];
+const ROWERR_FOUND = ['แขวงตีกลับ', 'หมวดตรวจพบเอง', 'เจ้าของที่ดินแจ้ง', 'อื่นๆ'];
+const ROWERR_NEAR_M = 200;
+function rowErrs(r){ return Array.isArray(r && r.rowErrors) ? r.rowErrors : []; }
+function rowErrState(r){ const e = rowErrs(r); return !e.length ? '' : (e.some(x => !x.fixed) ? 'open' : 'fixed'); }
+function rowErrNum(v){ return (v === '' || v == null || isNaN(Number(v))) ? '-' : String(Number(v)); }
+function rowErrText(e){ return (e.pin ? 'หมุด ' + e.pin + ' ' : '') + 'ระบุ ' + rowErrNum(e.docVal) + ' ม. · บัญชี ' + rowErrNum(e.acctVal) + ' ม.'; }
+// เรื่องอื่นที่เคยระบุเขตทางผิด ใกล้ ทล./กม. นี้ (เรียงจากใกล้สุด)
+function nearRowErrs(hw, km, exceptId){
+  if (!hw || km === null || km === undefined || km === '' || isNaN(Number(km))) return [];
+  const out = [];
+  records.forEach(o => {
+    if (o.id === exceptId || o.cancelled || !rowErrs(o).length || String(o.highway) !== String(hw)) return;
+    if (o.km === null || o.km === undefined || o.km === '' || isNaN(Number(o.km))) return;
+    const dist = Math.abs(Number(o.km) - Number(km));
+    if (dist <= ROWERR_NEAR_M) out.push({ rec: o, dist });
+  });
+  return out.sort((a, b) => a.dist - b.dist);
+}
+// open = ผิด รอแก้ · fixed = ผิด แก้แล้ว · near = ไม่ได้ผิดเอง แต่อยู่ใกล้จุดที่เคยผิด · none
+function rowErrKey(r){ return rowErrState(r) || (!r.cancelled && nearRowErrs(r.highway, r.km, r.id).length ? 'near' : 'none'); }
+function nearRowErrText(list, seqMap){
+  const f = list[0], e = rowErrs(f.rec)[0];
+  return 'ห่างจุดที่เคยผิด ' + Math.round(f.dist) + ' ม. (' + caseNoOf(f.rec, seqMap) + (e && e.cause ? ' · ' + e.cause : '') + ')' + (list.length > 1 ? ' และอีก ' + (list.length - 1) + ' เรื่อง' : '');
+}
+// ระยะเขตทางตามบัญชี ณ กม./ด้าน (null = หาไม่ได้ หรือซ้าย/ขวาไม่เท่ากันแต่ไม่ได้เลือกด้าน)
+function acctRowAt(hw, km, side){
+  if (!hw || km === null || km === undefined || !window.CNMaster || !CNMaster.findRightOfWay) return null;
+  const r = CNMaster.findRightOfWay(hw, km);
+  if (!r) return null;
+  const v = side === 'ซ้ายทาง' ? r.left : side === 'ขวาทาง' ? r.right : (r.left != null && Number(r.left) === Number(r.right) ? r.left : null);
+  return (v === null || v === undefined || v === '' || isNaN(Number(v))) ? null : Number(v);
+}
+function recPinKms(r){ return pinKms(draftBase(r), Array.isArray(r.pinGaps) ? r.pinGaps : [], r.pinDir); }
+
+// การ์ดในหน้ารายละเอียด: รายการข้อผิดพลาด + เตือนถ้าอยู่ใกล้จุดที่เคยผิด
+function rowErrCardHtml(rec, seqMap){
+  const list = rowErrs(rec), near = nearRowErrs(rec.highway, rec.km, rec.id);
+  const items = list.map((e, i) => `<div class="re-item ${e.fixed ? 'fixed' : 'open'}">
+      <div class="re-h"><b>${escapeHtml(rowErrText(e))}</b><span class="re-pill ${e.fixed ? 'fixed' : 'open'}" style="margin:0">${e.fixed ? 'แก้ไขแล้ว' : 'รอแก้'}</span><button type="button" class="btn btn-outline btn-sm" data-re-edit="${i}">${e.fixed ? 'ดู/แก้' : 'บันทึกการแก้ไข'}</button></div>
+      ${e.cause ? '<small>สาเหตุ: ' + escapeHtml(e.cause) + (e.cause === 'บัญชีเขตทางยังไม่ปรับปรุง' ? ' — แจ้งผู้ดูแลฐานข้อมูลกลางให้ตรวจบัญชีเขตทางช่วงนี้' : '') + '</small>' : ''}
+      <small>พบโดย: ${escapeHtml(e.foundBy || '-')}${e.foundDate ? ' · ' + escapeHtml(formatThaiDate(e.foundDate)) : ''}${e.recordedBy ? ' · บันทึกโดย ' + escapeHtml(e.recordedBy) : ''}</small>
+      ${e.note ? '<small>หมายเหตุ: ' + escapeHtml(e.note) + '</small>' : ''}
+      ${e.fixed ? '<small>แก้ไขแล้ว' + (e.fixRef ? ' · หนังสือ ' + escapeHtml(e.fixRef) : '') + (e.fixDate ? ' · ' + escapeHtml(formatThaiDate(e.fixDate)) : '') + '</small>' : ''}
+    </div>`).join('');
+  const nearHtml = near.length ? `<div class="re-near"><b>⚠ ช่วงนี้เคยระบุเขตทางผิด</b> — ตรวจระยะเขตทางให้ละเอียดทั้งภาคสนามและเอกสาร${near.slice(0, 3).map(n => '<br>• ' + escapeHtml(caseNoOf(n.rec, seqMap)) + ' กม.' + escapeHtml(formatKm(n.rec.km)) + ' (ห่าง ' + Math.round(n.dist) + ' ม.): ' + rowErrs(n.rec).map(e => escapeHtml(rowErrText(e) + (e.cause ? ' · ' + e.cause : ''))).join(' / ')).join('')}</div>` : '';
+  return `<div class="cd-card" id="rowErrCard"><div class="cd-sec">ข้อผิดพลาดเขตทางในเอกสาร<button type="button" class="btn btn-outline btn-sm" id="btnAddRowErr" style="margin-left:auto">+ บันทึกข้อผิดพลาด</button></div>
+    ${list.length ? '<div class="re-list">' + items + '</div>' : '<div style="font-size:13px;color:var(--ink-mute);margin-top:4px">ไม่มีบันทึก — ถ้าเอกสารที่ส่งแขวงระบุเขตทางไม่ตรงบัญชี กด "บันทึกข้อผิดพลาด"</div>'}
+    ${rec.rowAcctOverride ? '<div style="font-size:12.5px;color:var(--ink-soft);margin-top:8px">ส่งแขวงด้วยค่าที่ไม่ตรงบัญชี (' + (rec.rowAcctOverride.pins || []).map(b => 'หมุด ' + b.pin + ': ' + escapeHtml(rowErrNum(b.val)) + '/' + escapeHtml(rowErrNum(b.acct)) + ' ม.').join(', ') + ') เหตุผล: ' + escapeHtml(rec.rowAcctOverride.reason || '-') + (rec.rowAcctOverride.by ? ' — ' + escapeHtml(rec.rowAcctOverride.by) : '') + '</div>' : ''}
+    ${nearHtml}</div>`;
+}
+
+// ฟอร์มบันทึก/แก้ไขข้อผิดพลาด 1 รายการ (idx = -1 คือเพิ่มใหม่) · ปิดแล้วกลับไปหน้ารายละเอียดเรื่องเดิม
+function openRowErrModal(id, idx){
+  const rec = records.find(r => r.id === id);
+  if (!rec) return;
+  const list = rowErrs(rec), isNew = !(idx >= 0 && list[idx]);
+  const kms = recPinKms(rec), n = kms.length;
+  const docOf = p => { const a = Array.isArray(rec.rowAcctList) ? rec.rowAcctList : []; const v = p ? a[p - 1] : (a[0] != null ? a[0] : rec.rowDistance); return v == null ? '' : String(v); };
+  const acctOf = p => { const v = acctRowAt(rec.highway, kms[(p || 1) - 1], rec.side); return v === null ? '' : String(v); };
+  const e = isNew ? { pin: n > 1 ? '' : 1, docVal: docOf(1), acctVal: acctOf(1), cause: '', foundBy: 'แขวงตีกลับ', foundDate: todayYmd(), note: '', fixed: false, fixRef: '', fixDate: '' } : Object.assign({}, list[idx]);
+  const opt = (arr, v) => arr.map(x => `<option${x === v ? ' selected' : ''}>${escapeHtml(x)}</option>`).join('');
+  const pinOpts = '<option value="">ทั้งแปลง / ไม่ระบุหมุด</option>' + Array.from({ length: n }, (_, i) => `<option value="${i + 1}"${String(e.pin) === String(i + 1) ? ' selected' : ''}>หมุด ${i + 1}${kms[i] !== null ? ' (กม.' + escapeHtml(fmtKm2(kms[i])) + ')' : ''}</option>`).join('');
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-head"><h3>${isNew ? 'บันทึกข้อผิดพลาดเขตทาง' : 'ข้อผิดพลาดเขตทาง'}</h3><button class="modal-close" id="reClose" type="button">×</button></div>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--ink-soft)">ทล.${escapeHtml(rec.highway)} กม.${escapeHtml(formatKm(rec.km))}${rec.side ? ' · ' + escapeHtml(rec.side) : ''} — ค่าในเรื่องเดิมไม่ถูกแก้ ระบบเก็บเป็นประวัติแยกไว้</p>
+        <div class="re-form">
+          <div class="field full"><label>หมุดที่ผิด</label><select id="reePin">${pinOpts}</select></div>
+          <div class="field"><label>ค่าที่ระบุในเอกสาร (ม.)</label><input id="reeDoc" type="number" step="0.01" inputmode="decimal" value="${escapeHtml(e.docVal)}"></div>
+          <div class="field"><label>ค่าที่ถูกตามบัญชีเขตทาง (ม.)</label><input id="reeAcct" type="number" step="0.01" inputmode="decimal" value="${escapeHtml(e.acctVal)}"></div>
+          <div class="field full"><label>สาเหตุ</label><select id="reeCause"><option value="">— เลือก —</option>${opt(ROWERR_CAUSES, e.cause)}</select></div>
+          <div class="field"><label>พบโดย</label><select id="reeFound">${opt(ROWERR_FOUND, e.foundBy)}</select></div>
+          <div class="field"><label>วันที่พบ</label><input id="reeDate" type="date" value="${escapeHtml(e.foundDate || '')}"></div>
+          <div class="field full"><label>หมายเหตุ / สิ่งที่ต้องระวังครั้งหน้า</label><textarea id="reeNote" rows="2">${escapeHtml(e.note || '')}</textarea></div>
+          <div class="field full"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input id="reeFixed" type="checkbox" style="width:auto"${e.fixed ? ' checked' : ''}> ส่งเอกสารแก้ไขแล้ว</label></div>
+          <div class="field" data-fix><label>เลขที่หนังสือแก้ไข</label><input id="reeFixRef" value="${escapeHtml(e.fixRef || '')}"></div>
+          <div class="field" data-fix><label>วันที่ส่งแก้ไข</label><input id="reeFixDate" type="date" value="${escapeHtml(e.fixDate || '')}"></div>
+        </div>
+        <p id="reeErr" style="color:var(--rust);font-size:13px;margin:8px 0 0" hidden></p>
+        <div class="actions">
+          ${isNew ? '' : '<button class="btn btn-danger" id="reeDel" style="margin-right:auto">ลบบันทึกนี้</button>'}
+          <button class="btn btn-outline" id="reeCancel">ยกเลิก</button>
+          <button class="btn btn-primary" id="reeSave">บันทึก</button>
+        </div>
+      </div>
+    </div>`;
+  const $ = s => document.getElementById(s);
+  const back = () => { root.innerHTML = ''; openCaseDetailModal(id); };
+  const syncFix = () => root.querySelectorAll('[data-fix]').forEach(el => { el.style.display = $('reeFixed').checked ? '' : 'none'; });
+  syncFix();
+  $('reeFixed').onchange = () => { if ($('reeFixed').checked && !$('reeFixDate').value) $('reeFixDate').value = todayYmd(); syncFix(); };
+  // เปลี่ยนหมุด → เติมค่าในเอกสาร/บัญชีของหมุดนั้นให้ (เฉพาะรายการใหม่)
+  $('reePin').onchange = () => { if (!isNew) return; const p = Number($('reePin').value) || 0; $('reeDoc').value = docOf(p); $('reeAcct').value = acctOf(p); };
+  $('reClose').onclick = back; $('reeCancel').onclick = back;
+  const commit = async (btn, nextList, doneText) => {
+    const prev = rec.rowErrors;
+    busyButton(btn, 'กำลังบันทึก...');
+    rec.rowErrors = nextList; rec.updatedBy = recorderName || rec.updatedBy; rec.updatedAt = new Date().toISOString();
+    const ok = await apiUpdateRecord(rec);
+    if (!ok) { rec.rowErrors = prev; btn.disabled = false; btn.classList.remove('btn-loading'); btn.innerHTML = btn.dataset.originalHTML || 'บันทึก'; return; }
+    await doneButton(btn, '✓ ' + doneText);
+    back(); renderTable(); showToast(doneText);
+  };
+  if ($('reeDel')) $('reeDel').onclick = () => { if (confirm('ลบบันทึกข้อผิดพลาดนี้?')) commit($('reeDel'), list.filter((_, i) => i !== idx), 'ลบบันทึกแล้ว'); };
+  $('reeSave').onclick = () => {
+    const err = $('reeErr');
+    const doc = $('reeDoc').value.trim(), acct = $('reeAcct').value.trim();
+    if (doc === '' || acct === '') { err.textContent = 'กรอกค่าที่ระบุในเอกสารและค่าตามบัญชีเขตทาง'; err.hidden = false; return; }
+    if (!$('reeCause').value) { err.textContent = 'เลือกสาเหตุ'; err.hidden = false; return; }
+    const fixed = $('reeFixed').checked;
+    const item = Object.assign({}, e, {
+      id: e.id || ('re-' + Date.now().toString(36)),
+      pin: Number($('reePin').value) || '', docVal: doc, acctVal: acct,
+      cause: $('reeCause').value, foundBy: $('reeFound').value, foundDate: $('reeDate').value, note: $('reeNote').value.trim(),
+      fixed, fixRef: fixed ? $('reeFixRef').value.trim() : '', fixDate: fixed ? $('reeFixDate').value : '',
+      recordedBy: e.recordedBy || recorderName || '', recordedAt: e.recordedAt || new Date().toISOString()
+    });
+    const next = list.slice();
+    if (isNew) next.push(item); else next[idx] = item;
+    commit($('reeSave'), next, isNew ? 'บันทึกข้อผิดพลาดแล้ว' : 'บันทึกแล้ว');
+  };
 }
 
 /* ===== วันทำการ (จันทร์–ศุกร์ ยังไม่หักวันหยุดนักขัตฤกษ์) ===== */
@@ -2581,6 +2744,15 @@ function updateKmHint(){
   const route = findRoute(hw);
   const kmEl = document.getElementById('f_km');
   if (kmEl.dataset.ph0 === undefined) kmEl.dataset.ph0 = kmEl.getAttribute('placeholder') || '';
+  // เตือนเมื่อ กม. อยู่ใกล้จุดที่เรื่องอื่นเคยระบุเขตทางผิด (ให้ระวังทั้งภาคสนามและเอกสาร)
+  let errHint = document.getElementById('kmErrHint');
+  if (!errHint) { errHint = document.createElement('div'); errHint.id = 'kmErrHint'; errHint.className = 're-near km-err-hint'; hint.insertAdjacentElement('afterend', errHint); }
+  const near = nearRowErrs(hw, kmVal !== null ? kmVal : parseKm(document.getElementById('f_pinKm0').value), editingId);
+  if (near.length) {
+    const seqMap = computeSeqMap();
+    errHint.innerHTML = '<b>⚠ ช่วงนี้เคยระบุเขตทางผิด</b> — ตรวจระยะเขตทางให้ละเอียดทั้งภาคสนามและเอกสาร' + near.slice(0, 3).map(n => '<br>• ' + escapeHtml(caseNoOf(n.rec, seqMap)) + ' กม.' + escapeHtml(formatKm(n.rec.km)) + ' (ห่าง ' + Math.round(n.dist) + ' ม.): ' + rowErrs(n.rec).map(e => escapeHtml(rowErrText(e) + (e.cause ? ' · ' + e.cause : '') + (e.note ? ' · ' + e.note : ''))).join(' / ')).join('');
+    errHint.hidden = false;
+  } else { errHint.innerHTML = ''; errHint.hidden = true; }
   if (!hw) { hint.textContent = ''; hint.classList.remove('warn'); kmEl.placeholder = kmEl.dataset.ph0; return; }
   const rangeText = kmRangesText(route);
   if (kmVal !== null && route && !kmInRange(route, kmVal)) {
@@ -3915,7 +4087,35 @@ function loadRecordIntoForm(rec){
   openFormModal();
 }
 
-async function saveForm(){
+// ก่อนส่งแขวง: ระยะเขตทางที่จะลงเอกสารไม่ตรงบัญชี → ต้องยืนยันพร้อมเหตุผล (ไม่ห้ามส่ง)
+function confirmAcctMismatch(bad, onOk){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-backdrop">
+      <div class="modal">
+        <div class="modal-head"><h3>ระยะเขตทางไม่ตรงบัญชี</h3><button class="modal-close" id="amClose" type="button">×</button></div>
+        <p style="margin:0 0 8px">ระยะเขตทางที่จะลงในเอกสารส่งแขวงไม่ตรงกับบัญชีเขตทาง:</p>
+        <div class="re-near" style="margin:0 0 10px">${bad.map(b => '• หมุด ' + b.pin + ': ในเอกสาร <b>' + escapeHtml(rowErrNum(b.val)) + ' ม.</b> · บัญชี <b>' + escapeHtml(rowErrNum(b.acct)) + ' ม.</b>').join('<br>')}</div>
+        <div class="field"><label>เหตุผลที่ใช้ค่านี้ (เช่น ยึดตามแผนที่ ร.ว. / บัญชียังไม่ปรับปรุง)</label><textarea id="amReason" rows="2"></textarea></div>
+        <p id="amErr" style="color:var(--rust);font-size:13px;margin:6px 0 0" hidden>กรอกเหตุผลก่อนยืนยัน</p>
+        <div class="actions">
+          <button class="btn btn-outline" id="amCancel">กลับไปแก้ไข</button>
+          <button class="btn btn-primary" id="amOk">ยืนยันส่งค่านี้</button>
+        </div>
+      </div>
+    </div>`;
+  const close = () => { root.innerHTML = ''; };
+  document.getElementById('amClose').onclick = close;
+  document.getElementById('amCancel').onclick = close;
+  document.getElementById('amReason').oninput = () => { document.getElementById('amErr').hidden = true; };
+  document.getElementById('amOk').onclick = () => {
+    const reason = document.getElementById('amReason').value.trim();
+    if (!reason) { document.getElementById('amErr').hidden = false; return; }
+    close(); onOk(reason);
+  };
+}
+async function saveForm(opts){
+  if (!opts || opts instanceof Event) opts = {};
   const fiscalYear = parseInt(document.getElementById('f_fiscalYear').value, 10);
   const dateReceived = document.getElementById('f_dateReceived').value;
   const highway = document.getElementById('f_highway').value;
@@ -3967,6 +4167,20 @@ async function saveForm(){
   STEPS.forEach(s => { rec[s.field] = snap[s.field] || ''; });
   if (rec.hasProxy !== 'มี') { rec.proxyName = ''; rec.proxyPhone = ''; rec.proxyRelation = ''; }
   if (!rec.cancelled) rec.cancelReason = '';
+  // ประวัติข้อผิดพลาดเขตทาง/เหตุผลที่ใช้ค่าต่างจากบัญชี บันทึกจากหน้ารายละเอียด — ฟอร์มนี้ไม่แตะ
+  rec.rowErrors = rowErrs(old);
+  if (old.rowAcctOverride) rec.rowAcctOverride = old.rowAcctOverride;
+  // ส่งแขวงครั้งแรก: ตรวจระยะเขตทางที่จะลงเอกสารเทียบบัญชีเขตทางทีละหมุด
+  if (rec.sentDate && !old.sentDate && !rec.cancelled) {
+    const kms = recPinKms(rec), bad = [];
+    rec.rowAcctList.forEach((v, i) => {
+      if (v === '' || v == null || isNaN(Number(v))) return;
+      const a = acctRowAt(rec.highway, kms[i], rec.side);
+      if (a !== null && Math.abs(Number(v) - a) > 0.001) bad.push({ pin: i + 1, val: v, acct: a });
+    });
+    if (bad.length && !opts.acctReason) { confirmAcctMismatch(bad, reason => saveForm({ acctReason: reason })); return; }
+    if (bad.length) rec.rowAcctOverride = { reason: opts.acctReason, by: recorderName, at: now, pins: bad };
+  }
 
   setSaveButtonLoading(true);
   const prevRecForPhotos = editingId ? records.find(r => r.id === editingId) : null;
@@ -4259,6 +4473,14 @@ function populateStatusFilter(){
     const mb = { '': 'ทั้งหมด', miss: 'ข้อมูลไม่ครบ', ok: 'ข้อมูลครบ' };
     [...ms.options].forEach(o => { if (o.value in mb) { const t = mb[o.value] + (o.value ? ' (' + m[o.value] + ')' : ''); if (o.textContent !== t) o.textContent = t; } });
   }
+  // ตัวกรอง "เขตทางในเอกสาร"
+  const rs = document.getElementById('filterRowErr');
+  if (rs) {
+    const c = { open: 0, fixed: 0, near: 0, none: 0 };
+    records.forEach(r => { c[rowErrKey(r)]++; });
+    const rb = { '': 'ทั้งหมด', open: 'ระบุผิด รอแก้', fixed: 'ระบุผิด แก้แล้ว', near: 'ใกล้จุดที่เคยผิด', none: 'ไม่มีประวัติผิด' };
+    [...rs.options].forEach(o => { if (o.value in rb) { const t = rb[o.value] + (o.value ? ' (' + c[o.value] + ')' : ''); if (o.textContent !== t) o.textContent = t; } });
+  }
 }
 // เรียงตามความเร่งด่วน: เรื่องที่ยังดำเนินการอยู่ก่อน (เกินกำหนดนานสุด → ใกล้ครบ → ยังไม่ถึงกำหนด → ยังไม่ชี้แนว) ตามด้วยเรื่องเสร็จสิ้น/ยกเลิก
 function listSortKey(r){
@@ -4289,12 +4511,20 @@ function renderTable(){
   rows.forEach(r => {
     const tr = document.createElement('tr');
     tr.style.cursor = 'pointer';
+    // ระบุเขตทางผิด: แดง = รอแก้ · ฟ้า = แก้แล้ว · ส้ม (เฉพาะบรรทัดเตือน) = อยู่ใกล้จุดที่เคยผิด
+    const reSt = rowErrState(r), reList = rowErrs(r);
+    const near = reSt || r.cancelled ? [] : nearRowErrs(r.highway, r.km, r.id);
+    let reLine = '', rePill = '';
+    if (reSt === 'open') { const e = reList.find(x => !x.fixed); reLine = `<span class="re-line open">⚠ ${escapeHtml(rowErrText(e))}${reList.filter(x => !x.fixed).length > 1 ? ' และอื่นๆ' : ''}</span>`; rePill = '<br><span class="re-pill open">เขตทางผิด · รอแก้</span>'; }
+    else if (reSt === 'fixed') { const e = reList[reList.length - 1]; reLine = `<span class="re-line fixed">✓ แก้ไขเขตทางแล้ว${e.fixRef ? ' · ' + escapeHtml(e.fixRef) : ''}${e.fixDate ? ' · ' + escapeHtml(formatThaiDate(e.fixDate)) : ''}</span>`; rePill = '<br><span class="re-pill fixed">แก้ไขเขตทางแล้ว</span>'; }
+    else if (near.length) reLine = `<span class="re-line near">⚠ ${escapeHtml(nearRowErrText(near, seqMap))}</span>`;
+    if (reSt) tr.className = 'rowerr-' + reSt;
     tr.innerHTML = `
       <td class="case-cell nowrap-cell"><b>${formatThaiDate(r.dateReceived)}</b><span class="c-sub">${escapeHtml(caseNoOf(r, seqMap))}</span></td>
       <td class="hw-cell nowrap-cell">ทล.${escapeHtml(r.highway)} · ${formatKm(r.km) ? 'กม.' + escapeHtml(formatKm(r.km)) : 'กม.รอระบุ'}<span class="c-sub">${escapeHtml([r.side, r.section].filter(Boolean).join(' · '))}</span></td>
       <td>${escapeHtml(r.ownerName || '-')}${r.hasProxy === 'มี' && r.proxyName ? `<span class="c-sub">มอบอำนาจ: ${escapeHtml(r.proxyName)}</span>` : ''}</td>
-      <td>${escapeHtml(deedText(r))}<span class="c-sub">${escapeHtml(placeText(r))}</span></td>
-      <td class="status-cell">${statusPillOf(r)}${missIconHtml(r)}</td>
+      <td>${escapeHtml(deedText(r))}<span class="c-sub">${escapeHtml(placeText(r))}</span>${reLine}</td>
+      <td class="status-cell">${statusPillOf(r)}${missIconHtml(r)}${rePill}</td>
     `;
     tr.addEventListener('dblclick', () => openCaseDetailModal(r.id));
     tbody.appendChild(tr);
@@ -4489,6 +4719,8 @@ async function buildCaseImage(){
   stage.className = 'cd-snap-stage';
   stage.appendChild(shell);
   stage.querySelectorAll('.dr-miss, .miss-ico').forEach(n => n.remove());   // เครื่องหมายเตือนข้อมูลไม่ครบมีไว้ดูบนจอ ไม่ใส่ในรูป
+  // การ์ดข้อผิดพลาดเขตทางเป็นข้อมูลภายในหมวด: ไม่ใส่ในรูป
+  stage.querySelectorAll('#rowErrCard').forEach(n => n.remove());
   document.body.appendChild(stage);
   // ตรากรมในหัวรูป: ใช้ตรากลางจากฮับ (ถ้าโหลดไม่ได้ใช้ logo.png ของระบบ)
   const emb = shell.querySelector('.cd-logo');
@@ -4728,6 +4960,7 @@ function openCaseDetailModal(id){
                 </dl></div>
             </div>
             <div>
+              ${rowErrCardHtml(rec, seqMap)}
               ${hasDraftData(rec) ? '<div class="cd-card"><div class="cd-sec">ใบร่างผลการชี้แนวเขต ' + missIconHtml(rec) + '<button type="button" class="btn btn-outline btn-sm" id="btnPrintDraft" style="margin-left:auto">พิมพ์ใบร่าง</button></div><div class="draft-box" style="margin-top:6px">' + draftSvg(draftModelFromRec(rec), { markMissing: !!missingInfo(rec).length }) + '</div></div>' : ''}
               ${casePhotosCardHtml(rec)}
             </div>
@@ -4743,6 +4976,8 @@ function openCaseDetailModal(id){
 
   hydrateCasePhotos(rec);
   const pb = document.getElementById('btnPrintDraft'); if (pb) pb.onclick = () => printDraft(draftModelFromRec(rec));
+  document.getElementById('btnAddRowErr').onclick = () => openRowErrModal(rec.id, -1);
+  root.querySelectorAll('[data-re-edit]').forEach(b => { b.onclick = () => openRowErrModal(rec.id, Number(b.dataset.reEdit)); });
   document.getElementById('caseDetailCopy').onclick = (e) => copyCaseDetailAsImage(rec, e.currentTarget);
   loadScriptOnce(HTML2CANVAS_URL).catch(() => {});   // โหลดตัวสร้างรูปล่วงหน้า ให้กดคัดลอกแล้วเร็ว (iPad ต้องสร้างรูปให้ทันเวลา)
   document.getElementById('caseDetailCloseX').onclick = () => { root.innerHTML = ''; };
@@ -5181,6 +5416,7 @@ function goToFilteredList(fiscalYear, opt){
   document.getElementById('filterHighway').value = '';
   document.getElementById('filterStatus').value = opt.status || (opt.waitPoint || opt.waitReport ? 'open' : '');
   document.getElementById('filterMissing').value = '';
+  document.getElementById('filterRowErr').value = '';
   listWaitPointOnly = !!opt.waitPoint;
   listWaitReportOnly = !!opt.waitReport;
   renderTable();
@@ -6243,6 +6479,7 @@ function listFilterState(){
     hw: selVals('filterHighway'),
     status: selVals('filterStatus'),
     miss: selVals('filterMissing'),
+    rowErr: selVals('filterRowErr'),
     waitPoint: listWaitPointOnly,
     waitReport: listWaitReportOnly
   };
@@ -6253,6 +6490,7 @@ function recordMatchesList(r, f, seqMap){
   if (f.hw.length && !f.hw.includes(String(r.highway))) return false;
   if (f.status.length && !f.status.some(v => v === 'open' ? isOpenCase(r) : v === 'done' ? isDone(r) : !!r.cancelled)) return false;
   if (f.miss.length && !f.miss.includes(missingInfo(r).length ? 'miss' : 'ok')) return false;
+  if (f.rowErr.length && !f.rowErr.includes(rowErrKey(r))) return false;
   if (f.waitPoint && (!isOpenCase(r) || r.pointedDate)) return false;
   if (f.waitReport && (!isOpenCase(r) || !r.pointedDate)) return false;
   if (f.q) {
@@ -6264,7 +6502,7 @@ function recordMatchesList(r, f, seqMap){
 }
 function hasListFilters(){
   const f = listFilterState();
-  return !!(f.q || f.year.length || f.hw.length || f.status.length || f.miss.length || f.waitPoint || f.waitReport);
+  return !!(f.q || f.year.length || f.hw.length || f.status.length || f.miss.length || f.rowErr.length || f.waitPoint || f.waitReport);
 }
 function getListRecords(scope){
   if (scope === 'all') return records.slice();
@@ -6277,6 +6515,7 @@ function describeListFilters(){
   if (f.hw.length) out.push('ทล.' + f.hw.join(', '));
   if (f.status.length) out.push(f.status.map(v => ({ open: 'กำลังดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' })[v]).join(', '));
   if (f.miss.length) out.push(f.miss.map(v => v === 'miss' ? 'ข้อมูลไม่ครบ' : 'ข้อมูลครบ').join(', '));
+  if (f.rowErr.length) out.push('เขตทาง: ' + f.rowErr.map(v => ({ open: 'ระบุผิด รอแก้', fixed: 'ระบุผิด แก้แล้ว', near: 'ใกล้จุดที่เคยผิด', none: 'ไม่มีประวัติผิด' })[v]).join(', '));
   if (f.waitPoint) out.push('รอชี้แนวเขต');
   if (f.waitReport) out.push('รอส่งแขวง');
   if (f.q) out.push('คำค้น "' + document.getElementById('searchBox').value.trim() + '"');
@@ -6429,6 +6668,7 @@ function buildCasesSheet(wb, rows, seqMap){
     ['กำหนดส่ง', 4, 12, 'date', r => xlDate(deadlineInfo(r).due)],
     ['ผลการส่ง', 4, 22, 'deadline', r => deadlineInfo(r).text],
     ['เลขที่หนังสือส่ง', 5, 26, 'text', r => r.outgoingNo || ''],
+    ['เขตทางในเอกสาร', 5, 34, 'text', r => rowErrs(r).map(e => (e.fixed ? 'แก้แล้ว' : 'ผิด รอแก้') + ': ' + rowErrText(e) + (e.cause ? ' · ' + e.cause : '') + (e.fixed && e.fixRef ? ' · หนังสือแก้ไข ' + e.fixRef : '')).join('\n')],
     ['หมายเหตุ', 5, 28, 'text', r => [r.cancelled ? 'ยกเลิก: ' + (r.cancelReason || '-') : '', r.note].filter(Boolean).join(' · ')],
     ['ผู้บันทึก', 5, 20, 'text', r => r.recordedBy || '']
   ];
@@ -6523,7 +6763,7 @@ function buildReportHtml(rows, meta){
       <td class="c nw">${th(formatThaiDate(r.dateReceived))}</td>
       <td>ทล.${th(r.highway)} กม.${th(formatKm(r.km))}<div class="sub">${th([r.side, r.section].filter(Boolean).join(' · '))}</div></td>
       <td>${th(r.ownerName || '-')}${r.hasProxy === 'มี' && r.proxyName ? `<div class="sub">มอบอำนาจ: ${th(r.proxyName)}</div>` : ''}</td>
-      <td>${th(deedText(r))}<div class="sub">${th(placeText(r))}</div></td>
+      <td>${th(deedText(r))}<div class="sub">${th(placeText(r))}</div>${rowErrs(r).map(e => `<div class="sub" style="color:${e.fixed ? '#1f5f94' : '#a32d2d'}">${e.fixed ? 'เขตทางแก้แล้ว' : 'เขตทางผิด รอแก้'}: ${th(rowErrText(e))}</div>`).join('')}</td>
       <td class="c nw">${r.pointedDate ? th(formatThaiDate(r.pointedDate)) : '-'}</td>
       <td class="c nw">${r.sentDate ? th(formatThaiDate(r.sentDate)) : '-'}</td>
       <td class="c"><span class="pl ${st.cls === 'done' ? 'ok' : st.cls === 'cancel' ? 'na' : 'wait'}">${th(st.text)}</span></td>
@@ -7011,11 +7251,11 @@ async function init(){
     renderTable();
     document.getElementById('searchBox').focus();
   });
-  ['filterYear', 'filterHighway', 'filterStatus', 'filterMissing'].forEach(id =>
+  ['filterYear', 'filterHighway', 'filterStatus', 'filterMissing', 'filterRowErr'].forEach(id =>
     document.getElementById(id).addEventListener('change', () => { listWaitPointOnly = false; listWaitReportOnly = false; renderTable(); }));
   initMissTip();
   document.getElementById('btnClearFilters').addEventListener('click', () => {
-    ['filterYear', 'filterHighway', 'filterStatus', 'filterMissing'].forEach(id => { document.getElementById(id).value = ''; });
+    ['filterYear', 'filterHighway', 'filterStatus', 'filterMissing', 'filterRowErr'].forEach(id => { document.getElementById(id).value = ''; });
     document.getElementById('searchBox').value = '';
     document.getElementById('searchWrap').classList.remove('has-text');
     listWaitPointOnly = false; listWaitReportOnly = false;
