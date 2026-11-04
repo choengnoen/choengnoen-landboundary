@@ -269,7 +269,7 @@
         '<div class="field"><label>กม. <span class="req">*</span></label><input type="text" id="drKm" placeholder="เช่น 145+200" value="' + esc(d ? fmtKm(d.km) : '') + '"></div>' +
         '<div class="field full"><label>หมายเหตุ</label><input type="text" id="drNote" value="' + esc(d ? (d.note || '') : '') + '"></div>' +
       '</div>' +
-      '<div class="dm-f">' + (d ? '<button type="button" class="btn btn-outline dm-del" id="drDel">🗑 ' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '</button>' : '') + '<span class="sp"></span>' +
+      '<div class="dm-f">' + (d ? '<button type="button" class="btn btn-outline dm-del" id="drDel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:1.15em;height:1.15em;flex:none"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>' + (ACC ? 'ลบร่าง' : 'ยกเลิกร่าง') + '</button>' : '') + '<span class="sp"></span>' +
         '<button type="button" class="btn btn-outline" id="drCancelEdit">ยกเลิก</button>' +
         '<button type="button" class="btn btn-primary" id="drAdd">' + (d ? 'บันทึกการแก้ไข' : '＋ เพิ่มร่าง') + '</button></div></div>';
     document.body.appendChild(m);
