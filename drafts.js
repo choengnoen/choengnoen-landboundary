@@ -173,7 +173,7 @@
     var canEdit = !d.caseId && d.status !== 'cancelled' && !(d.km == null && d.parcel);   // ร่างจาก LINE ที่ใช้พิกัดแปลงแทน กม. แก้ในฟอร์มนี้ไม่ได้ (ฟอร์มบังคับ กม.)
     var canCancel = ACC ? true : !closed;
     return '<div class="dr-ln" role="button" tabindex="0" data-id="' + esc(d.id) + '">' +
-      '<span class="dr-t">ทล.' + esc(d.highway) + sectionText(d.highway) + '<span class="dr-k">' + (d.km == null && d.parcel ? 'พิกัดแปลง ' + parcelLink(d.parcel) : 'กม.' + esc(fmtKm(d.km))) + '</span></span>' +
+      '<span class="dr-t">ทล.' + esc(d.highway) + sectionText(d.highway) + '<span class="dr-k">' + (d.km == null && d.parcel ? 'พิกัดแปลง ' + parcelLink(d.parcel) : (d.km == null ? 'กม.รอระบุ' : 'กม.' + esc(fmtKm(d.km)))) + '</span></span>' +
       '<span class="dr-n">' + esc(d.note || '') + '</span>' +
       '<span class="dr-d">' + (v.due ? 'ครบ ' + esc(tdate(v.due)) : esc(tdate(v.start))) + '</span>' +
       chip(v) + (d.caseId ? '<span class="dr-chip g">บันทึกเคสแล้ว</span>' : '') +
@@ -329,7 +329,7 @@
   async function cancelDraft(d) {
     // ลบ/ยกเลิก = ตั้งสถานะ "cancelled" (สมาชิกทุกคนทำได้ · ไม่ต้องแก้ Rules · LINE เลิกติดตามร่างนี้) · คืนค่า true เมื่อทำสำเร็จ
     var word = ACC ? 'ลบร่าง' : 'ยกเลิกร่าง';
-    if (!(await ask(word + 'นี้หรือไม่ ?', 'ทล.' + d.highway + ' กม.' + fmtKm(d.km), (ACC ? 'ร่างจะหายจากตาราง และระบบจะไม่แจ้งเตือนอีก' : 'ร่างจะไม่ถูกติดตาม และระบบจะไม่แจ้งเตือนอีก'), word, true))) return false;
+    if (!(await ask(word + 'นี้หรือไม่ ?', 'ทล.' + d.highway + (d.km == null ? ' กม.รอระบุ' : ' กม.' + fmtKm(d.km)), (ACC ? 'ร่างจะหายจากตาราง และระบบจะไม่แจ้งเตือนอีก' : 'ร่างจะไม่ถูกติดตาม และระบบจะไม่แจ้งเตือนอีก'), word, true))) return false;
     if (await save({ id: d.id, status: 'cancelled', cancelledAt: new Date().toISOString(), cancelledBy: who() })) { toast(word + 'แล้ว'); return true; }
     return false;
   }

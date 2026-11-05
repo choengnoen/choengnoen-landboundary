@@ -1774,11 +1774,8 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <select id="f_highway"></select>
           <span class="hint km-hint" id="highwayHint"></span>
           <input type="hidden" id="f_section">
-        </div>
-        <div class="field" style="flex:1">
-          <label>กม. <span class="req">*</span></label>
-          <input type="text" id="f_km" placeholder="เช่น 230+500">
-          <span class="hint km-hint" id="kmHint"></span>
+          <!-- ไม่มีช่อง กม. ในส่วนนี้ (ผู้ใช้สั่ง 5 พ.ย. 69): กรอก กม. ที่ผลการชี้แนวเขต · ค่าซ่อนนี้เก็บ กม. เดิมของเรื่อง/รายการร่าง -->
+          <input type="hidden" id="f_km">
         </div>
         </div>
         <div class="lln">
@@ -1871,6 +1868,7 @@ tr.route-editable:hover td{background:var(--amber-glow)}
           <input type="text" id="f_note" maxlength="80" autocomplete="off">
         </div>
         <div class="pin-tablewrap" id="pinRows"></div>
+        <div style="padding:0 6px"><span class="hint km-hint" id="kmHint"></span></div>
         <!-- ระยะเขตทาง "บัญชี" ระบบเติมจากฐานข้อมูลกลางตาม กม. ของหมุดนั้น · "หน้างาน" กรอกเอง (สร้างโดย renderPinSegs/updatePinVals) -->
         <div class="pv-hint"><span class="hint km-hint" id="rowHint"></span></div>
       </div>
@@ -2609,6 +2607,7 @@ function formatKm(num){
   const m = Math.round(num - km * 1000);
   return km + '+' + String(m).padStart(3,'0');
 }
+function kmText(num){ const t = formatKm(num); return t ? 'กม.' + t : 'กม.รอระบุ'; }
 function formatMoney(n){
   if (n === null || n === undefined || n === '' || isNaN(n)) return '-';
   return Number(n).toLocaleString('th-TH', {maximumFractionDigits: 2});
@@ -2739,31 +2738,31 @@ function updateCoordsHint(){
 function updateKmHint(){
   try { syncSectionView(); updateDraftPreview(); } catch (e) {}
   const hw = document.getElementById('f_highway').value;
-  const kmVal = parseKm(document.getElementById('f_km').value);
+  const kmVal = caseKmFromForm();
   const hint = document.getElementById('kmHint');
   const route = findRoute(hw);
-  const kmEl = document.getElementById('f_km');
-  if (kmEl.dataset.ph0 === undefined) kmEl.dataset.ph0 = kmEl.getAttribute('placeholder') || '';
   // เตือนเมื่อ กม. อยู่ใกล้จุดที่เรื่องอื่นเคยระบุเขตทางผิด (ให้ระวังทั้งภาคสนามและเอกสาร)
   let errHint = document.getElementById('kmErrHint');
   if (!errHint) { errHint = document.createElement('div'); errHint.id = 'kmErrHint'; errHint.className = 're-near km-err-hint'; hint.insertAdjacentElement('afterend', errHint); }
-  const near = nearRowErrs(hw, kmVal !== null ? kmVal : parseKm(document.getElementById('f_pinKm0').value), editingId);
+  const near = nearRowErrs(hw, kmVal, editingId);
   if (near.length) {
     const seqMap = computeSeqMap();
     errHint.innerHTML = '<b>⚠ ช่วงนี้เคยระบุเขตทางผิด</b> — ตรวจระยะเขตทางให้ละเอียดทั้งภาคสนามและเอกสาร' + near.slice(0, 3).map(n => '<br>• ' + escapeHtml(caseNoOf(n.rec, seqMap)) + ' กม.' + escapeHtml(formatKm(n.rec.km)) + ' (ห่าง ' + Math.round(n.dist) + ' ม.): ' + rowErrs(n.rec).map(e => escapeHtml(rowErrText(e) + (e.cause ? ' · ' + e.cause : '') + (e.note ? ' · ' + e.note : ''))).join(' / ')).join('');
     errHint.hidden = false;
   } else { errHint.innerHTML = ''; errHint.hidden = true; }
-  if (!hw) { hint.textContent = ''; hint.classList.remove('warn'); kmEl.placeholder = kmEl.dataset.ph0; return; }
-  const rangeText = kmRangesText(route);
+  if (!hw) { hint.textContent = ''; hint.classList.remove('warn'); return; }
   if (kmVal !== null && route && !kmInRange(route, kmVal)) {
-    hint.textContent = 'กม.นี้อยู่นอกช่วงที่หมวดฯ ดูแล (' + rangeText + ') — ตรวจสอบอีกครั้ง';
+    hint.textContent = 'กม.นี้อยู่นอกช่วงที่หมวดฯ ดูแล (' + kmRangesText(route) + ') — ตรวจสอบอีกครั้ง';
     hint.classList.add('warn');
   } else {
-    // ช่วงที่หมวดฯ ดูแลแสดงเป็นตัวอย่างในช่อง (placeholder) — ใต้ช่องแจ้งเฉพาะเมื่อ กม. อยู่นอกช่วง
     hint.textContent = '';
     hint.classList.remove('warn');
-    kmEl.placeholder = rangeText ? ('ช่วง ' + rangeText) : kmEl.dataset.ph0;
   }
+}
+// กม. ของเรื่อง = กม. หมุดที่ 1 จากผลการชี้แนวเขต · ถ้ายังไม่กรอกใช้ค่าเดิมของเรื่อง/รายการร่าง (ว่างได้ถ้ายังไม่ได้ออกชี้แนว)
+function caseKmFromForm(){
+  const pin = parseKm(document.getElementById('f_pinKm0').value);
+  return pin !== null ? pin : parseKm(document.getElementById('f_km').value);
 }
 /* ระยะเขตทางตามบัญชี: เติมให้อัตโนมัติจากฐานข้อมูลกลาง (บัญชีเขตทาง) ตาม ทล. + กม. หมุดที่ 1 + ด้านของแปลง
    - ด้านซ้ายทาง/ขวาทาง → ใช้ค่าด้านนั้น · ทั้งสองด้าน/ยังไม่เลือก → เติมให้เฉพาะเมื่อซ้ายกับขวาเท่ากัน (ถ้าต่างกัน ดูข้อความใต้ช่องแล้วกรอกเอง)
@@ -3582,7 +3581,7 @@ function populateHighwaySelect(){
     updateKmHint();
     updateHighwayHint();
   });
-  document.getElementById('f_km').addEventListener('input', updateKmHint);
+  document.getElementById('f_pinKm0').addEventListener('input', updateKmHint);
 }
 function populateYearFilter(){
   const years = Array.from(new Set(records.map(r => r.fiscalYear).filter(Boolean))).sort((a,b)=>b-a);
@@ -4119,14 +4118,12 @@ async function saveForm(opts){
   const fiscalYear = parseInt(document.getElementById('f_fiscalYear').value, 10);
   const dateReceived = document.getElementById('f_dateReceived').value;
   const highway = document.getElementById('f_highway').value;
-  // กม. บังคับ (ผู้ใช้สั่ง 20 ต.ค. 69) · ถ้ายังว่างแต่กรอก "กม. หมุดที่ 1" ในส่วนผลชี้แนวเขตแล้ว ใช้ค่านั้นเป็น กม. ของเรื่อง
-  let km = parseKm(document.getElementById('f_km').value);
-  if (km === null) km = parseKm(document.getElementById('f_pinKm0').value);
+  // กม. ไม่บังคับตอนรับเรื่อง (ผู้ใช้สั่ง 5 พ.ย. 69) · กรอกภายหลังที่ "กม. หมุดที่ 1" ในส่วนผลชี้แนวเขต
+  const km = caseKmFromForm();
   const ownerName = document.getElementById('f_ownerName').value.trim();
 
   if (!dateReceived) { showToast('กรุณากรอกวันที่หนังสือ'); return; }
   if (!highway) { showToast('กรุณาเลือกทางหลวง (ทล.)'); return; }
-  if (km === null) { showToast('กรุณากรอก กม. ให้ถูกรูปแบบ เช่น 230+500'); return; }
   if (!ownerName) { showToast('กรุณากรอกชื่อเจ้าของที่ดิน'); return; }
   // วันที่ของขั้นตอนต้องไม่ก่อนวันที่รับเรื่อง
   const snap = stepSnapshot();
@@ -5097,7 +5094,7 @@ function renderFollowUp(){
     const right = d.due ? deadlinePill(r) : `<span class="age-pill ${age > 30 ? 'bad' : age > 14 ? 'warn' : ''}">รับเรื่องมา ${age === null ? '-' : age} วัน</span>`;
     return `
     <div class="follow-row" data-id="${escapeHtml(r.id)}">
-      <div class="f-main"><b>${escapeHtml(caseNoOf(r, seqMap))}</b> · ทล.${escapeHtml(String(r.highway))} กม.${escapeHtml(formatKm(r.km))}
+      <div class="f-main"><b>${escapeHtml(caseNoOf(r, seqMap))}</b> · ทล.${escapeHtml(String(r.highway))} ${escapeHtml(kmText(r.km))}
         <div class="f-sub">${escapeHtml(r.ownerName || '-')} · ${escapeHtml(st.text)}</div></div>
       <div class="f-right">${right}</div>
     </div>`;
@@ -5153,7 +5150,7 @@ function collectCalItems(todayStr){
 const calHighway = r => String(r.draft ? r.draft.highway : r.highway);
 const calPlace = r => r.draft
   ? 'ทล.' + String(r.draft.highway) + (r.draft.km == null ? '' : ' กม.' + formatKm(r.draft.km)) + (r.draft.note ? ' · ' + r.draft.note : '')   // ไม่แสดงพิกัดแปลง · แสดง กม. เมื่อมีข้อมูล
-  : 'ทล.' + String(r.highway) + ' กม.' + formatKm(r.km) + ' · ' + (r.ownerName || '-');
+  : 'ทล.' + String(r.highway) + ' ' + kmText(r.km) + ' · ' + (r.ownerName || '-');
 const calCard = x => `<div class="wk-it ${x.cls}" ${x.r.draft ? 'data-draft="' + escapeHtml(x.r.draft.id) + '"' : 'data-id="' + escapeHtml(x.r.id) + '"'}><em>${WK_TYPE[x.cls]}</em><b>${escapeHtml(x.label)}</b><small>${escapeHtml(calPlace(x.r))}</small></div>`;
 function bindCalCards(el, before){
   el.querySelectorAll('.wk-it').forEach(it => { it.ondblclick = () => { if (before) before(); if (it.dataset.draft) DRAFTS.openDraft(it.dataset.draft); else openCaseDetailModal(it.dataset.id); }; });
@@ -5262,7 +5259,7 @@ function renderAppointments(){
     const when = diff < 0 ? { cls: 'bad', text: 'เลยนัด ' + (-diff) + ' วัน' } : diff === 0 ? { cls: 'warn', text: 'วันนี้' } : diff === 1 ? { cls: 'warn', text: 'พรุ่งนี้' } : { cls: '', text: 'อีก ' + diff + ' วัน' };
     const place = [r.tambon, r.amphoe].filter(Boolean).join(' · ');
     return `<div class="follow-row" data-id="${escapeHtml(r.id)}">
-      <div class="f-main"><b>${escapeHtml(formatThaiDate(r.appointDate))}</b> · ทล.${escapeHtml(String(r.highway))} กม.${escapeHtml(formatKm(r.km))}
+      <div class="f-main"><b>${escapeHtml(formatThaiDate(r.appointDate))}</b> · ทล.${escapeHtml(String(r.highway))} ${escapeHtml(kmText(r.km))}
         <div class="f-sub">${escapeHtml(caseNoOf(r, seqMap))} · ${escapeHtml(r.ownerName || '-')}${place ? ' · ' + escapeHtml(place) : ''}</div></div>
       <div class="f-right"><span class="age-pill ${when.cls}">${when.text}</span></div>
     </div>`;
@@ -6143,7 +6140,6 @@ function initDraftCard(){
     el.addEventListener('change', updateDraftPreview);
   });
   document.getElementById('f_rowWork').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9.]/g, ''); });
-  document.getElementById('f_km').addEventListener('input', updateDraftPreview);
   document.getElementById('f_deedType').addEventListener('change', updateDeedOtherUi);
   ['f_province', 'f_amphoe'].forEach(id => document.getElementById(id).addEventListener('input', landRefreshLists));
   fillDatalist('dlLProv', ADDR_PROVINCES);
@@ -6761,7 +6757,7 @@ function buildReportHtml(rows, meta){
     return `<tr>
       <td class="c nw">${th(caseNoOf(r, seqMap))}</td>
       <td class="c nw">${th(formatThaiDate(r.dateReceived))}</td>
-      <td>ทล.${th(r.highway)} กม.${th(formatKm(r.km))}<div class="sub">${th([r.side, r.section].filter(Boolean).join(' · '))}</div></td>
+      <td>ทล.${th(r.highway)} ${th(kmText(r.km))}<div class="sub">${th([r.side, r.section].filter(Boolean).join(' · '))}</div></td>
       <td>${th(r.ownerName || '-')}${r.hasProxy === 'มี' && r.proxyName ? `<div class="sub">มอบอำนาจ: ${th(r.proxyName)}</div>` : ''}</td>
       <td>${th(deedText(r))}<div class="sub">${th(placeText(r))}</div>${rowErrs(r).map(e => `<div class="sub" style="color:${e.fixed ? '#1f5f94' : '#a32d2d'}">${e.fixed ? 'เขตทางแก้แล้ว' : 'เขตทางผิด รอแก้'}: ${th(rowErrText(e))}</div>`).join('')}</td>
       <td class="c nw">${r.pointedDate ? th(formatThaiDate(r.pointedDate)) : '-'}</td>
