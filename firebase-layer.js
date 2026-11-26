@@ -264,6 +264,7 @@
      - ทดสอบ: ตั้ง localStorage 'fbl_idle_test' = "วินาทีออก,วินาทีเตือน" (ใช้ได้เฉพาะ "ลดเวลา" ลง ไม่ทำให้ยาวขึ้น) */
   (function (FBL, auth, db, pid) {
     var IDLE_MIN = 60, WARN_MIN = 5;
+    var AUTO_LOGOUT = false; // 26 พ.ย. 2569: ปิดการออกจากระบบอัตโนมัติเมื่อไม่ได้ใช้งาน ตามที่ผู้ใช้ขอ (ปุ่มออกจากระบบยังล้างแคชเหมือนเดิม) — เปิดกลับ = true
     var idleMs = IDLE_MIN * 60000, warnMs = WARN_MIN * 60000;
     try {
       var tst = String(localStorage.getItem('fbl_idle_test') || '').split(',');
@@ -368,7 +369,7 @@
       window.addEventListener(t, touch, { passive: true, capture: true });
     });
     // เหตุการณ์ล็อกอินครั้งแรกหลังเปิดหน้า: ถ้าเป็นเซสชันเก่าที่ค้างมานานเกินกำหนด ให้ออกจากระบบทันที (ไม่ให้แค่ขยับเมาส์แล้วเข้าได้เลย)
-    auth.onAuthStateChanged(function (u) { if (u && staleOnLoad && !leaving) FBL.logout(); staleOnLoad = false; });
+    if (AUTO_LOGOUT) auth.onAuthStateChanged(function (u) { if (u && staleOnLoad && !leaving) FBL.logout(); staleOnLoad = false; });
     function tick() {
       if (leaving || !auth.currentUser) { if (!auth.currentUser) hideWarn(); return; }
       var idle = Date.now() - lastActive();
@@ -376,8 +377,8 @@
       else if (idle >= idleMs - warnMs) showWarn(idleMs - idle);
       else if (warnEl) hideWarn();
     }
-    setInterval(tick, 1000);
-    document.addEventListener('visibilitychange', function () { if (!document.hidden) tick(); });
+    if (AUTO_LOGOUT) setInterval(tick, 1000);
+    if (AUTO_LOGOUT) document.addEventListener('visibilitychange', function () { if (!document.hidden) tick(); });
   })(FBL, auth, db, firebaseConfig.projectId);
 
   /* ---------- สถานะออนไลน์ (เจ้าของระบบ/ผู้ดูแลระบบเห็นใน "ระบบควบคุมการเข้าใช้งาน") ----------
